@@ -294,6 +294,9 @@ use themed glass surfaces, navigation uses one glass-effect container, and Retry
 use prominent glass buttons. Secondary approval and navigation actions use glass buttons.
 The video renderer never receives a glass effect.
 
+Build the iOS UI with Xcode 26 or later (the iOS 26 SDK); the app deployment target
+remains iOS 15.
+
 Set `.streamTheme(.light.with { $0.surfaceStyle = .solid })` to keep opaque chrome,
 or apply the same override to `.dark`. Theme tokens still supply tint and text colors.
 The deployment target remains iOS 15; earlier systems use the existing solid styling.
