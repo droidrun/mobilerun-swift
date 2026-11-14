@@ -1,0 +1,32 @@
+// !$*UTF8*$!
+{
+archiveVersion = 1; classes = {}; objectVersion = 56;
+objects = {
+A00000000000000000000001 = {isa = PBXProject; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; mainGroup = A00000000000000000000002; productRefGroup = A00000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000004,B00000000000000000000001,); packageReferences = (A00000000000000000000020,); };
+A00000000000000000000002 = {isa = PBXGroup; children = (A00000000000000000000005,B00000000000000000000002,A00000000000000000000003,); sourceTree = "<group>";};
+A00000000000000000000003 = {isa = PBXGroup; children = (A00000000000000000000006,); name = Products; sourceTree = "<group>";};
+A00000000000000000000004 = {isa = PBXNativeTarget; buildConfigurationList = A00000000000000000000011; buildPhases = (A00000000000000000000007,A00000000000000000000008,); buildRules = (); dependencies = (); name = StreamSpike; productName = StreamSpike; productReference = A00000000000000000000006; productType = "com.apple.product-type.application"; packageProductDependencies = (A00000000000000000000021,);};
+A00000000000000000000005 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSpike/StreamSpike.swift; sourceTree = "<group>";};
+A00000000000000000000006 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = StreamSpike.app; sourceTree = BUILT_PRODUCTS_DIR;};
+A00000000000000000000007 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000009,); runOnlyForDeploymentPostprocessing = 0;};
+A00000000000000000000008 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000022,); runOnlyForDeploymentPostprocessing = 0;};
+A00000000000000000000009 = {isa = PBXBuildFile; fileRef = A00000000000000000000005;};
+A00000000000000000000010 = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000012,A00000000000000000000013,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+A00000000000000000000011 = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000014,A00000000000000000000015,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+A00000000000000000000012 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 6.0; CLANG_ENABLE_MODULES = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone";};};
+A00000000000000000000013 = {isa = XCBuildConfiguration; name = Release; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 6.0; CLANG_ENABLE_MODULES = YES; SWIFT_OPTIMIZATION_LEVEL = "-O";};};
+A00000000000000000000014 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.StreamSpike; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = StreamSpike/Info.plist; TARGETED_DEVICE_FAMILY = 1; CODE_SIGNING_ALLOWED = NO; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";};};
+A00000000000000000000015 = {isa = XCBuildConfiguration; name = Release; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.StreamSpike; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = StreamSpike/Info.plist; TARGETED_DEVICE_FAMILY = 1; CODE_SIGNING_ALLOWED = NO; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";};};
+A00000000000000000000020 = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/livekit/webrtc-xcframework"; requirement = {kind = exactVersion; version = 150.7871.05;};};
+A00000000000000000000021 = {isa = XCSwiftPackageProductDependency; package = A00000000000000000000020; productName = LiveKitWebRTC;};
+A00000000000000000000022 = {isa = PBXBuildFile; productRef = A00000000000000000000021;};
+B00000000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = B00000000000000000000006; buildPhases = (B00000000000000000000003,); buildRules = (); dependencies = (); name = StreamSpikeUITests; productName = StreamSpikeUITests; productReference = B00000000000000000000005; productType = "com.apple.product-type.bundle.ui-testing";};
+B00000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSpikeUITests/URLConsent.swift; sourceTree = "<group>";};
+B00000000000000000000003 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B00000000000000000000004,); runOnlyForDeploymentPostprocessing = 0;};
+B00000000000000000000004 = {isa = PBXBuildFile; fileRef = B00000000000000000000002;};
+B00000000000000000000005 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = StreamSpikeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR;};
+B00000000000000000000006 = {isa = XCConfigurationList; buildConfigurations = (B00000000000000000000007,B00000000000000000000008,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+B00000000000000000000007 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.StreamSpikeUITests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; CODE_SIGNING_ALLOWED = NO; TEST_TARGET_NAME = StreamSpike; SWIFT_VERSION = 6.0;};};
+B00000000000000000000008 = {isa = XCBuildConfiguration; name = Release; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.StreamSpikeUITests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; CODE_SIGNING_ALLOWED = NO; TEST_TARGET_NAME = StreamSpike; SWIFT_VERSION = 6.0;};};
+}; rootObject = A00000000000000000000001;
+}
