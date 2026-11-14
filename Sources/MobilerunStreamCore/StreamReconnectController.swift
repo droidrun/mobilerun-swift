@@ -21,22 +21,27 @@ public struct StreamReconnectSnapshot: Sendable, Equatable {
     public let attempt: Int
 }
 
-/// Cancellation handle for one scheduled action.
+/// Main-actor cancellation handle for one scheduled action, usable by a main-actor host.
+@MainActor
 public protocol ScheduledTask {
     /// Cancels the action; harmless if already fired or cancelled.
     func cancel()
 }
 
-/// Serial time source supplied by the host. The core creates no real timers.
+/// Main-actor time source supplied by the host. Protocol requirements and actions are isolated
+/// to the main actor, allowing Swift 6 hosts to conform without unsafe isolation bridges.
+/// The core creates no real timers.
+@MainActor
 public protocol ReconnectScheduler {
     /// Schedules an action after the given milliseconds. Never invoke it synchronously.
-    /// Equal deadlines fire in scheduling order, on the same serial context as the controller.
-    func schedule(delayMs: Int, action: @escaping () -> Void) -> any ScheduledTask
+    /// Equal deadlines fire in scheduling order on the main actor.
+    func schedule(delayMs: Int, action: @escaping @MainActor () -> Void) -> any ScheduledTask
 }
 
 /// Pure reconnect controller for one stream, matching the shared conformance scenarios.
-/// Call every entry point and scheduled action on one serial context. This mutable controller is
-/// deliberately not Sendable. After dispose, entry points have no effects.
+/// Every entry point, scheduled action, and callback runs on the main actor. Call dispose to cancel
+/// pending actions before releasing the controller. After disposal, entry points have no effects.
+@MainActor
 public final class StreamReconnectController {
     private let onRemount: () -> Void
     private let onSnapshot: (StreamReconnectSnapshot) -> Void
@@ -71,12 +76,6 @@ public final class StreamReconnectController {
         self.onHeal = onHeal
     }
 
-    deinit {
-        watchdogTimer?.cancel()
-        backoffTimer?.cancel()
-        stabilityTimer?.cancel()
-    }
-
     /// Current snapshot, including after disposal.
     public var snapshot: StreamReconnectSnapshot {
         StreamReconnectSnapshot(status: status, attempt: attempt)
@@ -87,16 +86,16 @@ public final class StreamReconnectController {
         guard !disposed else { return }
         enabled = true
         guard !recoveryIsScheduled else { return }
-        watchdogTimer = cancel(watchdogTimer)
+        cancel(&watchdogTimer)
         everConnectedThisEpoch = false
         failureLatched = false
         if status == .connected {
-            stabilityTimer = cancel(stabilityTimer)
+            cancel(&stabilityTimer)
             status = .connecting
             emit()
         }
         watchdogTimer = scheduler.schedule(delayMs: ReconnectPolicy.connectTimeoutMs) { [weak self] in
-            guard let self, !self.disposed else { return }
+            guard let self, self.enabled else { return }
             self.watchdogTimer = nil
             self.countFailure()
         }
@@ -104,7 +103,7 @@ public final class StreamReconnectController {
 
     /// Removes the target, cancels timers, and resets the retry budget.
     public func disable() {
-        guard !disposed else { return }
+        guard enabled else { return }
         enabled = false
         clearAllTimers()
         everConnectedThisEpoch = false
@@ -119,18 +118,18 @@ public final class StreamReconnectController {
 
     /// The connection reached connected; cancels a pending remount and starts the stability window.
     public func handleConnected() {
-        guard !disposed, enabled else { return }
-        watchdogTimer = cancel(watchdogTimer)
-        backoffTimer = cancel(backoffTimer)
+        guard enabled else { return }
+        cancel(&watchdogTimer)
+        cancel(&backoffTimer)
         everConnectedThisEpoch = true
         failureLatched = false
         if status != .connected {
             status = .connected
             emit()
         }
-        stabilityTimer = cancel(stabilityTimer)
+        cancel(&stabilityTimer)
         stabilityTimer = scheduler.schedule(delayMs: ReconnectPolicy.stabilityMs) { [weak self] in
-            guard let self, !self.disposed else { return }
+            guard let self, self.enabled else { return }
             self.stabilityTimer = nil
             self.healedThisCycle = false
             if self.attempt != 0 {
@@ -142,32 +141,32 @@ public final class StreamReconnectController {
 
     /// Counts a disconnected state only if this mount had connected, once per mount.
     public func handleDisconnected() {
-        guard !disposed, enabled, everConnectedThisEpoch, !failureLatched else { return }
+        guard enabled, everConnectedThisEpoch, !failureLatched else { return }
         countFailure()
     }
 
     /// Counts a terminal negotiation, socket, or peer-connection failure, once per mount.
     public func handleFailure() {
-        guard !disposed, enabled, !failureLatched else { return }
+        guard enabled, !failureLatched else { return }
         countFailure()
     }
 
-    /// Defers a target or credential change only during backoff or while unavailable.
-    public func shouldDeferTargetChange() -> Bool { recoveryIsScheduled }
+    /// Defers a target or credential change only during backoff or while unavailable; false after disposal.
+    public var shouldDeferTargetChange: Bool { !disposed && recoveryIsScheduled }
 
     /// Foreground or network recovery: skips backoff, or restarts an exhausted retry cycle.
     public func handleWake() {
-        guard !disposed, enabled else { return }
+        guard enabled else { return }
         if status == .unavailable { freshCycle() }
         else if backoffTimer != nil {
-            backoffTimer = cancel(backoffTimer)
+            cancel(&backoffTimer)
             onRemount()
         }
     }
 
     /// Manual retry; only starts a cycle when unavailable.
     public func retry() {
-        guard !disposed, enabled else { return }
+        guard enabled else { return }
         if status == .unavailable { freshCycle() }
     }
 
@@ -181,22 +180,22 @@ public final class StreamReconnectController {
     private var recoveryIsScheduled: Bool { backoffTimer != nil || status == .unavailable }
     private func emit() { onSnapshot(snapshot) }
 
-    private func cancel(_ timer: (any ScheduledTask)?) -> (any ScheduledTask)? {
+    private func cancel(_ timer: inout (any ScheduledTask)?) {
         timer?.cancel()
-        return nil
+        timer = nil
     }
 
     private func clearAllTimers() {
-        watchdogTimer = cancel(watchdogTimer)
-        backoffTimer = cancel(backoffTimer)
-        stabilityTimer = cancel(stabilityTimer)
+        cancel(&watchdogTimer)
+        cancel(&backoffTimer)
+        cancel(&stabilityTimer)
     }
 
     private func countFailure() {
         guard !recoveryIsScheduled else { return }
         failureLatched = true
-        watchdogTimer = cancel(watchdogTimer)
-        stabilityTimer = cancel(stabilityTimer)
+        cancel(&watchdogTimer)
+        cancel(&stabilityTimer)
         attempt += 1
         if attempt > ReconnectPolicy.maxAttempts {
             status = .unavailable
@@ -205,12 +204,10 @@ public final class StreamReconnectController {
         }
         status = .reconnecting
         emit()
-        if !healedThisCycle {
-            healedThisCycle = true
-            onHeal()
-        }
-        backoffTimer = scheduler.schedule(delayMs: ReconnectPolicy.delayMs(attempt: attempt, random: random())) { [weak self] in
-            guard let self, !self.disposed else { return }
+        healOnce()
+        let delay = ReconnectPolicy.delayMs(attempt: attempt, random: random())
+        backoffTimer = scheduler.schedule(delayMs: delay) { [weak self] in
+            guard let self, self.enabled else { return }
             self.backoffTimer = nil
             self.onRemount()
         }
@@ -220,10 +217,16 @@ public final class StreamReconnectController {
         attempt = 0
         failureLatched = false
         everConnectedThisEpoch = false
-        healedThisCycle = true
+        healedThisCycle = false
         status = .reconnecting
         emit()
-        onHeal()
+        healOnce()
         onRemount()
+    }
+
+    private func healOnce() {
+        guard !healedThisCycle else { return }
+        healedThisCycle = true
+        onHeal()
     }
 }

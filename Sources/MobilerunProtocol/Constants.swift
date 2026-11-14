@@ -45,7 +45,7 @@ public enum ControlMessageType {
     public static let injectMouseHoverEvent: Int = 21
 
     /// All constants indexed by their protocol names.
-    public static let values: [String: Int] = [
+    static let values: [String: Int] = [
         "INJECT_KEYCODE": injectKeycode,
         "INJECT_TEXT": injectText,
         "INJECT_TOUCH_EVENT": injectTouchEvent,
@@ -92,7 +92,7 @@ public enum MotionEvent {
     public static let buttonTertiary: Int = 4
 
     /// All constants indexed by their protocol names.
-    public static let values: [String: Int] = [
+    static let values: [String: Int] = [
         "ACTION_DOWN": actionDown,
         "ACTION_UP": actionUp,
         "ACTION_MOVE": actionMove,
@@ -714,7 +714,7 @@ public enum AndroidKey {
     public static let keycodeSoftSleep: Int = 276
 
     /// All constants indexed by their protocol names.
-    public static let values: [String: Int] = [
+    static let values: [String: Int] = [
         "ACTION_DOWN": actionDown,
         "ACTION_UP": actionUp,
         "META_NONE": metaNone,

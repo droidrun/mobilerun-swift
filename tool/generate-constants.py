@@ -25,7 +25,7 @@ for key, (name, documentation) in groups.items():
         output += [f"    /// Wire constant `{wire}`.",
                    f"    public static let {swift_name(wire)}: Int = {value}", ""]
     output += ["    /// All constants indexed by their protocol names.",
-               "    public static let values: [String: Int] = ["]
+               "    static let values: [String: Int] = ["]
     output += [f'        "{wire}": {swift_name(wire)},' for wire in fixture[key]]
     output += ["    ]", "}", ""]
 output += ["/// Layout-independent keyboard event codes mapped to Android keycodes.",

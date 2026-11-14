@@ -9,17 +9,17 @@ public enum ControlMessages {
     /// Touch packet. The pointer ID is big-endian; all other multibyte fields are little-endian.
     /// A mouse uses pointer ID -1. Pressure defaults to 1 and is scaled by 65535.
     public static func touch(
-        action: Int, pointerId: Int64, videoWidth: Int, videoHeight: Int,
+        action: Int, pointerID: Int64, videoWidth: Int, videoHeight: Int,
         x: Double, y: Double, pressure: Double = 1, actionButton: Int = 0, buttons: Int = 0
     ) -> Data {
         var out = ByteWriter()
         out.integer(UInt8(ControlMessageType.injectTouchEvent))
         out.integer(UInt8(truncatingIfNeeded: action))
-        out.integer(pointerId.bigEndian)
+        out.bigEndian(pointerID)
         out.position(x: x, y: y, width: videoWidth, height: videoHeight)
-        out.integer(UInt16(truncatingIfNeeded: jsInteger(jsRound(pressure * 65535))).littleEndian)
-        out.integer(Int32(truncatingIfNeeded: actionButton).littleEndian)
-        out.integer(Int32(truncatingIfNeeded: buttons).littleEndian)
+        out.littleEndian(UInt16(truncatingIfNeeded: jsInt32(jsRound(pressure * 65535))))
+        out.littleEndian(Int32(truncatingIfNeeded: actionButton))
+        out.littleEndian(Int32(truncatingIfNeeded: buttons))
         return out.data
     }
 
@@ -32,9 +32,9 @@ public enum ControlMessages {
         var out = ByteWriter()
         out.integer(UInt8(ControlMessageType.injectScrollEvent))
         out.position(x: x, y: y, width: videoWidth, height: videoHeight)
-        out.integer(scrollValue(hscrollTicks).littleEndian)
-        out.integer(scrollValue(vscrollTicks).littleEndian)
-        out.integer(Int32(truncatingIfNeeded: buttons).littleEndian)
+        out.littleEndian(scrollValue(hscrollTicks))
+        out.littleEndian(scrollValue(vscrollTicks))
+        out.littleEndian(Int32(truncatingIfNeeded: buttons))
         return out.data
     }
 
@@ -45,7 +45,7 @@ public enum ControlMessages {
         var out = ByteWriter()
         out.integer(UInt8(ControlMessageType.injectMouseHoverEvent))
         out.position(x: x, y: y, width: videoWidth, height: videoHeight)
-        out.integer(Int32(truncatingIfNeeded: buttons).littleEndian)
+        out.littleEndian(Int32(truncatingIfNeeded: buttons))
         return out.data
     }
 
@@ -54,19 +54,19 @@ public enum ControlMessages {
         var out = ByteWriter()
         out.integer(UInt8(ControlMessageType.injectKeycode))
         out.integer(UInt8(truncatingIfNeeded: action))
-        out.integer(Int32(truncatingIfNeeded: keycode).littleEndian)
-        out.integer(Int32(truncatingIfNeeded: `repeat`).littleEndian)
-        out.integer(Int32(truncatingIfNeeded: metaState).littleEndian)
+        out.littleEndian(Int32(truncatingIfNeeded: keycode))
+        out.littleEndian(Int32(truncatingIfNeeded: `repeat`))
+        out.littleEndian(Int32(truncatingIfNeeded: metaState))
         return out.data
     }
 
     /// UTF-8 text without normalization, prefixed by its little-endian byte count.
     /// Swift repairs unpaired UTF-16 surrogates to U+FFFD when constructing a String.
-    public static func text(text: String) -> Data {
+    public static func text(_ text: String) -> Data {
         let payload = Data(text.utf8)
         var out = ByteWriter()
         out.integer(UInt8(ControlMessageType.injectText))
-        out.integer(UInt32(truncatingIfNeeded: payload.count).littleEndian)
+        out.littleEndian(UInt32(truncatingIfNeeded: payload.count))
         out.data.append(payload)
         return out.data
     }
@@ -77,22 +77,26 @@ public enum ControlMessages {
         let payload = Data(text.utf8)
         var out = ByteWriter()
         out.integer(UInt8(ControlMessageType.setClipboard))
-        out.integer(UInt64(0))
+        out.bigEndian(UInt64(0))
         out.integer(UInt8(paste ? 1 : 0))
-        out.integer(UInt32(truncatingIfNeeded: payload.count).bigEndian)
+        out.bigEndian(UInt32(truncatingIfNeeded: payload.count))
         out.data.append(payload)
         return out.data
     }
 
     private static func scrollValue(_ ticks: Double) -> Int16 {
+        // Swift min/max do not propagate NaN like Math.min/Math.max; preserve it for DataView.
         let clamped = ticks.isNaN ? ticks : max(-1, min(1, ticks / 16))
         let scaled = jsRound(clamped * 32768)
-        return Int16(truncatingIfNeeded: jsInteger(scaled >= 32767 ? 32767 : scaled))
+        return Int16(truncatingIfNeeded: jsInt32(min(scaled, 32767)))
     }
 }
 
 private struct ByteWriter {
     var data = Data()
+
+    mutating func littleEndian<T: FixedWidthInteger>(_ value: T) { integer(value.littleEndian) }
+    mutating func bigEndian<T: FixedWidthInteger>(_ value: T) { integer(value.bigEndian) }
 
     mutating func integer<T: FixedWidthInteger>(_ value: T) {
         var value = value
@@ -100,10 +104,10 @@ private struct ByteWriter {
     }
 
     mutating func position(x: Double, y: Double, width: Int, height: Int) {
-        integer(Int32(truncatingIfNeeded: jsInteger(jsRound(x))).littleEndian)
-        integer(Int32(truncatingIfNeeded: jsInteger(jsRound(y))).littleEndian)
-        integer(UInt16(truncatingIfNeeded: width).littleEndian)
-        integer(UInt16(truncatingIfNeeded: height).littleEndian)
+        littleEndian(jsInt32(jsRound(x)))
+        littleEndian(jsInt32(jsRound(y)))
+        littleEndian(UInt16(truncatingIfNeeded: width))
+        littleEndian(UInt16(truncatingIfNeeded: height))
     }
 }
 
@@ -114,7 +118,8 @@ private func jsRound(_ value: Double) -> Double {
 }
 
 // Only the low 32 bits reach the wire. Reduce before converting to avoid Swift integer traps.
-private func jsInteger(_ value: Double) -> Int64 {
+private func jsInt32(_ value: Double) -> Int32 {
     guard value.isFinite else { return 0 }
-    return Int64(value.rounded(.towardZero).truncatingRemainder(dividingBy: 4_294_967_296))
+    return Int32(truncatingIfNeeded:
+        Int64(value.rounded(.towardZero).truncatingRemainder(dividingBy: 4_294_967_296)))
 }

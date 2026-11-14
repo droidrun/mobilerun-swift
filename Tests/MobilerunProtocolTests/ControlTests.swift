@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
-import MobilerunProtocol
+@testable import MobilerunProtocol
 import Testing
 
 @Test("Control packet bytes", arguments: try controlCases())
@@ -12,7 +12,7 @@ func controlPacket(_ item: ControlCase) throws {
     switch item.file {
     case "touch.json":
         bytes = try ControlMessages.touch(
-            action: #require(a.action), pointerId: #require(a.pointerId),
+            action: #require(a.action), pointerID: #require(a.pointerId),
             videoWidth: #require(a.videoWidth), videoHeight: #require(a.videoHeight),
             x: #require(a.x), y: #require(a.y), pressure: #require(a.pressure),
             actionButton: #require(a.actionButton), buttons: #require(a.buttons))
@@ -22,23 +22,28 @@ func controlPacket(_ item: ControlCase) throws {
             x: #require(a.x), y: #require(a.y), hscrollTicks: #require(a.hscrollTicks),
             vscrollTicks: #require(a.vscrollTicks), buttons: #require(a.buttons))
     case "hover.json":
-        bytes = try ControlMessages.hover(videoWidth: #require(a.videoWidth), videoHeight: #require(a.videoHeight),
-                                         x: #require(a.x), y: #require(a.y), buttons: #require(a.buttons))
+        bytes = try ControlMessages.hover(
+            videoWidth: #require(a.videoWidth), videoHeight: #require(a.videoHeight),
+            x: #require(a.x), y: #require(a.y), buttons: #require(a.buttons))
     case "keycode.json":
         bytes = try ControlMessages.keycode(action: #require(a.action), keycode: #require(a.keycode),
                                            repeat: #require(a.repeat), metaState: #require(a.metaState))
-    case "text.json": bytes = try ControlMessages.text(text: #require(a.text))
-    case "set-clipboard.json": bytes = try ControlMessages.setClipboard(text: #require(a.text), paste: #require(a.paste))
+    case "text.json": bytes = try ControlMessages.text( #require(a.text))
+    case "set-clipboard.json":
+        bytes = try ControlMessages.setClipboard(text: #require(a.text), paste: #require(a.paste))
     default: Issue.record("Unhandled control fixture \(item.file)"); return
     }
     #expect(hex(bytes) == item.hex)
 }
 
-@Test("Unpaired UTF-16 surrogates encode as U+FFFD", arguments: [[UInt16(0xd800)], [UInt16(0xdc00)], [UInt16(0xd800), 0x61, 0xdc00]])
-func surrogateReplacement(_ units: [UInt16]) {
+@Test("Unpaired UTF-16 surrogates encode as U+FFFD", arguments: [
+    ([UInt16(0xd800)], "efbfbd"),
+    ([UInt16(0xdc00)], "efbfbd"),
+    ([UInt16(0xd800), 0x61, 0xdc00], "efbfbd61efbfbd"),
+])
+func surrogateReplacement(units: [UInt16], expected: String) {
     let text = String(decoding: units, as: UTF16.self)
-    let expected = units.count == 1 ? "efbfbd" : "efbfbd61efbfbd"
-    #expect(hex(ControlMessages.text(text: text).dropFirst(5)) == expected)
+    #expect(hex(ControlMessages.text(text).dropFirst(5)) == expected)
     #expect(hex(ControlMessages.setClipboard(text: text).dropFirst(14)) == expected)
 }
 

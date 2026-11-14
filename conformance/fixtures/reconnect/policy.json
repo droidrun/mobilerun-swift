@@ -1,7 +1,5 @@
 {
   "max_attempts": 6,
-  "ws_open_timeout_ms": 15000,
-  "rtc_config_timeout_ms": 15000,
   "connect_timeout_ms": 45000,
   "stability_ms": 30000,
   "backoff": {
@@ -133,6 +131,6 @@
     }
   ],
   "invariants": [
-    "connect_timeout_ms > ws_open_timeout_ms + rtc_config_timeout_ms"
+    "connect_timeout_ms > ws_open_timeout_ms + rtc_config_timeout_ms (the two handshake timeouts are defined in signalling/sequence.json timing)"
   ]
 }

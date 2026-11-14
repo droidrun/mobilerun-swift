@@ -4,7 +4,7 @@
 import Foundation
 
 /// An outgoing signalling message. Candidate null fields are always written explicitly.
-public enum ClientMessage: Sendable, Equatable, Codable {
+public enum ClientMessage: Sendable, Equatable {
     /// Requests ICE configuration and always opts into live credential refresh.
     case requestRTCConfiguration(sessionID: String)
     /// Initial or ICE-restart SDP offer.
@@ -27,7 +27,7 @@ public enum ClientMessage: Sendable, Equatable, Codable {
         /// Stream session identifier.
         public let sessionID: String
 
-        fileprivate init(url: String, sessionID: String) {
+        private init(url: String, sessionID: String) {
             self.url = url
             self.sessionID = sessionID
         }
@@ -42,46 +42,6 @@ public enum ClientMessage: Sendable, Equatable, Codable {
     /// Serializes the typed message to a JSON text frame.
     public func toJSON() throws -> String {
         try jsonText(object)
-    }
-
-    /// Decodes an existing wire message. Wire URLs have already been percent-decoded by their
-    /// sender; app-supplied URLs must use ``OpenURL/create(suppliedURL:sessionID:)`` instead.
-    public init(from decoder: any Decoder) throws {
-        let fields = try decoder.container(keyedBy: Keys.self)
-        let type = try fields.decode(String.self, forKey: .type)
-        func sessionID() throws -> String { try fields.decode(String.self, forKey: .sessionId) }
-        switch type {
-        case "requestRtcConfiguration":
-            guard try fields.decode(Bool.self, forKey: .supportsLiveRtcRefresh) else {
-                throw DecodingError.dataCorruptedError(forKey: .supportsLiveRtcRefresh, in: fields,
-                                                        debugDescription: "Live refresh must be enabled")
-            }
-            self = try .requestRTCConfiguration(sessionID: sessionID())
-        case "offer":
-            self = try .offer(sdp: fields.decode(String.self, forKey: .sdp), sessionID: sessionID())
-        case "candidate":
-            self = try .candidate(candidate: fields.decode(String.self, forKey: .candidate),
-                                  sdpMid: fields.decodeIfPresent(String.self, forKey: .sdpMid),
-                                  sdpMLineIndex: fields.decodeIfPresent(Int.self, forKey: .sdpMLineIndex),
-                                  sessionID: sessionID())
-        case "keepAlive": self = try .keepAlive(sessionID: sessionID())
-        case "requestFrame": self = try .requestFrame(sessionID: sessionID())
-        case "openUrl":
-            self = try .openURL(OpenURL(url: fields.decode(String.self, forKey: .url), sessionID: sessionID()))
-        case "screenshot": self = try .screenshot(id: fields.decode(String.self, forKey: .id))
-        default:
-            throw DecodingError.dataCorruptedError(forKey: .type, in: fields,
-                                                    debugDescription: "Unknown client message type")
-        }
-    }
-
-    /// Encodes the typed message using the wire field names.
-    public func encode(to encoder: any Encoder) throws {
-        try JSONValue.object(object).encode(to: encoder)
-    }
-
-    private enum Keys: String, CodingKey {
-        case type, sessionId, supportsLiveRtcRefresh, sdp, candidate, sdpMid, sdpMLineIndex, url, id
     }
 
     private var object: [String: JSONValue] {

@@ -19,7 +19,7 @@ public enum ReconnectPolicy {
     /// Delay for the one-based attempt with ±25% jitter, rounded half toward positive infinity.
     /// Values below one count as one. Supply random in [0, 1); 0.5 disables jitter.
     public static func delayMs(attempt: Int, random: Double) -> Int {
-        let exponent = min(5, max(1, attempt) - 1)
+        let exponent = max(1, attempt) - 1
         let base = min(Double(baseDelayMs) * pow(2, Double(exponent)), Double(maxDelayMs))
         return Int(floor(base * (0.75 + random * 0.5) + 0.5))
     }

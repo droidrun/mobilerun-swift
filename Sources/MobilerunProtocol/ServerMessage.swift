@@ -58,22 +58,8 @@ public enum ServerMessage: Sendable, Equatable {
         /// Typed ICE servers, or nil if absent or malformed. An empty array is a valid refresh.
         public var iceServers: [ICEServer]? {
             guard case .array(let entries) = configuration?["iceServers"] else { return nil }
-            var result: [ICEServer] = []
-            for entry in entries {
-                guard let object = entry.object else { return nil }
-                let urls: [String]
-                if let url = object["urls"]?.string { urls = [url] }
-                else if case .array(let values) = object["urls"] {
-                    urls = values.compactMap(\.string)
-                    guard urls.count == values.count else { return nil }
-                } else { return nil }
-                guard validOptionalString(object["username"]), validOptionalString(object["credential"]) else {
-                    return nil
-                }
-                result.append(ICEServer(urls: urls, username: object["username"]?.string,
-                                        credential: object["credential"]?.string))
-            }
-            return result
+            let servers = entries.compactMap(ICEServer.init)
+            return servers.count == entries.count ? servers : nil
         }
     }
 
@@ -85,6 +71,21 @@ public enum ServerMessage: Sendable, Equatable {
         public let username: String?
         /// Optional TURN credential.
         public let credential: String?
+
+        fileprivate init?(_ value: JSONValue) {
+            guard let object = value.object else { return nil }
+            if let url = object["urls"]?.string { urls = [url] }
+            else if case .array(let values) = object["urls"] {
+                let strings = values.compactMap(\.string)
+                guard strings.count == values.count else { return nil }
+                urls = strings
+            } else { return nil }
+            guard validOptionalString(object["username"]), validOptionalString(object["credential"]) else {
+                return nil
+            }
+            username = object["username"]?.string
+            credential = object["credential"]?.string
+        }
     }
 
     /// Parsed successful screenshot reply.
@@ -106,43 +107,56 @@ public enum ServerMessage: Sendable, Equatable {
     /// Parses a server frame. Invalid JSON (including literal null) fails startup only while
     /// awaiting configuration. Other valid message types are ignored during that phase.
     public static func parse(_ text: String, phase: SignallingPhase) -> ServerFrame {
-        let invalid: ServerFrame = phase == .awaitingRTCConfiguration ? .startupFailure : .ignored
-        guard let json = try? JSONDecoder().decode(JSONValue.self, from: Data(text.utf8)), json != .null else {
-            return invalid
+        let malformedFrame: ServerFrame = phase == .awaitingRTCConfiguration ? .startupFailure : .ignored
+        let data = repairingJSONSurrogates(Data(text.utf8))
+        let decoder = JSONDecoder()
+        // Decode only the discriminator first. Foundation can scan valid JSON numbers like 1e999
+        // without converting them to Double, so unrelated startup frames are still ignored.
+        // Known difference: Foundation keeps the first duplicate object key; JSON.parse keeps the last.
+        guard let header = try? decoder.decode(FrameHeader.self, from: data), !header.isNull else {
+            return malformedFrame
         }
-        guard let object = json.object else { return .ignored }
-        let type = object["type"]?.string
-        if phase == .awaitingRTCConfiguration, type != "rtcConfiguration" { return .ignored }
-        switch type {
+        guard header.isObject else { return .ignored }
+        if phase == .awaitingRTCConfiguration, header.type != "rtcConfiguration" { return .ignored }
+        guard let json = try? decoder.decode(JSONValue.self, from: data), let object = json.object else {
+            return header.type == "rtcConfiguration" ? malformedFrame : .ignored
+        }
+        switch header.type {
         case "answer":
-            guard let sdp = object["sdp"]?.string else { return invalid }
+            guard let sdp = object["sdp"]?.string else { return .ignored }
             return .message(.answer(Answer(sdp: sdp)))
         case "candidate":
             guard let candidate = object["candidate"]?.string,
-                  validOptionalString(object["sdpMid"]) else { return invalid }
+                  validOptionalString(object["sdpMid"]) else { return .ignored }
             let index: Int?
             if let value = object["sdpMLineIndex"], value != .null {
-                guard case .number(let number) = value, let integer = Int(exactly: number) else { return invalid }
+                guard case .number(let number) = value, let integer = Int(exactly: number) else {
+                    return .ignored
+                }
                 index = integer
             } else { index = nil }
             return .message(.candidate(Candidate(candidate: candidate, sdpMid: object["sdpMid"]?.string,
                                                  sdpMLineIndex: index)))
         case "rtcConfiguration":
             let config = object["rtcConfiguration"]
-            guard config == nil || config == .null || config?.object != nil else { return invalid }
+            guard config == nil || config == .null || config?.object != nil else {
+                return malformedFrame
+            }
             return .message(.rtcConfiguration(RTCConfiguration(configuration: config?.object)))
         case "screenshot":
-            guard let id = object["id"]?.string, let uri = object["dataUri"]?.string else { return invalid }
+            guard let id = object["id"]?.string, let uri = object["dataUri"]?.string else { return .ignored }
             return .message(.screenshot(Screenshot(id: id, dataURI: uri)))
         case "screenshotError":
-            guard let id = object["id"]?.string, let message = object["message"]?.string else { return invalid }
+            guard let id = object["id"]?.string, let message = object["message"]?.string else {
+                return .ignored
+            }
             return .message(.screenshotError(ScreenshotError(id: id, message: message)))
         default: return .ignored
         }
     }
 
-    /// Re-serializes the recognized message as JSON; unknown top-level fields are omitted.
-    public func toJSON() throws -> String {
+    // Re-serialize recognized fields for conformance comparisons.
+    func toJSON() throws -> String {
         let object: [String: JSONValue]
         switch self {
         case .answer(let answer):
@@ -153,12 +167,16 @@ public enum ServerMessage: Sendable, Equatable {
                       "sdpMLineIndex": candidate.sdpMLineIndex.map { .number(Double($0)) } ?? .null]
         case .rtcConfiguration(let config):
             var fields: [String: JSONValue] = ["type": .string("rtcConfiguration")]
-            if let configuration = config.configuration { fields["rtcConfiguration"] = .object(configuration) }
+            if let configuration = config.configuration {
+                fields["rtcConfiguration"] = .object(configuration)
+            }
             object = fields
         case .screenshot(let screenshot):
-            object = ["type": .string("screenshot"), "id": .string(screenshot.id), "dataUri": .string(screenshot.dataURI)]
+            object = ["type": .string("screenshot"), "id": .string(screenshot.id),
+                      "dataUri": .string(screenshot.dataURI)]
         case .screenshotError(let error):
-            object = ["type": .string("screenshotError"), "id": .string(error.id), "message": .string(error.message)]
+            object = ["type": .string("screenshotError"), "id": .string(error.id),
+                      "message": .string(error.message)]
         }
         return try jsonText(object)
     }
@@ -166,4 +184,20 @@ public enum ServerMessage: Sendable, Equatable {
 
 private func validOptionalString(_ value: JSONValue?) -> Bool {
     value == nil || value == .null || value?.string != nil
+}
+
+// A discriminator-only decode avoids converting irrelevant numeric fields during startup.
+private struct FrameHeader: Decodable {
+    let isNull: Bool
+    let isObject: Bool
+    let type: String?
+
+    private enum Keys: String, CodingKey { case type }
+
+    init(from decoder: any Decoder) throws {
+        isNull = try decoder.singleValueContainer().decodeNil()
+        let object = try? decoder.container(keyedBy: Keys.self)
+        isObject = object != nil
+        type = try? object?.decode(String.self, forKey: .type)
+    }
 }

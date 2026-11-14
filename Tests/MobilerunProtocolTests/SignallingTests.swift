@@ -2,100 +2,165 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
-import MobilerunProtocol
+@testable import MobilerunProtocol
 import Testing
 
-@Test("Signalling message objects", arguments: try signallingCases())
-func signallingMessage(_ item: SignallingCase) throws {
+@Test("Server signalling objects", arguments: try signallingCases(prefix: "server-"))
+func serverMessage(_ item: SignallingCase) throws {
+    let input = String(decoding: try JSONEncoder().encode(item.json), as: UTF8.self)
+    guard case .message(let message) = ServerMessage.parse(input, phase: .established) else {
+        Issue.record("Expected parsed server message: \(item.testDescription)")
+        return
+    }
+    #expect(try jsonObject(message.toJSON()) == item.json)
+}
+
+@Test("Client signalling objects", arguments: try signallingCases(prefix: "client-"))
+func clientMessage(_ item: SignallingCase) throws {
     let object = item.json
-    let input = String(decoding: try JSONEncoder().encode(object), as: UTF8.self)
-    let output: String
-    if item.file.hasPrefix("server-") {
-        guard case .message(let message) = ServerMessage.parse(input, phase: .established) else {
-            Issue.record("Expected parsed server message: \(item.testDescription)"); return
-        }
-        output = try message.toJSON()
-        if case .rtcConfiguration(let config) = message {
-            if item.name == "initial reply or refresh" {
-                #expect(config.iceServers?.count == 2)
-                #expect(config.iceServers?.last?.username == "1700000000:user")
-            } else { #expect(config.iceServers == nil) }
-        }
-    } else {
-        let message: ClientMessage
-        func session() throws -> String { try #require(object["sessionId"]?.stringValue) }
-        switch object["type"]?.stringValue {
-        case "requestRtcConfiguration": message = try .requestRTCConfiguration(sessionID: session())
-        case "offer": message = try .offer(sdp: #require(object["sdp"]?.stringValue), sessionID: session())
-        case "candidate":
-            message = try .candidate(candidate: #require(object["candidate"]?.stringValue),
-                                     sdpMid: object["sdpMid"]?.stringValue,
-                                     sdpMLineIndex: object["sdpMLineIndex"]?.intValue, sessionID: session())
-        case "keepAlive": message = try .keepAlive(sessionID: session())
-        case "requestFrame": message = try .requestFrame(sessionID: session())
-        case "openUrl":
-            message = try .openURL(.create(suppliedURL: "https%3A%2F%2Fexample.test%2Fpath%3Fq%3Da%20b", sessionID: session()))
-        case "screenshot": message = try .screenshot(id: #require(object["id"]?.stringValue))
-        default: Issue.record("Unhandled client fixture \(item.file)"); return
-        }
-        let parsed = try JSONDecoder().decode(ClientMessage.self, from: Data(input.utf8))
-        #expect(parsed == message)
-        #expect(try jsonObject(String(decoding: JSONEncoder().encode(parsed), as: UTF8.self)) == object)
-        output = try message.toJSON()
+    let message: ClientMessage
+    func session() throws -> String { try #require(object["sessionId"]?.stringValue) }
+    switch object["type"]?.stringValue {
+    case "requestRtcConfiguration": message = try .requestRTCConfiguration(sessionID: session())
+    case "offer": message = try .offer(sdp: #require(object["sdp"]?.stringValue), sessionID: session())
+    case "candidate":
+        message = try .candidate(
+            candidate: #require(object["candidate"]?.stringValue),
+            sdpMid: object["sdpMid"]?.stringValue,
+            sdpMLineIndex: object["sdpMLineIndex"]?.intValue, sessionID: session())
+    case "keepAlive": message = try .keepAlive(sessionID: session())
+    case "requestFrame": message = try .requestFrame(sessionID: session())
+    case "openUrl":
+        let url = try #require(object["url"]?.stringValue)
+        let encoded = try #require(url.addingPercentEncoding(withAllowedCharacters: .alphanumerics))
+        message = try .openURL(.create(suppliedURL: encoded, sessionID: session()))
+    case "screenshot": message = try .screenshot(id: #require(object["id"]?.stringValue))
+    default: Issue.record("Unhandled client fixture \(item.file)"); return
     }
-    #expect(try jsonObject(output) == object)
+    #expect(try jsonObject(message.toJSON()) == object)
 }
 
-@Test("Phase-dependent invalid JSON and unknown types")
-func frameRules() {
-    for text in ["not json", "", "{\"type\":", "null"] {
-        #expect(ServerMessage.parse(text, phase: .awaitingRTCConfiguration) == .startupFailure)
-        #expect(ServerMessage.parse(text, phase: .established) == .ignored)
-    }
-    for text in ["42", "[]", "true", "{}", "{\"type\":7}", "{\"type\":\"future\"}", "{\"type\":\"answer\",\"sdp\":\"x\"}"] {
-        #expect(ServerMessage.parse(text, phase: .awaitingRTCConfiguration) == .ignored)
-    }
-    for text in ["{\"type\":\"answer\"}", "{\"type\":\"screenshot\",\"id\":1,\"dataUri\":\"x\"}",
-                 "{\"type\":\"screenshotError\",\"id\":\"a\"}", "{\"type\":\"future\"}",
-                 "{\"type\":\"candidate\",\"candidate\":\"x\",\"sdpMLineIndex\":0.5}"] {
-        #expect(ServerMessage.parse(text, phase: .established) == .ignored)
-    }
-    #expect(ServerMessage.parse("{\"type\":\"rtcConfiguration\",\"rtcConfiguration\":\"bad\"}", phase: .awaitingRTCConfiguration) == .startupFailure)
-    #expect(ServerMessage.parse("{\"type\":\"answer\",\"sdp\":\"x\",\"extra\":1}", phase: .established)
-            == ServerMessage.parse("{\"type\":\"answer\",\"sdp\":\"x\"}", phase: .established))
+@Test("Malformed JSON follows the connection phase", arguments: ["not json", "", "{\"type\":", "null"])
+func malformedFrames(_ text: String) {
+    #expect(ServerMessage.parse(text, phase: .awaitingRTCConfiguration) == .startupFailure)
+    #expect(ServerMessage.parse(text, phase: .established) == .ignored)
 }
 
-@Test("Configuration preserves extension fields and handles refresh ICE servers")
-func configurationRules() throws {
-    for phase in [SignallingPhase.awaitingRTCConfiguration, .established] {
-        for config in ["", ",\"rtcConfiguration\":null", ",\"rtcConfiguration\":{}"] {
-            guard case .message(.rtcConfiguration(let message)) = ServerMessage.parse("{\"type\":\"rtcConfiguration\"\(config)}", phase: phase) else {
-                Issue.record("Configuration missing ICE servers should parse"); continue
-            }
-            #expect(message.iceServers == nil)
-        }
-        let text = "{\"type\":\"rtcConfiguration\",\"rtcConfiguration\":{\"iceServers\":[],\"iceTransportPolicy\":\"relay\"}}"
-        guard case .message(let message) = ServerMessage.parse(text, phase: phase),
-              case .rtcConfiguration(let config) = message else { Issue.record("Expected configuration"); continue }
-        #expect(config.iceServers == [])
-        #expect(try jsonObject(message.toJSON()) == jsonObject(text))
+@Test("Startup ignores valid frames of other types", arguments: [
+    "42", "[]", "true", "{}", #"{"type":7}"#, #"{"type":"future"}"#,
+    #"{"type":"answer","sdp":"x"}"#, #"{"type":"future","extra":"\ud800"}"#,
+    #"{"type":"future","extra":1e999}"#, #"{"type":"answer","sdp":1e999}"#,
+    #"{"type":1e999}"#, "1e999", "[1e999]",
+])
+func ignoredStartupFrames(_ text: String) {
+    #expect(ServerMessage.parse(text, phase: .awaitingRTCConfiguration) == .ignored)
+}
+
+@Test("Established sessions ignore unknown or unusable frames", arguments: [
+    #"{"type":"answer"}"#, #"{"type":"screenshot","id":1,"dataUri":"x"}"#,
+    #"{"type":"screenshotError","id":"a"}"#, #"{"type":"future"}"#,
+    #"{"type":"candidate","candidate":"x","sdpMLineIndex":0.5}"#,
+    #"{"type":"future","extra":1e999}"#,
+])
+func ignoredEstablishedFrames(_ text: String) {
+    #expect(ServerMessage.parse(text, phase: .established) == .ignored)
+}
+
+@Test("Unusable configuration follows the connection phase", arguments: [
+    #"{"type":"rtcConfiguration","rtcConfiguration":"bad"}"#,
+    #"{"type":"rtcConfiguration","rtcConfiguration":{"extra":1e999}}"#,
+])
+func unusableConfiguration(_ text: String) {
+    #expect(ServerMessage.parse(text, phase: .awaitingRTCConfiguration) == .startupFailure)
+    #expect(ServerMessage.parse(text, phase: .established) == .ignored)
+}
+
+@Test("Unknown fields are omitted from known messages")
+func unknownFields() throws {
+    let text = #"{"type":"answer","sdp":"x","extra":1}"#
+    guard case .message(let message) = ServerMessage.parse(text, phase: .established) else {
+        Issue.record("Expected answer"); return
     }
-    for (servers, valid) in [("[{\"urls\":\"stun:example.test\"}]", true),
-                             ("[{\"urls\":[\"stun:example.test\"]}]", true),
-                             ("[{\"urls\":[1]}]", false), ("[null]", false), ("{}", false)] {
-        let text = "{\"type\":\"rtcConfiguration\",\"rtcConfiguration\":{\"iceServers\":\(servers)}}"
-        guard case .message(.rtcConfiguration(let config)) = ServerMessage.parse(text, phase: .established) else {
-            Issue.record("Expected configuration"); continue
-        }
-        #expect((config.iceServers != nil) == valid)
-        if valid { #expect(config.iceServers?.first?.urls == ["stun:example.test"]) }
+    #expect(try jsonObject(message.toJSON()) == ["type": .string("answer"), "sdp": .string("x")])
+}
+
+@Test("Lone surrogate server strings parse with UTF-16 repair", arguments: [
+    (#"{"type":"answer","sdp":"\ud800"}"#, "�"),
+    (#"{"type":"answer","sdp":"a\udc00b"}"#, "a�b"),
+    (#"{"type":"answer","sdp":"\ud83d\ude00"}"#, "😀"),
+    (#"{"type":"answer","sdp":"\\ud800"}"#, #"\ud800"#),
+    (#"{"type":"answer","sdp":"\ud800\u0022\u005c"}"#, "�\"\\"),
+])
+func serverSurrogates(text: String, expected: String) {
+    guard case .message(.answer(let answer)) = ServerMessage.parse(text, phase: .established) else {
+        Issue.record("Expected repaired answer"); return
     }
+    #expect(answer.sdp == expected)
+}
+
+@Test("Surrogate escapes do not invalidate startup configuration")
+func startupSurrogates() {
+    let text = #"{"type":"rtcConfiguration","rtcConfiguration":{"label":"\ud800"}}"#
+    guard case .message(.rtcConfiguration(let config)) = ServerMessage.parse(
+        text, phase: .awaitingRTCConfiguration
+    ) else { Issue.record("Expected repaired configuration"); return }
+    #expect(config.configuration?["label"] == .string("�"))
+}
+
+@Test("Missing ICE servers are allowed", arguments: [
+    #"{"type":"rtcConfiguration"}"#,
+    #"{"type":"rtcConfiguration","rtcConfiguration":null}"#,
+    #"{"type":"rtcConfiguration","rtcConfiguration":{}}"#,
+], [SignallingPhase.awaitingRTCConfiguration, .established])
+func missingICEServers(text: String, phase: SignallingPhase) {
+    guard case .message(.rtcConfiguration(let config)) = ServerMessage.parse(text, phase: phase) else {
+        Issue.record("Expected configuration"); return
+    }
+    #expect(config.iceServers == nil)
+}
+
+@Test("Configuration keeps extension fields", arguments: [
+    SignallingPhase.awaitingRTCConfiguration, .established,
+])
+func configurationExtensions(_ phase: SignallingPhase) throws {
+    let text = #"{"type":"rtcConfiguration","rtcConfiguration":{"iceServers":[],"mode":"relay"}}"#
+    guard case .message(let message) = ServerMessage.parse(text, phase: phase),
+          case .rtcConfiguration(let config) = message else {
+        Issue.record("Expected configuration"); return
+    }
+    #expect(config.iceServers == [])
+    #expect(try jsonObject(message.toJSON()) == jsonObject(text))
+}
+
+@Test("ICE server entries normalize or reject malformed fields", arguments: [
+    (#"[{"urls":"stun:example.test"}]"#, ["stun:example.test"]),
+    (#"[{"urls":["stun:example.test"]}]"#, ["stun:example.test"]),
+    (#"[{"urls":[1]}]"#, nil), ("[null]", nil), ("{}", nil),
+    (#"[{"urls":"stun:example.test","username":1}]"#, nil),
+] as [(String, [String]?)])
+func iceServerEntries(servers: String, expected: [String]?) {
+    let text = "{\"type\":\"rtcConfiguration\",\"rtcConfiguration\":{\"iceServers\":\(servers)}}"
+    guard case .message(.rtcConfiguration(let config)) = ServerMessage.parse(text, phase: .established) else {
+        Issue.record("Expected configuration"); return
+    }
+    #expect(config.iceServers?.first?.urls == expected)
+}
+
+@Test("Configuration fixture exposes typed ICE servers")
+func typedICEServers() throws {
+    let example = try #require(signallingCases(prefix: "server-rtc-").first)
+    let text = String(decoding: try JSONEncoder().encode(example.json), as: UTF8.self)
+    guard case .message(.rtcConfiguration(let config)) = ServerMessage.parse(text, phase: .established) else {
+        Issue.record("Expected configuration"); return
+    }
+    #expect(config.iceServers?.count == 2)
+    #expect(config.iceServers?.last?.username == "1700000000:user")
 }
 
 @Test("Open URL uses decodeURIComponent semantics", arguments: [
     ("a+b%20c", "a+b c"), ("%25", "%"), ("%F0%9F%98%80", "😀"),
     ("%", "%"), ("%GG", "%GG"), ("%E9", "%E9"), ("%ED%A0%80", "%ED%A0%80"),
-    ("%C0%AF", "%C0%AF"), ("ok%20then%FF", "ok%20then%FF")
+    ("%C0%AF", "%C0%AF"), ("ok%20then%FF", "ok%20then%FF"),
 ])
 func openURL(input: String, expected: String) {
     #expect(ClientMessage.OpenURL.create(suppliedURL: input, sessionID: "s").url == expected)
@@ -109,15 +174,8 @@ func candidateNulls() throws {
     #expect(object["sdpMLineIndex"] == .null)
 }
 
-@Test("Decoded URL wire frames are not percent-decoded twice")
-func wireURL() throws {
-    let text = "{\"type\":\"openUrl\",\"url\":\"https://example.test/%2520%25\",\"sessionId\":\"s\"}"
-    let message = try JSONDecoder().decode(ClientMessage.self, from: Data(text.utf8))
-    #expect(try jsonObject(message.toJSON()) == jsonObject(text))
-}
-
-@Test("Signalling timing and channel contract equals sequence fixture")
-func sequenceContract() throws {
+@Test("Signalling timing equals the sequence fixture")
+func sequenceTiming() throws {
     let sequence = try fixture("signalling/sequence.json", as: [String: JSONValue].self)
     let timing = try #require(sequence["timing"]?.objectValue)
     let actual = ["ws_open_timeout_ms": SignallingTiming.wsOpenTimeoutMs,
@@ -128,13 +186,16 @@ func sequenceContract() throws {
                   "ice_restart_grace_ms": SignallingTiming.iceRestartGraceMs,
                   "screenshot_timeout_ms": SignallingTiming.screenshotTimeoutMs]
     #expect(timing == actual.mapValues { .number(Double($0)) })
+}
+
+@Test("Negotiated channels equal the sequence fixture", arguments: [DataChannels.control, DataChannels.hover])
+func sequenceChannels(_ channel: DataChannelSpec) throws {
+    let sequence = try fixture("signalling/sequence.json", as: [String: JSONValue].self)
     let channels = try #require(sequence["channels"]?.objectValue)
-    for channel in [DataChannels.control, DataChannels.hover] {
-        let expected = try #require(channels[channel.label]?.objectValue)
-        #expect(expected["label"] == .string(channel.label))
-        #expect(expected["id"] == .number(Double(channel.id)))
-        #expect(expected["negotiated"] == .bool(channel.negotiated))
-        #expect(expected["ordered"] == .bool(channel.ordered))
-        #expect(expected["maxRetransmits"] == (channel.maxRetransmits.map { .number(Double($0)) } ?? .null))
-    }
+    let expected = try #require(channels[channel.label]?.objectValue)
+    #expect(expected["label"] == .string(channel.label))
+    #expect(expected["id"] == .number(Double(channel.id)))
+    #expect(expected["negotiated"] == .bool(channel.negotiated))
+    #expect(expected["ordered"] == .bool(channel.ordered))
+    #expect(expected["maxRetransmits"] == (channel.maxRetransmits.map { .number(Double($0)) } ?? .null))
 }

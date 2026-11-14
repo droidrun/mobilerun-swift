@@ -7,26 +7,13 @@ permissions:
   contents: read
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Select newest stable Xcode
-        shell: bash
+      - run: swift --version
+      - name: Check generated constants
         run: |
-          python3 - <<'PY'
-          import pathlib
-          import re
-          import subprocess
-          candidates = []
-          for app in pathlib.Path('/Applications').glob('Xcode*.app'):
-              match = re.fullmatch(r'Xcode_(\d+(?:\.\d+)*).app', app.name)
-              if match:
-                  candidates.append((tuple(map(int, match[1].split('.'))), app))
-          if not candidates:
-              raise SystemExit('No stable Xcode installation found')
-          app = max(candidates)[1]
-          subprocess.run(['sudo', 'xcode-select', '-s', str(app / 'Contents/Developer')], check=True)
-          PY
-          swift --version
+          python3 tool/generate-constants.py
+          git diff --exit-code
       - run: swift build
       - run: swift test

@@ -3,13 +3,15 @@
 
 import MobilerunStreamCore
 
+@MainActor
 final class FakeClock: ReconnectScheduler {
+    @MainActor
     final class Task: ScheduledTask {
         let due: Int
         let order: Int
-        let action: () -> Void
+        let action: @MainActor () -> Void
         var cancelled = false
-        init(due: Int, order: Int, action: @escaping () -> Void) {
+        init(due: Int, order: Int, action: @escaping @MainActor () -> Void) {
             self.due = due
             self.order = order
             self.action = action
@@ -22,7 +24,7 @@ final class FakeClock: ReconnectScheduler {
     private var tasks: [Task] = []
     var pendingCount: Int { tasks.filter { !$0.cancelled }.count }
 
-    func schedule(delayMs: Int, action: @escaping () -> Void) -> any ScheduledTask {
+    func schedule(delayMs: Int, action: @escaping @MainActor () -> Void) -> any ScheduledTask {
         let task = Task(due: now + delayMs, order: nextOrder, action: action)
         nextOrder += 1
         tasks.append(task)

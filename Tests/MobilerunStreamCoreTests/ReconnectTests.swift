@@ -1,11 +1,14 @@
 // Copyright 2026 Mobilerun
 // SPDX-License-Identifier: Apache-2.0
 
-import MobilerunProtocol
+@testable import MobilerunProtocol
 import MobilerunStreamCore
 import Testing
 
-@Test("Reconnect scenario replay", arguments: try fixture("reconnect/scenarios.json", as: ScenarioFile.self).scenarios)
+@Test(
+    "Reconnect scenario replay",
+    arguments: try fixture("reconnect/scenarios.json", as: ScenarioFile.self).scenarios)
+@MainActor
 func replay(_ scenario: Scenario) {
     let clock = FakeClock()
     var healCalls = 0
@@ -15,20 +18,23 @@ func replay(_ scenario: Scenario) {
                                                onHeal: { healCalls += 1 })
     defer { controller.dispose() }
     var evaluated = 0
-    for i in 0...scenario.steps.count {
-        // Expectations occur before the next event, even when their timestamps are equal.
-        for expected in scenario.expect.filter({ $0.afterSteps == i }).sorted(by: { $0.atMs < $1.atMs }) {
+    func checkExpectations(after steps: Int) {
+        for expected in scenario.expect.filter({ $0.afterSteps == steps }).sorted(by: { $0.atMs < $1.atMs }) {
             clock.advance(to: expected.atMs)
             #expect(controller.snapshot.status.rawValue == expected.status)
             #expect(controller.snapshot.attempt == expected.attempt)
             #expect(healCalls == expected.healCalls)
             #expect(remountCalls == expected.remountCalls)
             if let deferred = expected.deferTargetChange {
-                #expect(controller.shouldDeferTargetChange() == deferred)
+                #expect(controller.shouldDeferTargetChange == deferred)
             }
             if let pending = expected.pendingTimers { #expect(clock.pendingCount == pending) }
             evaluated += 1
         }
+    }
+    for i in 0...scenario.steps.count {
+        // Check before the next event, even when timestamps are equal.
+        checkExpectations(after: i)
         guard i < scenario.steps.count else { break }
         let step = scenario.steps[i]
         clock.advance(to: step.atMs)
@@ -60,14 +66,17 @@ func policy() throws {
     #expect(ReconnectPolicy.stabilityMs == policy.stabilityMs)
     #expect(ReconnectPolicy.baseDelayMs == policy.backoff.baseDelayMs)
     #expect(ReconnectPolicy.maxDelayMs == policy.backoff.maxDelayMs)
-    #expect(SignallingTiming.wsOpenTimeoutMs == policy.wsOpenTimeoutMs)
-    #expect(SignallingTiming.rtcConfigTimeoutMs == policy.rtcConfigTimeoutMs)
-    #expect(ReconnectPolicy.connectTimeoutMs > SignallingTiming.wsOpenTimeoutMs + SignallingTiming.rtcConfigTimeoutMs)
+    let sequence = try fixture("signalling/sequence.json", as: [String: JSONValue].self)
+    let timing = try #require(sequence["timing"]?.objectValue)
+    let socketBudget = try #require(timing["ws_open_timeout_ms"]?.intValue)
+    let configurationBudget = try #require(timing["rtc_config_timeout_ms"]?.intValue)
+    #expect(ReconnectPolicy.connectTimeoutMs > socketBudget + configurationBudget)
     #expect(ReconnectPolicy.delayMs(attempt: Int.min, random: 0.5) == 1000)
     #expect(ReconnectPolicy.delayMs(attempt: Int.max, random: 0.5) == 30000)
 }
 
 @Test("Dispose permanently ignores every mutating entry point")
+@MainActor
 func disposedEntryPoints() {
     let clock = FakeClock()
     var callbackCount = 0
@@ -92,14 +101,17 @@ func disposedEntryPoints() {
     #expect(controller.snapshot == before)
     #expect(callbackCount == callbacksBefore)
     #expect(clock.pendingCount == 0)
+    #expect(!controller.shouldDeferTargetChange)
 }
 
 @Test("Snapshot callback follows state changes and stability reset")
+@MainActor
 func snapshotCallback() {
     let clock = FakeClock()
     var snapshots: [StreamReconnectSnapshot] = []
-    let controller = StreamReconnectController(scheduler: clock, random: { 0.5 },
-                                               onRemount: {}, onSnapshot: { snapshots.append($0) }, onHeal: {})
+    let controller = StreamReconnectController(
+        scheduler: clock, random: { 0.5 }, onRemount: {},
+        onSnapshot: { snapshots.append($0) }, onHeal: {})
     controller.attemptMounted()
     controller.handleFailure()
     controller.handleFailure()
@@ -113,6 +125,7 @@ func snapshotCallback() {
 }
 
 @Test("Fake clock fires equal deadlines in scheduling order, including newly scheduled actions")
+@MainActor
 func clockOrdering() {
     let clock = FakeClock()
     var order: [Int] = []

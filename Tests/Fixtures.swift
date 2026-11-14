@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
-import MobilerunProtocol
+@testable import MobilerunProtocol
 import Testing
 
 let fixturesURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-    .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("conformance/fixtures")
+    .deletingLastPathComponent().appendingPathComponent("conformance/fixtures")
 
 func fixture<T: Decodable>(_ path: String, as type: T.Type = T.self) throws -> T {
-    try JSONDecoder().decode(type, from: Data(contentsOf: fixturesURL.appendingPathComponent(path)))
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    let data = try Data(contentsOf: fixturesURL.appendingPathComponent(path))
+    return try decoder.decode(type, from: repairingJSONSurrogates(data))
 }
 
 struct ControlCase: Decodable, Sendable, CustomTestStringConvertible {
@@ -43,7 +46,8 @@ struct ControlCase: Decodable, Sendable, CustomTestStringConvertible {
 
 func controlCases() throws -> [ControlCase] {
     struct File: Decodable { let cases: [ControlCase] }
-    return try FileManager.default.contentsOfDirectory(atPath: fixturesURL.appendingPathComponent("control").path)
+    let directory = fixturesURL.appendingPathComponent("control").path
+    return try FileManager.default.contentsOfDirectory(atPath: directory)
         .sorted().flatMap { file in
             try fixture("control/\(file)", as: File.self).cases.map {
                 var item = $0
@@ -60,13 +64,14 @@ struct SignallingCase: Sendable, CustomTestStringConvertible {
     var testDescription: String { "\(file): \(name)" }
 }
 
-func signallingCases() throws -> [SignallingCase] {
+func signallingCases(prefix: String) throws -> [SignallingCase] {
     struct File: Decodable {
         struct Example: Decodable { let name: String; let json: [String: JSONValue] }
         let examples: [Example]
     }
-    return try FileManager.default.contentsOfDirectory(atPath: fixturesURL.appendingPathComponent("signalling").path)
-        .filter { $0.hasPrefix("client-") || $0.hasPrefix("server-") }.sorted().flatMap { file in
+    let directory = fixturesURL.appendingPathComponent("signalling").path
+    return try FileManager.default.contentsOfDirectory(atPath: directory)
+        .filter { $0.hasPrefix(prefix) }.sorted().flatMap { file in
             try fixture("signalling/\(file)", as: File.self).examples.map {
                 SignallingCase(file: file, name: $0.name, json: $0.json)
             }
@@ -84,3 +89,42 @@ func jsonObject(_ text: String) throws -> [String: JSONValue] {
 }
 
 func hex(_ data: Data) -> String { data.map { String(format: "%02x", $0) }.joined() }
+
+struct ScenarioFile: Decodable {
+    let scenarios: [Scenario]
+}
+
+struct Scenario: Decodable, Sendable, CustomTestStringConvertible {
+    let name: String
+    let random: Double
+    let steps: [Step]
+    let expect: [Expectation]
+    var testDescription: String { name }
+
+    struct Step: Decodable, Sendable { let atMs: Int; let event: String }
+    struct Expectation: Decodable, Sendable {
+        let atMs: Int
+        let afterSteps: Int
+        let status: String
+        let attempt: Int
+        let healCalls: Int
+        let remountCalls: Int
+        let deferTargetChange: Bool?
+        let pendingTimers: Int?
+    }
+}
+
+struct Policy: Decodable {
+    let maxAttempts: Int
+    let connectTimeoutMs: Int
+    let stabilityMs: Int
+    let backoff: Backoff
+    let delayCases: [Delay]
+    struct Backoff: Decodable { let baseDelayMs: Int; let maxDelayMs: Int }
+    struct Delay: Decodable, Sendable, CustomTestStringConvertible {
+        let attempt: Int
+        let random: Double
+        let delayMs: Int
+        var testDescription: String { "attempt \(attempt), random \(random)" }
+    }
+}

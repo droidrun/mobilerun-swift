@@ -125,6 +125,34 @@
         "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
       },
       "hex": "012c010000787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878"
+    },
+    {
+      "name": "lone high surrogate",
+      "args": {
+        "text": "\ud83d"
+      },
+      "hex": "0103000000efbfbd"
+    },
+    {
+      "name": "lone low surrogate inside text",
+      "args": {
+        "text": "a\udc00b"
+      },
+      "hex": "010500000061efbfbd62"
+    },
+    {
+      "name": "high surrogate at end after ascii",
+      "args": {
+        "text": "ok\ud83d"
+      },
+      "hex": "01050000006f6befbfbd"
+    },
+    {
+      "name": "reversed surrogate pair",
+      "args": {
+        "text": "\ude00\ud83d"
+      },
+      "hex": "0106000000efbfbdefbfbd"
     }
   ]
 }

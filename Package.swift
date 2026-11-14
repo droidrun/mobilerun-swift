@@ -13,9 +13,12 @@ let package = Package(
     ],
     targets: [
         .target(name: "MobilerunProtocol"),
-        .target(name: "MobilerunStreamCore", dependencies: ["MobilerunProtocol"]),
-        .testTarget(name: "MobilerunProtocolTests", dependencies: ["MobilerunProtocol"]),
-        .testTarget(name: "MobilerunStreamCoreTests", dependencies: ["MobilerunStreamCore"]),
+        .target(name: "MobilerunStreamCore"),
+        .testTarget(
+            name: "MobilerunConformanceTests",
+            dependencies: ["MobilerunProtocol", "MobilerunStreamCore"],
+            path: "Tests"
+        ),
     ],
     swiftLanguageModes: [.v6]
 )
