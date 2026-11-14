@@ -282,7 +282,10 @@ import SwiftUI
     @main struct ConnectionApp: App {
         @StateObject private var probe = ConnectionProbe()
         var body: some Scene {
-            WindowGroup { ConnectionView(session: probe.session, probe: probe) }
+            WindowGroup {
+                if ProcessInfo.processInfo.arguments.contains("--default-ui") { DefaultUIExample() }
+                else { ConnectionView(session: probe.session, probe: probe) }
+            }
         }
     }
 #else

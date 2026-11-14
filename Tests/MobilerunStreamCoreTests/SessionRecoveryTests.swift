@@ -221,7 +221,9 @@ func sessionFailurePaths(failure: SessionFailure) async throws {
     case .nilCredentials:
         h.returnNil = true
         h.engine.start()
-        await settle { h.engine.status == .reconnecting(attempt: 1) }
+        await settle { h.credentialCalls == 1 }
+        await drain()
+        #expect(h.engine.status == .connecting)
         #expect(h.sockets.isEmpty)
     case .offer:
         h.rejectOffer = true

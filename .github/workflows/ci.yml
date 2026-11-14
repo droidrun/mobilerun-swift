@@ -29,4 +29,19 @@ jobs:
           xcodebuild -scheme MobilerunStream-Package
           -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
           -parallel-testing-enabled NO -only-testing:MobilerunConformanceTests/NativeInputTests
+          -only-testing:MobilerunConformanceTests/ThemeTests
           -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO
+      - name: Test default UI on simulator
+        run: >-
+          xcodebuild -project Examples/Connection/Connection.xcodeproj
+          -scheme Connection -configuration Debug
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
+          -parallel-testing-enabled NO -only-testing:InputUITests/DefaultUITests ONLY_ACTIVE_ARCH=YES
+          -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO
+      - name: Test approval adaptive layout
+        run: >-
+          xcodebuild -project Examples/Connection/Connection.xcodeproj
+          -scheme Connection -configuration Debug
+          -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4),OS=latest'
+          -parallel-testing-enabled NO -only-testing:InputUITests/DefaultUITests/testApprovalAdaptiveWidth
+          ONLY_ACTIVE_ARCH=YES -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO

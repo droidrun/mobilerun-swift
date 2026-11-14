@@ -20,6 +20,8 @@ import MobilerunProtocol
     private let peers: @MainActor () -> any PeerTransport
     private let scheduler: any ReconnectScheduler
     private let random: () -> Double
+    private var hidden = false
+    private var credentialPoll: (any ScheduledTask)?
     private var started = false
     private var closed = false
     private var attempt: Attempt?
@@ -47,8 +49,10 @@ import MobilerunProtocol
         credentialTask?.cancel()
         let attempt = attempt
         let controller = controller
+        let credentialPoll = credentialPoll
         Task { @MainActor in
             controller?.dispose()
+            credentialPoll?.cancel()
             attempt?.release()
         }
     }
@@ -70,6 +74,19 @@ import MobilerunProtocol
         guard started, !closed, status == .unavailable else { return }
         cancelCredentials()
         controller?.retry()
+    }
+
+    package func setHidden(_ hidden: Bool) {
+        guard !closed, self.hidden != hidden else { return }
+        self.hidden = hidden
+        attempt?.keepAlive?.cancel()
+        attempt?.keepAlive = nil
+        if !hidden { attempt?.tickKeepAlive() }
+    }
+
+    package func handleWake() {
+        guard started, !closed else { return }
+        if credentialPoll != nil { mount() } else { controller?.handleWake() }
     }
 
     package func close() {
@@ -148,6 +165,8 @@ import MobilerunProtocol
     }
 
     private func cancelCredentials() {
+        credentialPoll?.cancel()
+        credentialPoll = nil
         credentialTask?.cancel()
         credentialTask = nil
     }
@@ -172,9 +191,13 @@ import MobilerunProtocol
                 guard !Task.isCancelled, let self, !self.closed else { return }
                 self.credentialTask = nil
                 guard let value else {
-                    self.controller?.handleFailure()
+                    self.controller?.disable()
+                    self.credentialPoll = self.scheduler.schedule(delayMs: 3000) { [weak self] in
+                        self?.mount()
+                    }
                     return
                 }
+                self.controller?.attemptMounted()
                 let attempt = Attempt(owner: self, scheduler: self.scheduler)
                 self.attempt = attempt
                 attempt.open(value)
@@ -294,6 +317,7 @@ import MobilerunProtocol
         }
 
         func tickKeepAlive() {
+            guard owner?.hidden == false else { return }
             keepAlive = scheduler.schedule(delayMs: SignallingTiming.keepAliveIntervalMs) { [weak self] in
                 guard let self, self.current else { return }
                 self.sendMessage(.keepAlive(sessionID: self.sessionID))

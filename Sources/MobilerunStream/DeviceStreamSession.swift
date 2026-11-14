@@ -68,6 +68,10 @@
         /// Starts a fresh cycle after the retry budget is exhausted.
         public func retry() { engine.retry() }
         public func close() { engine.close() }
+        /// Suspend keep-alives while hidden. The default UI manages this automatically.
+        public func setHidden(_ hidden: Bool) { engine.setHidden(hidden) }
+        /// Foreground/network recovery skips backoff or restarts an unavailable session.
+        public func handleWake() { engine.handleWake() }
         /// Updates received audio and the shared manual-audio gate. Muted sessions never activate audio.
         public func setMuted(_ muted: Bool) {
             self.muted = muted
@@ -92,6 +96,8 @@
                 self.videoSize = videoSize
                 engine.onStatus = { [weak self] in self?.status = $0 }
             }
+
+            func presentForTesting(_ status: StreamStatus) { self.status = status }
 
             func forceSignallingClose() { signalling?.forceClose() }
             func requestConfigurationRefresh() { engine.requestConfigurationRefresh() }

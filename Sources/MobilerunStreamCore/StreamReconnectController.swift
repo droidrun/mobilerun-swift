@@ -23,7 +23,7 @@ package struct StreamReconnectSnapshot: Sendable, Equatable {
 
 /// Main-actor cancellation handle for one scheduled action, usable by a main-actor host.
 @MainActor
-package protocol ScheduledTask {
+package protocol ScheduledTask: Sendable {
     /// Cancels the action; harmless if already fired or cancelled.
     func cancel()
 }
