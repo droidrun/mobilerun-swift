@@ -13,6 +13,7 @@ import SwiftUI
     @MainActor final class ConnectionProbe: ObservableObject {
         let session: DeviceStreamSession
         let controller = DeviceStreamViewController()
+        @Published var landscape = false
         private let fingers = (0..<10).map { _ in NSObject() }
         private var timer: Timer?
         private var hostPlayer: AVAudioPlayer?
@@ -131,12 +132,8 @@ import SwiftUI
                 }
                 mark("system requested")
             case "rotateView":
-                if let view = controller.view {
-                    view.bounds.size = CGSize(width: view.bounds.height, height: view.bounds.width)
-                    view.setNeedsLayout()
-                    view.layoutIfNeeded()
-                    mark("view rotated")
-                }
+                landscape.toggle()
+                mark("view rotated")
             case "mute":
                 session.setMuted(true)
                 auditHostAudio()
@@ -166,6 +163,7 @@ import SwiftUI
                 mark("tap rejected")
                 return
             }
+            mark("view bounds landscape=\(view.bounds.width > view.bounds.height)")
             let swapped = size.rotation % 180 != 0
             let width = swapped ? size.height : size.width
             let height = swapped ? size.width : size.height
@@ -257,7 +255,7 @@ import SwiftUI
 
     private struct ConnectionView: View {
         @ObservedObject var session: DeviceStreamSession
-        let probe: ConnectionProbe
+        @ObservedObject var probe: ConnectionProbe
         var body: some View {
             VStack {
                 Text("Mobilerun connection example").font(.headline)
@@ -266,6 +264,7 @@ import SwiftUI
                     Text("\(size.width) × \(size.height) · \(size.rotation)°").font(.caption)
                 }
                 DeviceStreamView(session: session, hasControl: true, controller: probe.controller)
+                    .frame(height: probe.landscape ? 200 : nil)
                     .background(Color.black)
             }.padding(8)
                 .onReceive(session.$status) { probe.mark("status \($0)") }
