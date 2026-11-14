@@ -6,10 +6,14 @@ import MobilerunProtocol
 
 /// Serial input state. UIKit supplies touch identities; every finger gets its own DOWN/UP.
 package struct PointerInput<Identity: Hashable> {
+    private static var mouseSlot: Int64 { -1 }
+    private static var fingerSlots: ClosedRange<Int64> { 0...9 }
+    package var isActive: Bool { !active.isEmpty }
+
     private struct Pointer {
         let slot: Int64
         let geometry: InputGeometry
-        var point: InputPoint
+        var point: CGPoint
         var pendingMove = false
     }
     private var active: [Identity: Pointer] = [:]
@@ -21,7 +25,7 @@ package struct PointerInput<Identity: Hashable> {
     ) -> Data? {
         guard active[id] == nil, let position = geometry.map(point) else { return nil }
         let used = Set(active.values.map(\.slot))
-        let slot = mouse ? (used.contains(-1) ? nil : Int64(-1)) : (Int64(0)...9).first { !used.contains($0) }
+        let slot = mouse ? (used.contains(Self.mouseSlot) ? nil : Self.mouseSlot) : Self.fingerSlots.first { !used.contains($0) }
         guard let slot else { return nil }
         let pointer = Pointer(slot: slot, geometry: geometry, point: position)
         active[id] = pointer
@@ -55,8 +59,6 @@ package struct PointerInput<Identity: Hashable> {
         active.removeAll()
         return packets
     }
-
-    package mutating func reset() { active.removeAll() }
 
     private func packet(_ action: Int, _ pointer: Pointer) -> Data {
         ControlMessages.touch(

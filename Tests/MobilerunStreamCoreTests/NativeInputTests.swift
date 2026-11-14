@@ -35,7 +35,7 @@
             #expect(commits == ["你", "好🙂", "好"])
             #expect(input.text.isEmpty)
             input.textViewDidChange(input)
-            #expect(commits.count == 3)
+            #expect(commits == ["你", "好🙂", "好"])
         }
 
         @Test func displayOnlyRejectsFocusAndHasNoVideoRect() {
@@ -65,7 +65,7 @@
                 window.isHidden = true
                 session.close()
             }
-            let input = try #require(view.subviews.compactMap { $0 as? StreamTextInput }.first)
+            let input = view.textClient
             view.showKeyboard()
             #expect(input.isFirstResponder)
             view.hasControl = false
@@ -82,36 +82,6 @@
             #expect(hostInput.isFirstResponder)
         }
 
-        @Test func forwardingUsesEncodersAndDisplayOnlySuppressesEveryPath() {
-            let session = DeviceStreamSession(credentials: { nil })
-            let view = DeviceStreamUIView(session: session, hasControl: true)
-            var packets: [Data] = []
-            view.onInput = { data, sent in
-                packets.append(data)
-                #expect(!sent) // No channel has been opened in this widget test.
-            }
-            view.routeKey(usage: 4, text: "a", down: true)
-            view.routeKey(usage: 4, text: "a", down: false)
-            #expect(packets == [ControlMessages.text("a")])
-            packets.removeAll()
-            for key: SystemKey in [.back, .home, .recent] { view.sendSystemKey(key) }
-            #expect(packets == [4, 3, 187].flatMap { code in
-                [ControlMessages.keycode(action: 0, keycode: code),
-                 ControlMessages.keycode(action: 1, keycode: code)]
-            })
-            view.hasControl = false
-            packets.removeAll()
-            view.routeKey(usage: 4, text: "a", down: true)
-            view.sendSystemKey(.back)
-            let input = view.subviews.compactMap { $0 as? StreamTextInput }.first
-            input?.insertText("ignored")
-            input?.deleteBackward()
-            view.paste(nil)
-            #expect(packets.isEmpty)
-            view.detach()
-            session.close()
-        }
-
         private func recordingView() async throws
             -> (SessionHarness, DeviceStreamSession, DeviceStreamUIView) {
             let harness = try SessionHarness()
@@ -120,7 +90,7 @@
             try await harness.connected()
             harness.peers[0].onEvent?(.channel(id: 1, open: true))
             harness.peers[0].onEvent?(.channel(id: 2, open: true))
-            let view = DeviceStreamUIView(session: session, hasControl: true)
+            let view = DeviceStreamUIView(session: session, hasControl: true, scheduler: harness.clock)
             view.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
             view.layoutIfNeeded()
             return (harness, session, view)
@@ -171,7 +141,7 @@
         @Test func sessionTransportRecordsKeysIMEAndSystemNavigation() async throws {
             let (h, session, view) = try await recordingView()
             defer { view.detach(); session.close() }
-            let input = try #require(view.subviews.compactMap { $0 as? StreamTextInput }.first)
+            let input = view.textClient
             view.routeKey(usage: 88, text: "\r", down: true)
             view.routeKey(usage: 88, text: "\r", down: false)
             let flags: UIKeyModifierFlags = [.shift, .alternate, .control, .command, .numericPad]
@@ -186,8 +156,9 @@
                 #expect(!view.routeKey(usage: usage, text: "", down: true))
             }
             input.insertText("a")
+            let beforeComposition = packets(h)
             input.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
-            #expect(h.peers[0].packets.count == 9)
+            #expect(packets(h) == beforeComposition)
             input.text = "你"
             input.textViewDidChange(input)
             input.deleteBackward()
@@ -207,6 +178,107 @@
             ])
         }
 
+        @Test func ownedTouchesBlockAncestorScrollAndEdgeSwipeOnlyWhileActive() async throws {
+            let (_, session, view) = try await recordingView()
+            let scroll = UIScrollView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+            scroll.addSubview(view)
+            let edge = UIScreenEdgePanGestureRecognizer()
+            edge.edges = .left
+            scroll.addGestureRecognizer(edge)
+            let finger = NSObject()
+            let id = ObjectIdentifier(finger)
+            defer { view.detach(); session.close() }
+            view.beginPointer(id, at: .zero) // Letterbox does not own the gesture.
+            #expect(view.gestureRecognizerShouldBegin(edge))
+            view.beginPointer(id, at: CGPoint(x: 60, y: 20))
+            #expect(!view.gestureRecognizerShouldBegin(scroll.panGestureRecognizer))
+            #expect(!view.gestureRecognizerShouldBegin(edge))
+            view.endPointer(id)
+            #expect(view.gestureRecognizerShouldBegin(edge))
+            view.hasControl = false
+            view.beginPointer(id, at: CGPoint(x: 60, y: 20))
+            #expect(view.gestureRecognizerShouldBegin(edge))
+        }
+
+        @Test func onlyAcceptedPointerDownTakesFocus() async throws {
+            let (_, session, view) = try await recordingView()
+            let host = UIViewController()
+            let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+            window.rootViewController = host
+            host.view.addSubview(view)
+            window.makeKeyAndVisible()
+            let finger = NSObject()
+            let id = ObjectIdentifier(finger)
+            defer { view.detach(); session.close(); window.isHidden = true }
+            view.beginPointer(id, at: .zero)
+            #expect(!view.isFirstResponder)
+            view.beginPointer(id, at: CGPoint(x: 60, y: 20))
+            #expect(view.isFirstResponder)
+            view.endPointer(id)
+            view.hasControl = false
+            view.beginPointer(id, at: CGPoint(x: 60, y: 20))
+            #expect(!view.isFirstResponder)
+        }
+
+        @Test func keyRepeatUsesBrowserCadenceAndGeometryDoesNotReleaseKeys() async throws {
+            let (h, session, view) = try await recordingView()
+            defer { view.detach(); session.close() }
+            let down = ControlMessages.keycode(action: 0, keycode: 22)
+            let up = ControlMessages.keycode(action: 1, keycode: 22)
+            func sent() -> [Data] { h.peers[0].packets.map(\.data) }
+            view.routeKey(usage: 79, text: "", down: true)
+            view.routeKey(usage: 79, text: "", down: true) // Duplicate UIKit down is not a second cadence.
+            let start = h.clock.now
+            h.clock.advance(to: start + 499)
+            #expect(sent() == [down])
+            h.clock.advance(to: start + 500)
+            #expect(sent() == [down, down])
+            view.frame.size.width = 300
+            view.layoutIfNeeded()
+            #expect(sent() == [down, down])
+            h.clock.advance(to: start + 533)
+            #expect(sent() == [down, down, down])
+            view.routeKey(usage: 79, text: "", down: false)
+            h.clock.advance(to: start + 1000)
+            #expect(sent() == [down, down, down, up])
+            view.routeKey(usage: 79, text: "", down: true)
+            view.hasControl = false
+            h.clock.advance(to: start + 2000)
+            #expect(sent() == [down, down, down, up, down, up])
+        }
+
+        @Test func hardwareCompositionAndInputTraits() async throws {
+            let (h, session, view) = try await recordingView()
+            defer { view.detach(); session.close() }
+            let input = view.textClient
+            #expect(StreamTextInput.isASCIICapable(language: "en-US"))
+            #expect(StreamTextInput.isASCIICapable(language: "de-DE"))
+            for language in ["zh-Hans", "ja-JP", "ko-KR", "ar"] {
+                #expect(!StreamTextInput.isASCIICapable(language: language))
+            }
+            input.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
+            #expect(!view.routeKey(usage: 4, text: "a", down: true))
+            #expect(h.peers[0].packets.isEmpty)
+            input.unmarkText()
+            #expect(h.peers[0].packets.map(\.data) == [ControlMessages.text("ni")])
+            #expect(input.autocorrectionType == .no)
+            if #available(iOS 17, *) { #expect(input.inlinePredictionType == .no) }
+        }
+
+        @Test func singleCharacterFallbackIncludesUnmappedAndControlCharacters() async throws {
+            let (h, session, view) = try await recordingView()
+            defer { view.detach(); session.close() }
+            #expect(view.routeKey(usage: 999, text: "\u{1}", down: true))
+            #expect(view.routeKey(usage: 999, text: "\u{1}", down: false))
+            #expect(view.routeKey(usage: 89, text: "\u{1}", down: true))
+            #expect(view.routeKey(usage: 89, text: "\u{1}", down: false))
+            #expect(view.routeKey(usage: 999, text: "x", down: true))
+            #expect(view.routeKey(usage: 999, text: "x", down: false))
+            #expect(!view.routeKey(usage: 999, text: "", down: true))
+            #expect(!view.routeKey(usage: 999, text: "", down: false))
+            #expect(packets(h) == ["1:010100000001", "1:010100000001", "1:010100000078"])
+        }
+
         @Test func displayOnlySendsNothingToTheSessionTransport() async throws {
             let (h, session, view) = try await recordingView()
             defer { view.detach(); session.close() }
@@ -222,7 +294,7 @@
             view.routeHover(at: CGPoint(x: 100, y: 100), buttons: [.primary, .secondary])
             view.routeScroll(at: CGPoint(x: 100, y: 100), translation: CGPoint(x: 0, y: 100), buttons: [])
             #expect(!view.routeKey(usage: 4, text: "a", down: true))
-            let input = try #require(view.subviews.compactMap { $0 as? StreamTextInput }.first)
+            let input = view.textClient
             input.insertText("ignored")
             input.deleteBackward()
             input.insertText("\n")

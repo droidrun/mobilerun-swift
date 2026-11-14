@@ -4,11 +4,6 @@
 import Foundation
 import CoreGraphics
 
-package struct InputPoint: Equatable, Sendable {
-    package let x: Double
-    package let y: Double
-}
-
 /// Aspect-fit geometry in view points and upright (post-rotation) video pixels.
 package struct InputGeometry: Equatable, Sendable {
     package let rect: CGRect
@@ -30,11 +25,11 @@ package struct InputGeometry: Equatable, Sendable {
     }
 
     /// Inclusive edges match React. Letterbox points and non-finite input are ignored.
-    package func map(_ point: CGPoint) -> InputPoint? {
+    package func map(_ point: CGPoint) -> CGPoint? {
         guard point.x.isFinite, point.y.isFinite,
               point.x >= rect.minX, point.x <= rect.maxX,
               point.y >= rect.minY, point.y <= rect.maxY else { return nil }
-        return InputPoint(x: (point.x - rect.minX) / rect.width * Double(videoWidth),
+        return CGPoint(x: (point.x - rect.minX) / rect.width * Double(videoWidth),
                           y: (point.y - rect.minY) / rect.height * Double(videoHeight))
     }
 }

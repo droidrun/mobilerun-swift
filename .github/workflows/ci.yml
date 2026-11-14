@@ -25,10 +25,8 @@ jobs:
           -scheme Connection -configuration Debug -destination 'generic/platform=iOS Simulator'
           -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO
       - name: Test UIKit input on simulator
-        run: |
-          runtime=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; print(next(r["identifier"] for r in json.load(sys.stdin)["runtimes"] if r["isAvailable"] and r["name"].startswith("iOS")))')
-          device=$(xcrun simctl create 'Input Tests' com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$runtime")
-          trap 'xcrun simctl shutdown "$device" || true; xcrun simctl delete "$device"' EXIT
-          xcodebuild -scheme MobilerunStream-Package -destination "id=$device" \
-            -parallel-testing-enabled NO -only-testing:MobilerunConformanceTests/NativeInputTests \
-            -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO
+        run: >-
+          xcodebuild -scheme MobilerunStream-Package
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
+          -parallel-testing-enabled NO -only-testing:MobilerunConformanceTests/NativeInputTests
+          -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO

@@ -12,6 +12,7 @@ package struct InputModifiers: OptionSet, Sendable {
     package static let alternate = Self(rawValue: 4)
     package static let command = Self(rawValue: 8)
     package static let capsLock = Self(rawValue: 16)
+    package var isShortcut: Bool { !intersection([.control, .command]).isEmpty }
 }
 
 package enum KeyInput {
@@ -23,31 +24,34 @@ package enum KeyInput {
 
     /// Clipboard is read lazily, only for the paste shortcut. The S1 map owns Android keycodes.
     package static func route(
-        usage: Int, text: String, down: Bool, modifiers: InputModifiers,
+        usage: Int, text: String, charactersIgnoringModifiers: String? = nil,
+        down: Bool, modifiers: InputModifiers,
         clipboard: () -> String?
     ) -> [Data] {
-        guard let code = HIDCode.values[usage], let keycode = KeyboardCode.values[code] else { return [] }
-        let shortcut = !modifiers.intersection([.control, .command]).isEmpty
-        if down && shortcut && text.lowercased() == "v" {
+        let code = HIDCode.values[usage]
+        let keycode = code.flatMap { KeyboardCode.values[$0] }
+        let shortcut = modifiers.isShortcut
+        let shortcutText = charactersIgnoringModifiers ?? text
+        if down && shortcut && shortcutText.lowercased() == "v" {
             guard let text = clipboard(), !text.isEmpty else { return [] }
             return [ControlMessages.setClipboard(text: text, paste: true)]
         }
-        if down && shortcut && text.lowercased() == "m" { return press(AndroidKey.menu) }
+        if down && shortcut && shortcutText.lowercased() == "m" { return press(AndroidKey.menu) }
         var meta = 0
-        let letter = code.hasPrefix("Key")
+        let letter = code?.hasPrefix("Key") == true
         let shifted = modifiers.contains(.shift) != (letter && modifiers.contains(.capsLock))
         if shifted { meta |= AndroidKey.metaShiftOn }
         if modifiers.contains(.control) { meta |= AndroidKey.metaCtrlOn }
         if modifiers.contains(.alternate) { meta |= AndroidKey.metaAltOn }
         if modifiers.contains(.command) { meta |= AndroidKey.metaMetaOn }
-        let controlCharacter = text.unicodeScalars.contains { $0.properties.generalCategory == .control }
-        if controlCodes.contains(code) || shortcut || controlCharacter {
+        if code.map({ controlCodes.contains($0) }) == true || shortcut {
+            guard let keycode else { return [] }
             return [ControlMessages.keycode(action: down ? AndroidKey.actionDown : AndroidKey.actionUp,
                                             keycode: keycode, metaState: meta)]
         }
         // React uses JavaScript string length: one UTF-16 code unit, not one Swift grapheme.
         if down && text.utf16.count == 1 { return [ControlMessages.text(text)] }
-        if down {
+        if down, let keycode {
             return [ControlMessages.keycode(action: AndroidKey.actionDown, keycode: keycode, metaState: meta)]
         }
         return []
@@ -58,17 +62,22 @@ package enum KeyInput {
          ControlMessages.keycode(action: AndroidKey.actionUp, keycode: keycode)]
     }
 
+    private static func hasControlScalar(_ text: String) -> Bool {
+        text.unicodeScalars.contains { $0.properties.generalCategory == .control }
+    }
+
     package static func committedText(_ text: String) -> [Data] {
         var packets: [Data] = []
         var pending = ""
         for character in text {
-            let newline = character == "\n" || character == "\r" || character == "\r\n"
-            let control = character.unicodeScalars.contains { $0.properties.generalCategory == .control }
-            if control {
+            if hasControlScalar(String(character)) {
                 if !pending.isEmpty { packets.append(ControlMessages.text(pending)) }
                 pending = ""
-                if newline { packets += press(AndroidKey.enter) }
-                else if character == "\t" { packets += press(AndroidKey.keycodeTab) }
+                switch character {
+                case "\n", "\r", "\r\n": packets += press(AndroidKey.enter)
+                case "\t": packets += press(AndroidKey.keycodeTab)
+                default: break
+                }
             } else { pending.append(character) }
         }
         if !pending.isEmpty { packets.append(ControlMessages.text(pending)) }

@@ -4,11 +4,11 @@
 #if os(iOS)
     import SwiftUI
 
-    /// Explicit Android navigation. The host app's back gesture is never intercepted.
+    /// Explicit Android navigation. Host Back actions are never forwarded automatically.
     public enum SystemKey: Sendable { case back, home, recent }
 
     /// Optional imperative handle for one mounted SwiftUI stream view.
-    @MainActor public final class DeviceStreamViewController {
+    @MainActor public final class DeviceStreamHandle {
         weak var view: DeviceStreamUIView?
         public init() {}
         /// Focuses the text client and asks UIKit to show its keyboard.
@@ -22,26 +22,26 @@
     @MainActor public struct DeviceStreamView: UIViewRepresentable {
         @ObservedObject private var session: DeviceStreamSession
         private let hasControl: Bool
-        private let controller: DeviceStreamViewController?
+        private let handle: DeviceStreamHandle?
 
         public init(
             session: DeviceStreamSession, hasControl: Bool,
-            controller: DeviceStreamViewController? = nil
+            handle: DeviceStreamHandle? = nil
         ) {
             self.session = session
             self.hasControl = hasControl
-            self.controller = controller
+            self.handle = handle
         }
 
         public func makeUIView(context: Context) -> DeviceStreamUIView {
             let view = DeviceStreamUIView(session: session, hasControl: hasControl)
-            view.bind(controller)
+            view.bind(handle)
             return view
         }
 
         public func updateUIView(_ view: DeviceStreamUIView, context: Context) {
             view.update(session: session, hasControl: hasControl)
-            view.bind(controller)
+            view.bind(handle)
         }
 
         public static func dismantleUIView(_ view: DeviceStreamUIView, coordinator: ()) {

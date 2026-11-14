@@ -112,7 +112,7 @@ func sessionChannelGuards() async throws {
     #expect(!h.engine.sendHover(bytes))
     peer.onEvent?(.channel(id: 2, open: true))
     #expect(h.engine.sendHover(bytes))
-    #expect(peer.sends == [1, 2])
+    #expect(peer.packets.map(\.channel) == [1, 2])
     peer.onEvent?(.channel(id: 1, open: false))
     #expect(!h.engine.sendControl(bytes))
     h.engine.close()

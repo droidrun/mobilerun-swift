@@ -2,9 +2,9 @@
 {
 archiveVersion = 1; classes = {}; objectVersion = 56;
 objects = {
-A00000000000000000000001 = {isa = PBXProject; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; mainGroup = A00000000000000000000002; productRefGroup = A00000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000004,); packageReferences = (A00000000000000000000020,); };
-A00000000000000000000002 = {isa = PBXGroup; children = (A00000000000000000000005,A00000000000000000000003,); sourceTree = "<group>";};
-A00000000000000000000003 = {isa = PBXGroup; children = (A00000000000000000000006,); name = Products; sourceTree = "<group>";};
+A00000000000000000000001 = {isa = PBXProject; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; mainGroup = A00000000000000000000002; productRefGroup = A00000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000004,B00000000000000000000001,); packageReferences = (A00000000000000000000020,); };
+A00000000000000000000002 = {isa = PBXGroup; children = (A00000000000000000000005,B00000000000000000000002,A00000000000000000000003,); sourceTree = "<group>";};
+A00000000000000000000003 = {isa = PBXGroup; children = (A00000000000000000000006,B00000000000000000000003,); name = Products; sourceTree = "<group>";};
 A00000000000000000000004 = {isa = PBXNativeTarget; buildConfigurationList = A00000000000000000000011; buildPhases = (A00000000000000000000007,A00000000000000000000008,); buildRules = (); dependencies = (); name = Connection; productName = Connection; productReference = A00000000000000000000006; productType = "com.apple.product-type.application"; packageProductDependencies = (A00000000000000000000021,);};
 A00000000000000000000005 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection/Connection.swift; sourceTree = "<group>";};
 A00000000000000000000006 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Connection.app; sourceTree = BUILT_PRODUCTS_DIR;};
@@ -20,5 +20,15 @@ A00000000000000000000015 = {isa = XCBuildConfiguration; name = Release; buildSet
 A00000000000000000000020 = {isa = XCLocalSwiftPackageReference; relativePath = ../..;};
 A00000000000000000000021 = {isa = XCSwiftPackageProductDependency; package = A00000000000000000000020; productName = MobilerunStream;};
 A00000000000000000000022 = {isa = PBXBuildFile; productRef = A00000000000000000000021;};
+B00000000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = B00000000000000000000007; buildPhases = (B00000000000000000000004,); buildRules = (); dependencies = (B00000000000000000000010,); name = InputUITests; productName = InputUITests; productReference = B00000000000000000000003; productType = "com.apple.product-type.bundle.ui-testing";};
+B00000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputUITests/InputUITests.swift; sourceTree = "<group>";};
+B00000000000000000000003 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = InputUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR;};
+B00000000000000000000004 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B00000000000000000000005,); runOnlyForDeploymentPostprocessing = 0;};
+B00000000000000000000005 = {isa = PBXBuildFile; fileRef = B00000000000000000000002;};
+B00000000000000000000007 = {isa = XCConfigurationList; buildConfigurations = (B00000000000000000000008,B00000000000000000000009,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+B00000000000000000000008 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.Connection.InputUITests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; TEST_TARGET_NAME = Connection; TARGETED_DEVICE_FAMILY = 1; CODE_SIGNING_ALLOWED = NO;};};
+B00000000000000000000009 = {isa = XCBuildConfiguration; name = Release; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.Connection.InputUITests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; TEST_TARGET_NAME = Connection; TARGETED_DEVICE_FAMILY = 1; CODE_SIGNING_ALLOWED = NO;};};
+B00000000000000000000010 = {isa = PBXTargetDependency; target = A00000000000000000000004; targetProxy = B00000000000000000000011;};
+B00000000000000000000011 = {isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001; proxyType = 1; remoteGlobalIDString = A00000000000000000000004; remoteInfo = Connection;};
 }; rootObject = A00000000000000000000001;
 }

@@ -11,37 +11,39 @@
     /// UIKit renderer and input surface. All video and input coordinates use the same aspect-fit rect.
     @MainActor public final class DeviceStreamUIView: UIView {
         private let renderer = LKRTCMTLVideoView(frame: .zero)
-        private let textClient = StreamTextInput(frame: .zero, textContainer: nil)
+        let textClient = StreamTextInput(frame: .zero, textContainer: nil)
         private var session: DeviceStreamSession
         private var track: LKRTCVideoTrack?
         private var subscriptions = Set<AnyCancellable>()
         private var pointers = PointerInput<ObjectIdentifier>()
         private var geometry: InputGeometry?
         private var displayLink: DisplayLinkTarget?
-        private weak var controller: DeviceStreamViewController?
-        private var pressedKeys: [Int: (String, InputModifiers)] = [:]
+        private weak var handle: DeviceStreamHandle?
+        private var pressedKeys: [Int: (text: String, unmodified: String, modifiers: InputModifiers,
+                                         timer: (any ScheduledTask)?)] = [:]
+        private let scheduler: any ReconnectScheduler
 
         #if DEBUG
             var onInput: ((Data, Bool) -> Void)?
+            private(set) var inputEventSource = "driver"
         #endif
 
         /// Disabling local control clears composition, focus and active input.
         public var hasControl: Bool {
             willSet {
-                if hasControl && !newValue { cancelInput() }
-            }
-            didSet {
-                if !hasControl {
-                    textClient.discardComposition()
-                    hideKeyboard()
-                }
+                if hasControl && !newValue { stopLocalInput() }
             }
         }
 
         /// Rendered upright video rect in local view points, or nil before a frame arrives.
-        public var renderedVideoRect: CGRect? { geometry?.rect }
+        var renderedVideoRect: CGRect? { geometry?.rect }
 
-        public init(session: DeviceStreamSession, hasControl: Bool) {
+        public convenience init(session: DeviceStreamSession, hasControl: Bool) {
+            self.init(session: session, hasControl: hasControl, scheduler: MainActorScheduler())
+        }
+
+        init(session: DeviceStreamSession, hasControl: Bool, scheduler: any ReconnectScheduler) {
+            self.scheduler = scheduler
             self.session = session
             self.hasControl = hasControl
             super.init(frame: .zero)
@@ -116,20 +118,12 @@
 
         public override func didMoveToWindow() {
             super.didMoveToWindow()
-            if window == nil {
-                cancelInput()
-                hideKeyboard()
-                displayLink?.invalidate()
-                displayLink = nil
-            } else if displayLink == nil {
-                displayLink = DisplayLinkTarget(view: self)
-            }
+            if window == nil { stopLocalInput() }
         }
 
         func update(session: DeviceStreamSession, hasControl: Bool) {
             if self.session !== session {
-                cancelInput()
-                textClient.discardComposition()
+                stopLocalInput()
                 subscriptions.removeAll()
                 setTrack(nil)
                 self.session = session
@@ -138,23 +132,22 @@
             self.hasControl = hasControl
         }
 
-        func bind(_ controller: DeviceStreamViewController?) {
-            if self.controller !== controller {
-                if self.controller?.view === self { self.controller?.view = nil }
-                self.controller = controller
+        func bind(_ handle: DeviceStreamHandle?) {
+            if self.handle !== handle {
+                if self.handle?.view === self { self.handle?.view = nil }
+                self.handle = handle
             }
-            controller?.view = self
+            handle?.view = self
         }
 
         func detach() {
-            cancelInput()
-            hideKeyboard()
+            stopLocalInput()
             subscriptions.removeAll()
             setTrack(nil)
             geometry = nil
             displayLink?.invalidate()
             displayLink = nil
-            if controller?.view === self { controller?.view = nil }
+            if handle?.view === self { handle?.view = nil }
         }
 
         private func observeSession() {
@@ -164,15 +157,14 @@
             }.store(in: &subscriptions)
             session.$status.sink { [weak self] status in
                 if status != .connected {
-                    self?.cancelInput()
-                    self?.textClient.discardComposition()
+                    self?.stopLocalInput()
                 }
             }.store(in: &subscriptions)
         }
 
         private func setTrack(_ newTrack: LKRTCVideoTrack?) {
             guard track !== newTrack else { return }
-            cancelInput()
+            resetInput()
             track?.remove(renderer)
             track = newTrack
             renderer.isHidden = newTrack == nil
@@ -184,7 +176,7 @@
         private func updateGeometry(video: VideoSize?) {
             let updated = InputGeometry(bounds: bounds, video: video)
             if geometry != updated {
-                cancelInput()
+                resetInput()
                 geometry = updated
             }
         }
@@ -199,22 +191,46 @@
             }
         }
 
-        private func cancelInput() {
+        private func resetInput() {
             send(pointers.cancel())
+            displayLink?.invalidate()
+            displayLink = nil
+        }
+
+        private func stopLocalInput() {
+            resetInput()
             for (usage, key) in pressedKeys.sorted(by: { $0.key < $1.key }) {
-                send(KeyInput.route(usage: usage, text: key.0, down: false, modifiers: key.1,
-                                    clipboard: { nil }))
+                key.timer?.cancel()
+                send(KeyInput.route(usage: usage, text: key.text, charactersIgnoringModifiers: key.unmodified,
+                                    down: false, modifiers: key.modifiers, clipboard: { nil }))
             }
             pressedKeys.removeAll()
+            textClient.discardComposition()
+            hideKeyboard()
+        }
+
+        public override func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
+            // UIKit consults the hit-tested view before an ancestor recognizer cancels its touches.
+            if pointers.isActive, let owner = recognizer.view, owner !== self,
+               isDescendant(of: owner),
+               recognizer is UIPanGestureRecognizer || recognizer is UISwipeGestureRecognizer {
+                return false
+            }
+            return super.gestureRecognizerShouldBegin(recognizer)
         }
 
         func flushMoves() { send(pointers.flushMoves()) }
 
         public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            #if DEBUG
+                inputEventSource = "touch"
+                defer { inputEventSource = "driver" }
+            #endif
             guard hasControl else { return }
-            if !textClient.isFirstResponder { becomeFirstResponder() }
             for touch in touches {
-                if touch.type == .indirectPointer && event?.buttonMask.contains(.primary) != true { continue }
+                let isNonPrimaryClick = touch.type == .indirectPointer
+                    && event?.buttonMask.contains(.primary) != true
+                if isNonPrimaryClick { continue }
                 beginPointer(ObjectIdentifier(touch), at: touch.location(in: self),
                              mouse: touch.type == .indirectPointer)
             }
@@ -243,6 +259,8 @@
         func beginPointer(_ id: ObjectIdentifier, at point: CGPoint, mouse: Bool = false) {
             guard hasControl, let geometry,
                   let packet = pointers.down(id, at: point, geometry: geometry, mouse: mouse) else { return }
+            if !textClient.isFirstResponder { becomeFirstResponder() }
+            if displayLink == nil { displayLink = DisplayLinkTarget(view: self) }
             send([packet])
         }
 
@@ -253,6 +271,10 @@
 
         func endPointer(_ id: ObjectIdentifier, cancelled: Bool = false) {
             if let packet = pointers.up(id, cancelled: cancelled) { send([packet]) }
+            if !pointers.isActive {
+                displayLink?.invalidate()
+                displayLink = nil
+            }
         }
 
         @objc private func hover(_ recognizer: UIHoverGestureRecognizer) {
@@ -271,21 +293,25 @@
         @objc private func scroll(_ recognizer: UIPanGestureRecognizer) {
             let delta = recognizer.translation(in: self)
             recognizer.setTranslation(.zero, in: self)
-            guard recognizer.state == .changed else { return }
+            guard [.began, .changed, .ended].contains(recognizer.state) else { return }
             routeScroll(at: recognizer.location(in: self), translation: delta, buttons: recognizer.buttonMask)
         }
 
         func routeScroll(at location: CGPoint, translation: CGPoint, buttons: UIEvent.ButtonMask) {
             guard hasControl, let geometry, let point = geometry.map(location) else { return }
-            // Pan translation follows the pointer/content; browser wheel deltas have the opposite sign.
-            let ticks = ScrollInput.ticks(horizontal: -translation.x, vertical: -translation.y, unit: .pixel)
             send([ControlMessages.scroll(
                 videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight, x: point.x, y: point.y,
-                hscrollTicks: ticks.0, vscrollTicks: ticks.1, buttons: Int(buttons.rawValue)
+                hscrollTicks: translation.x * ScrollInput.ticksPerPoint,
+                vscrollTicks: translation.y * ScrollInput.ticksPerPoint, buttons: Int(buttons.rawValue)
             )])
         }
 
         public override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+            if hasControl, textClient.usesTextSystem, !textClient.isFirstResponder,
+               textClient.becomeFirstResponder() {
+                textClient.pressesBegan(presses, with: event)
+                return
+            }
             let remaining = presses.subtracting(handlePresses(presses, down: true))
             if !remaining.isEmpty { super.pressesBegan(remaining, with: event) }
         }
@@ -301,32 +327,58 @@
         }
 
         private func handlePresses(_ presses: Set<UIPress>, down: Bool) -> Set<UIPress> {
+            #if DEBUG
+                inputEventSource = "press"
+                defer { inputEventSource = "driver" }
+            #endif
             guard hasControl else { return [] }
-            var handled = Set<UIPress>()
-            for press in presses {
-                guard let key = press.key else { continue }
-                let usage = key.keyCode.rawValue
-                guard HIDCode.values[usage] != nil else { continue }
-                let modifiers = Self.modifiers(key.modifierFlags)
-                // Shortcut matching uses unmodified characters, printable input uses the actual layout text.
-                let shortcut = !modifiers.intersection([.control, .command]).isEmpty
-                routeKey(usage: usage, text: shortcut ? key.charactersIgnoringModifiers : key.characters,
-                         down: down, flags: key.modifierFlags)
-                handled.insert(press)
-            }
-            return handled
+            return Set(presses.filter { press in
+                guard let key = press.key else { return false }
+                return routeKey(usage: key.keyCode.rawValue, text: key.characters,
+                                charactersIgnoringModifiers: key.charactersIgnoringModifiers,
+                                down: down, flags: key.modifierFlags)
+            })
         }
 
         @discardableResult func routeKey(
-            usage: Int, text: String, down: Bool, flags: UIKeyModifierFlags = []
+            usage: Int, text: String, charactersIgnoringModifiers: String? = nil,
+            down: Bool, flags: UIKeyModifierFlags = []
         ) -> Bool {
-            guard hasControl, HIDCode.values[usage] != nil else { return false }
+            guard hasControl, !textClient.usesTextSystem || (!down && pressedKeys[usage] != nil) else {
+                return false
+            }
+            if down, pressedKeys[usage] != nil { return true }
             let modifiers = Self.modifiers(flags)
-            if down { pressedKeys[usage] = (text, modifiers) }
-            else { pressedKeys.removeValue(forKey: usage) }
-            send(KeyInput.route(usage: usage, text: text, down: down, modifiers: modifiers,
-                                clipboard: { UIPasteboard.general.string }))
+            let unmodified = charactersIgnoringModifiers ?? text
+            let packets = KeyInput.route(usage: usage, text: text, charactersIgnoringModifiers: unmodified,
+                                         down: down, modifiers: modifiers,
+                                         clipboard: { UIPasteboard.general.string })
+            let isShortcut = modifiers.isShortcut && ["v", "m"].contains(unmodified.lowercased())
+            guard HIDCode.values[usage] != nil || !packets.isEmpty || pressedKeys[usage] != nil
+                    || (down && isShortcut) else { return false }
+            if down {
+                // UIKit does not promise repeated pressesBegan. Own the cadence.
+                pressedKeys[usage] = (text, unmodified, modifiers, nil)
+                if !(224...231).contains(usage) { scheduleRepeat(usage, delayMs: 500) }
+            } else {
+                pressedKeys.removeValue(forKey: usage)?.timer?.cancel()
+            }
+            send(packets)
             return true
+        }
+
+        private func scheduleRepeat(_ usage: Int, delayMs: Int) {
+            pressedKeys[usage]?.timer = scheduler.schedule(delayMs: delayMs) { [weak self] in
+                guard let self, let key = self.pressedKeys[usage], self.hasControl else { return }
+                if self.textClient.usesTextSystem {
+                    self.pressedKeys[usage]?.timer = nil
+                    return
+                }
+                self.send(KeyInput.route(usage: usage, text: key.text, charactersIgnoringModifiers: key.unmodified,
+                                         down: true, modifiers: key.modifiers,
+                                         clipboard: { UIPasteboard.general.string }))
+                self.scheduleRepeat(usage, delayMs: 33)
+            }
         }
 
         private static func modifiers(_ flags: UIKeyModifierFlags) -> InputModifiers {

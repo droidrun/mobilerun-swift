@@ -21,6 +21,8 @@
             smartQuotesType = .no
             smartDashesType = .no
             smartInsertDeleteType = .no
+            textContentType = .oneTimeCode
+            if #available(iOS 17, *) { inlinePredictionType = .no }
         }
 
         @available(*, unavailable)
@@ -67,19 +69,40 @@
             onCommit?(committed)
         }
 
+        /// Public UIKit exposes a language tag, not an ASCII-capability flag. Conservatively
+        /// leave non-Latin input modes (including CJK) to UIKit's text/composition system.
+        var usesTextSystem: Bool {
+            if markedTextRange != nil { return true }
+            guard let language = textInputMode?.primaryLanguage else { return false }
+            return !Self.isASCIICapable(language: language)
+        }
+
+        static func isASCIICapable(language: String) -> Bool {
+            let letters = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyz")
+            return !(NSLocale(localeIdentifier: language).exemplarCharacterSet as CharacterSet)
+                .intersection(letters).isEmpty
+        }
+
         override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+            if usesTextSystem { super.pressesBegan(presses, with: event); return }
             let remaining = presses.subtracting(onPresses?(presses, true) ?? [])
-            if !remaining.isEmpty { super.pressesBegan(remaining, with: event) }
+            if !remaining.isEmpty { next?.pressesBegan(remaining, with: event) }
         }
 
         override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
             let remaining = presses.subtracting(onPresses?(presses, false) ?? [])
-            if !remaining.isEmpty { super.pressesEnded(remaining, with: event) }
+            if !remaining.isEmpty {
+                if usesTextSystem { super.pressesEnded(remaining, with: event) }
+                else { next?.pressesEnded(remaining, with: event) }
+            }
         }
 
         override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
             let remaining = presses.subtracting(onPresses?(presses, false) ?? [])
-            if !remaining.isEmpty { super.pressesCancelled(remaining, with: event) }
+            if !remaining.isEmpty {
+                if usesTextSystem { super.pressesCancelled(remaining, with: event) }
+                else { next?.pressesCancelled(remaining, with: event) }
+            }
         }
     }
 #endif
