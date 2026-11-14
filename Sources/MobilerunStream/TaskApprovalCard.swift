@@ -43,11 +43,16 @@ import MobilerunProtocol
                     GeometryReader { geometry in
                         let wide = geometry.size.width >= 768
                         ZStack(alignment: .topLeading) {
-                            details(approval)
-                                .frame(width: wide ? max(0, geometry.size.width - 280) : geometry.size.width)
-                                .opacity(wide || !showDevice ? 1 : 0)
-                                .allowsHitTesting(wide || !showDevice).accessibilityHidden(!wide && showDevice)
-                            device.frame(width: wide ? 256 : geometry.size.width, height: 320)
+                            VStack(alignment: .leading, spacing: 16) {
+                                details(approval)
+                                    .opacity(wide || !showDevice ? 1 : 0)
+                                    .allowsHitTesting(wide || !showDevice).accessibilityHidden(!wide && showDevice)
+                                Spacer(minLength: 0)
+                                decisionContent
+                            }
+                            .frame(width: wide ? max(0, geometry.size.width - 280) : geometry.size.width,
+                                   height: wide ? 428 : 380, alignment: .topLeading)
+                            device.frame(width: wide ? 256 : geometry.size.width, height: wide ? 428 : 320)
                                 .clipped().offset(x: wide ? max(0, geometry.size.width - 256) : 0)
                                 .opacity(wide || showDevice ? 1 : 0)
                                 .allowsHitTesting(wide || showDevice).accessibilityHidden(!wide && !showDevice)
@@ -56,19 +61,26 @@ import MobilerunProtocol
                         .overlay(alignment: .top) {
                             if !wide { viewSwitch }
                         }
-                    }.frame(height: 368)
-                } else { details(approval) }
-                if let error = state.error {
-                    Text(error.localizedDescription).foregroundColor(theme.destructive)
-                        .onAppear { announce(error.localizedDescription) }
-                        .onChange(of: error.localizedDescription) { announce($0) }
+                    }.frame(height: 428)
+                } else {
+                    details(approval)
+                    decisionContent
                 }
-                actions(TaskApprovalActionsState(isDeciding: state.isDeciding, decision: state.decision, onDecide: onDecide))
             }
             .font(theme.typography).foregroundColor(theme.cardForeground).padding(16)
             .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.radius))
             .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
             .onChange(of: approval.approvalId) { _ in showDevice = false }
+        }
+    }
+    private var decisionContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if let error = state.error {
+                Text(error.localizedDescription).foregroundColor(theme.destructive)
+                    .onAppear { announce(error.localizedDescription) }
+                    .onChange(of: error.localizedDescription) { announce($0) }
+            }
+            actions(TaskApprovalActionsState(isDeciding: state.isDeciding, decision: state.decision, onDecide: onDecide))
         }
     }
     private var viewSwitch: some View {

@@ -70,6 +70,7 @@ import XCTest
         XCUIDevice.shared.orientation = .landscapeLeft
         XCTAssertGreaterThan(app.frame.width, app.frame.height)
         XCTAssertTrue(app.staticTexts["Device mounts: 1"].exists)
+        Thread.sleep(forTimeInterval: 1)
         capture("approval-landscape")
         XCUIDevice.shared.orientation = .portrait
         app.buttons["Details"].tap()
