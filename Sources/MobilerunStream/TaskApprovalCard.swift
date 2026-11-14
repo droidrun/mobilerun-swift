@@ -26,11 +26,6 @@ private enum TaskApprovalLayout {
     static let columnGap: CGFloat = 24
 }
 
-private struct ApprovalCardWidthKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
-}
-
 /// Backend-owned approval, including unknown kinds. Countdown never disables the actions.
 /// The device stays in one structural position across switch/width changes.
 @MainActor public struct TaskApprovalCard<Device: View>: View {
@@ -83,9 +78,10 @@ private struct ApprovalCardWidthKey: PreferenceKey {
             }
             .font(theme.typography).foregroundColor(theme.cardForeground).padding(TaskApprovalLayout.padding)
             .background(GeometryReader { geometry in
-                Color.clear.preference(key: ApprovalCardWidthKey.self, value: geometry.size.width)
+                Color.clear
+                    .onAppear { cardWidth = geometry.size.width }
+                    .onChange(of: geometry.size.width) { cardWidth = $0 }
             })
-            .onPreferenceChange(ApprovalCardWidthKey.self) { cardWidth = $0 }
             .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.radius))
             .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
             .onAppear { announceErrorIfChanged() }
