@@ -116,14 +116,16 @@ function and modifier keys inject Android keycodes. Cmd/Ctrl+V pastes the local 
 SET_CLIPBOARD; Cmd/Ctrl+M sends Menu. Modifier masks and physical HID-to-Android mapping follow
 the protocol's keyboard code table. After shortcuts/control keys, any single UTF-16 character
 injects text on keydown only, including control characters and unmapped physical codes.
-Textless unmapped media/volume/gamepad keys pass through to the host. Numpad Enter is a control key.
-Held hardware
-keys repeat after 500 ms at approximately 33 ms intervals. CJK composition and non-Latin input
+Mapped fallback keys with no printable text send paired DOWN/UP keycodes; releases follow the
+original keydown route even if the produced text changes. Textless unmapped keys pass through
+to the host. Numpad Enter is a control key. Held hardware keys repeat after 500 ms at approximately
+33 ms intervals. CJK composition and non-Latin input
 modes stay with the UIKit text system. `showKeyboard()` explicitly focuses a UIKit text-input
-client;
-marked IME text stays local until committed or finalized by UIKit. Committed Unicode text
-injects text, an empty-buffer
-backspace sends DEL, and return sends ENTER. Keyboard hiding only resigns this view's own responder;
+client using a normal text keyboard, with correction, spell checking, smart substitutions and
+predictions disabled. CJK and emoji remain available. Marked IME text stays local until committed or
+finalized by UIKit. Committed Unicode text
+injects text, an empty-buffer backspace sends DEL, and return sends ENTER. Keyboard hiding only
+resigns this view's own responder;
 it leaves the host app's input alone. Paste uses `UIPasteboard` and follows the platform's
 clipboard access behavior.
 

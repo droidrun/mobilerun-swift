@@ -21,7 +21,9 @@
             smartQuotesType = .no
             smartDashesType = .no
             smartInsertDeleteType = .no
-            textContentType = .oneTimeCode
+            keyboardType = .default
+            textContentType = nil
+            isSecureTextEntry = false
             if #available(iOS 17, *) { inlinePredictionType = .no }
         }
 

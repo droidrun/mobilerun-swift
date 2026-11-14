@@ -261,11 +261,21 @@
             #expect(h.peers[0].packets.isEmpty)
             input.unmarkText()
             #expect(h.peers[0].packets.map(\.data) == [ControlMessages.text("ni")])
+            input.setMarkedText("你好🙂", selectedRange: NSRange(location: 2, length: 0))
+            input.unmarkText()
+            #expect(h.peers[0].packets.map(\.data) == [ControlMessages.text("ni"), ControlMessages.text("你好🙂")])
+            #expect(input.keyboardType == .default)
+            #expect(input.textContentType == nil)
+            #expect(!input.isSecureTextEntry)
             #expect(input.autocorrectionType == .no)
+            #expect(input.spellCheckingType == .no)
+            #expect(input.smartQuotesType == .no)
+            #expect(input.smartDashesType == .no)
+            #expect(input.smartInsertDeleteType == .no)
             if #available(iOS 17, *) { #expect(input.inlinePredictionType == .no) }
         }
 
-        @Test func singleCharacterFallbackIncludesUnmappedAndControlCharacters() async throws {
+        @Test func fallbackRoutingBalancesKeycodesAndPreservesText() async throws {
             let (h, session, view) = try await recordingView()
             defer { view.detach(); session.close() }
             #expect(view.routeKey(usage: 999, text: "\u{1}", down: true))
@@ -276,7 +286,19 @@
             #expect(view.routeKey(usage: 999, text: "x", down: false))
             #expect(!view.routeKey(usage: 999, text: "", down: true))
             #expect(!view.routeKey(usage: 999, text: "", down: false))
-            #expect(packets(h) == ["1:010100000001", "1:010100000001", "1:010100000078"])
+            view.routeKey(usage: 4, text: "", down: true)
+            view.routeKey(usage: 4, text: "a", down: false) // The release still matches the fallback down.
+            view.routeKey(usage: 4, text: "a", down: true)
+            view.routeKey(usage: 4, text: "", down: false) // Text injection must not gain a keycode UP.
+            view.routeKey(usage: 4, text: "Dead", down: true)
+            view.hasControl = false
+            h.clock.advance(to: h.clock.now + 2000)
+            #expect(packets(h) == [
+                "1:010100000001", "1:010100000001", "1:010100000078",
+                "1:00001d0000000000000000000000", "1:00011d0000000000000000000000",
+                "1:010100000061",
+                "1:00001d0000000000000000000000", "1:00011d0000000000000000000000",
+            ])
         }
 
         @Test func displayOnlySendsNothingToTheSessionTransport() async throws {

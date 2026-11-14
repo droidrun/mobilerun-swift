@@ -349,8 +349,10 @@
             }
             if down, pressedKeys[usage] != nil { return true }
             let modifiers = Self.modifiers(flags)
+            // Match the original down route even if releasing Shift/composition changes the key's text.
+            let routeText = down ? text : (pressedKeys[usage]?.text ?? text)
             let unmodified = charactersIgnoringModifiers ?? text
-            let packets = KeyInput.route(usage: usage, text: text, charactersIgnoringModifiers: unmodified,
+            let packets = KeyInput.route(usage: usage, text: routeText, charactersIgnoringModifiers: unmodified,
                                          down: down, modifiers: modifiers,
                                          clipboard: { UIPasteboard.general.string })
             let isShortcut = modifiers.isShortcut && ["v", "m"].contains(unmodified.lowercased())

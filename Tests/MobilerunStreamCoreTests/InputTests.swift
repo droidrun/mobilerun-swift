@@ -135,12 +135,15 @@ struct InputTests {
         (4, "a", true, [.control, .capsLock, .shift],
          [ControlMessages.keycode(action: 0, keycode: 29, metaState: 4096)]),
         (4, "", true, [], [ControlMessages.keycode(action: 0, keycode: 29)]),
-        (4, "", false, [], []),
+        (4, "", false, [], [ControlMessages.keycode(action: 1, keycode: 29)]),
+        (4, "Dead", true, [], [ControlMessages.keycode(action: 0, keycode: 29)]),
+        (4, "Dead", false, [], [ControlMessages.keycode(action: 1, keycode: 29)]),
         (999, "\u{1}", true, [], [ControlMessages.text("\u{1}")]),
         (999, "\u{1}", false, [], []),
         (999, "a", true, [], [ControlMessages.text("a")]),
         (999, "a", false, [], []),
         (999, "", true, [], []),
+        (999, "", false, [], []),
     ]
 
     @Test(arguments: keyCases)

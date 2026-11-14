@@ -50,9 +50,10 @@ package enum KeyInput {
                                             keycode: keycode, metaState: meta)]
         }
         // React uses JavaScript string length: one UTF-16 code unit, not one Swift grapheme.
-        if down && text.utf16.count == 1 { return [ControlMessages.text(text)] }
-        if down, let keycode {
-            return [ControlMessages.keycode(action: AndroidKey.actionDown, keycode: keycode, metaState: meta)]
+        if text.utf16.count == 1 { return down ? [ControlMessages.text(text)] : [] }
+        if let keycode {
+            return [ControlMessages.keycode(action: down ? AndroidKey.actionDown : AndroidKey.actionUp,
+                                            keycode: keycode, metaState: meta)]
         }
         return []
     }
