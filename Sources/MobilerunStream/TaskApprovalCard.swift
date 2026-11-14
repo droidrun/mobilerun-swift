@@ -16,6 +16,17 @@ import MobilerunProtocol
     }
 }
 
+private enum TaskApprovalLayout {
+    static let padding: CGFloat = 16
+    static let breakpoint: CGFloat = 768
+    static let wideHeight: CGFloat = 428
+    static let narrowHeight: CGFloat = 380
+    static let deviceWidth: CGFloat = 256
+    static let deviceHeight: CGFloat = 320
+    static let columnGap: CGFloat = 24
+    static let switchHeight: CGFloat = 48
+}
+
 /// Backend-owned approval, including unknown kinds. Countdown never disables the actions.
 /// The device stays in one structural position across switch/width changes.
 @MainActor public struct TaskApprovalCard<Device: View>: View {
@@ -35,16 +46,6 @@ import MobilerunProtocol
         self.state = state; self.onDecide = onDecide; self.actions = actions
         self.device = device(); hasDevice = Device.self != EmptyView.self
     }
-    private enum Layout {
-        static let padding: CGFloat = 16
-        static let breakpoint: CGFloat = 768
-        static let wideHeight: CGFloat = 428
-        static let narrowHeight: CGFloat = 380
-        static let deviceWidth: CGFloat = 256
-        static let deviceHeight: CGFloat = 320
-        static let columnGap: CGFloat = 24
-        static let switchHeight: CGFloat = 48
-    }
     public var body: some View {
         if let approval = state.approval {
             VStack(alignment: .leading, spacing: 16) {
@@ -52,31 +53,31 @@ import MobilerunProtocol
                 ApprovalCountdown(approvalId: approval.approvalId, expiresAt: approval.expiresAt)
                 if hasDevice {
                     GeometryReader { geometry in
-                        let wide = geometry.size.width + 2 * Layout.padding >= Layout.breakpoint
+                        let wide = geometry.size.width + 2 * TaskApprovalLayout.padding >= TaskApprovalLayout.breakpoint
                         let showingDevice = showDevice && selectedApprovalId == approval.approvalId
                         ZStack(alignment: .topLeading) {
                             ScrollView { details(approval) }
-                                .frame(width: wide ? max(0, geometry.size.width - Layout.deviceWidth - Layout.columnGap) : geometry.size.width,
-                                       height: wide ? Layout.wideHeight : Layout.narrowHeight, alignment: .topLeading)
+                                .frame(width: wide ? max(0, geometry.size.width - TaskApprovalLayout.deviceWidth - TaskApprovalLayout.columnGap) : geometry.size.width,
+                                       height: wide ? TaskApprovalLayout.wideHeight : TaskApprovalLayout.narrowHeight, alignment: .topLeading)
                                 .opacity(wide || !showingDevice ? 1 : 0)
                                 .allowsHitTesting(wide || !showingDevice).accessibilityHidden(!wide && showingDevice)
-                            device.frame(width: wide ? Layout.deviceWidth : geometry.size.width,
-                                         height: wide ? Layout.wideHeight : Layout.deviceHeight)
-                                .clipped().offset(x: wide ? max(0, geometry.size.width - Layout.deviceWidth) : 0)
+                            device.frame(width: wide ? TaskApprovalLayout.deviceWidth : geometry.size.width,
+                                         height: wide ? TaskApprovalLayout.wideHeight : TaskApprovalLayout.deviceHeight)
+                                .clipped().offset(x: wide ? max(0, geometry.size.width - TaskApprovalLayout.deviceWidth) : 0)
                                 .opacity(wide || showingDevice ? 1 : 0)
                                 .allowsHitTesting(wide || showingDevice).accessibilityHidden(!wide && !showingDevice)
                         }
-                        .padding(.top, wide ? 0 : Layout.switchHeight)
+                        .padding(.top, wide ? 0 : TaskApprovalLayout.switchHeight)
                         .overlay(alignment: .top) {
                             if !wide { viewSwitch(approvalId: approval.approvalId, showingDevice: showingDevice) }
                         }
-                    }.frame(height: Layout.wideHeight)
+                    }.frame(height: TaskApprovalLayout.wideHeight)
                 } else {
                     details(approval)
                 }
                 decisionContent
             }
-            .font(theme.typography).foregroundColor(theme.cardForeground).padding(Layout.padding)
+            .font(theme.typography).foregroundColor(theme.cardForeground).padding(TaskApprovalLayout.padding)
             .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.radius))
             .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
             .onAppear { announceErrorIfChanged() }
