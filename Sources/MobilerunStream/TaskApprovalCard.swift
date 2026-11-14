@@ -20,11 +20,15 @@ private enum TaskApprovalLayout {
     static let padding: CGFloat = 16
     static let breakpoint: CGFloat = 768
     static let wideHeight: CGFloat = 428
-    static let narrowHeight: CGFloat = 380
+    static let narrowHeight: CGFloat = 320
     static let deviceWidth: CGFloat = 256
     static let deviceHeight: CGFloat = 320
     static let columnGap: CGFloat = 24
-    static let switchHeight: CGFloat = 48
+}
+
+private struct ApprovalCardWidthKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 /// Backend-owned approval, including unknown kinds. Countdown never disables the actions.
@@ -34,6 +38,7 @@ private enum TaskApprovalLayout {
     @Environment(\.taskApprovalLabels) private var labels
     @State private var showDevice = false
     @State private var selectedApprovalId: String?
+    @State private var cardWidth: CGFloat = 0
     @State private var errorAnnouncement = ApprovalErrorAnnouncement()
     private let state: TaskApprovalState
     private let onDecide: (ApprovalDecision) -> Void
@@ -48,17 +53,20 @@ private enum TaskApprovalLayout {
     }
     public var body: some View {
         if let approval = state.approval {
+            let wide = cardWidth >= TaskApprovalLayout.breakpoint
+            let showingDevice = showDevice && selectedApprovalId == approval.approvalId
+            let viewportHeight = wide ? TaskApprovalLayout.wideHeight : TaskApprovalLayout.narrowHeight
             VStack(alignment: .leading, spacing: 16) {
                 Text(approval.paymentCardDetails() == nil ? labels.waiting : labels.paymentCardTitle).fontWeight(.semibold)
                 ApprovalCountdown(approvalId: approval.approvalId, expiresAt: approval.expiresAt)
                 if hasDevice {
+                    if !wide { viewSwitch(approvalId: approval.approvalId, showingDevice: showingDevice) }
                     GeometryReader { geometry in
-                        let wide = geometry.size.width + 2 * TaskApprovalLayout.padding >= TaskApprovalLayout.breakpoint
-                        let showingDevice = showDevice && selectedApprovalId == approval.approvalId
                         ZStack(alignment: .topLeading) {
                             ScrollView { details(approval) }
+                                .accessibilityIdentifier("approval-details")
                                 .frame(width: wide ? max(0, geometry.size.width - TaskApprovalLayout.deviceWidth - TaskApprovalLayout.columnGap) : geometry.size.width,
-                                       height: wide ? TaskApprovalLayout.wideHeight : TaskApprovalLayout.narrowHeight, alignment: .topLeading)
+                                       height: viewportHeight, alignment: .topLeading)
                                 .opacity(wide || !showingDevice ? 1 : 0)
                                 .allowsHitTesting(wide || !showingDevice).accessibilityHidden(!wide && showingDevice)
                             device.frame(width: wide ? TaskApprovalLayout.deviceWidth : geometry.size.width,
@@ -67,17 +75,17 @@ private enum TaskApprovalLayout {
                                 .opacity(wide || showingDevice ? 1 : 0)
                                 .allowsHitTesting(wide || showingDevice).accessibilityHidden(!wide && !showingDevice)
                         }
-                        .padding(.top, wide ? 0 : TaskApprovalLayout.switchHeight)
-                        .overlay(alignment: .top) {
-                            if !wide { viewSwitch(approvalId: approval.approvalId, showingDevice: showingDevice) }
-                        }
-                    }.frame(height: TaskApprovalLayout.wideHeight)
+                    }.frame(height: viewportHeight)
                 } else {
                     details(approval)
                 }
                 decisionContent
             }
             .font(theme.typography).foregroundColor(theme.cardForeground).padding(TaskApprovalLayout.padding)
+            .background(GeometryReader { geometry in
+                Color.clear.preference(key: ApprovalCardWidthKey.self, value: geometry.size.width)
+            })
+            .onPreferenceChange(ApprovalCardWidthKey.self) { cardWidth = $0 }
             .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.radius))
             .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
             .onAppear { announceErrorIfChanged() }

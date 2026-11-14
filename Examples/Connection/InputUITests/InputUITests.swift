@@ -174,8 +174,11 @@ import XCTest
             .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.8)))
         XCTAssertTrue(app.staticTexts["Card"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Device mounts: 1"].exists)
+        XCTAssertGreaterThanOrEqual(app.staticTexts["Card"].frame.minY, app.buttons["Details"].frame.maxY)
+        let facts = app.scrollViews["approval-details"]
+        XCTAssertGreaterThanOrEqual(app.buttons["Approve"].frame.minY, facts.frame.maxY)
         for _ in 0..<5 {
-            if app.buttons["Approve"].isHittable { break }
+            if app.buttons["Approve"].isHittable && app.buttons["Approve"].frame.maxY < app.frame.maxY - 30 { break }
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.8))
                 .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.2)))
         }
