@@ -1,0 +1,335 @@
+{
+  "crop": [
+    130,
+    470,
+    940,
+    1950
+  ],
+  "statusBarBottom": 460,
+  "steps": [
+    {
+      "command": {
+        "action": "system",
+        "value": "HOME"
+      },
+      "shot": "02-home",
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ]
+    },
+    {
+      "command": {
+        "action": "tap",
+        "x": 0.38306451612903225,
+        "y": 0.09074074074074075
+      },
+      "shot": "03-chrome",
+      "screen": {
+        "kind": "changed"
+      },
+      "expectEvents": [
+        "input type=2 action=0 pointer=0 sent=true",
+        "input type=2 action=1 pointer=0 sent=true"
+      ]
+    },
+    {
+      "command": {
+        "action": "nativeEvents",
+        "x": 0.46,
+        "y": 0.21
+      },
+      "expectEvents": [
+        "input type=2 action=0 pointer=0 sent=true native=touch",
+        "input type=1 action=-1 pointer=-1 sent=true native=press"
+      ],
+      "shot": "02-native-address",
+      "screen": {
+        "kind": "changed"
+      }
+    },
+    {
+      "command": {
+        "action": "delete"
+      },
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ],
+      "shot": "02-native-delete",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.0002
+      },
+      "crop": [
+        210,
+        475,
+        800,
+        170
+      ]
+    },
+    {
+      "command": {
+        "action": "text",
+        "value": "https://example.com/"
+      },
+      "expectEvents": [
+        "input type=1 action=-1 pointer=-1 sent=true"
+      ],
+      "shot": "03-soft-text",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.0002
+      },
+      "crop": [
+        210,
+        475,
+        800,
+        170
+      ]
+    },
+    {
+      "command": {
+        "action": "hardware",
+        "usage": 27,
+        "value": "x"
+      },
+      "expectEvents": [
+        "input type=1 action=-1 pointer=-1 sent=true"
+      ],
+      "shot": "04-hardware-text",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.0002
+      },
+      "crop": [
+        210,
+        475,
+        800,
+        170
+      ]
+    },
+    {
+      "command": {
+        "action": "delete"
+      },
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ],
+      "shot": "05-backspace",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.0002
+      },
+      "crop": [
+        210,
+        475,
+        800,
+        170
+      ]
+    },
+    {
+      "command": {
+        "action": "compose",
+        "value": "?ime"
+      },
+      "expectEvents": [
+        "input type=1 action=-1 pointer=-1 sent=true"
+      ],
+      "shot": "06-ime",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.0002
+      },
+      "crop": [
+        210,
+        475,
+        800,
+        170
+      ]
+    },
+    {
+      "command": {
+        "action": "paste",
+        "value": "-paste"
+      },
+      "expectEvents": [
+        "input type=9 action=-1 pointer=-1 sent=true"
+      ],
+      "shot": "07-clipboard",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.0002
+      },
+      "crop": [
+        210,
+        475,
+        800,
+        170
+      ]
+    },
+    {
+      "command": {
+        "action": "text",
+        "value": "\n"
+      },
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ],
+      "shot": "08-enter",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.002
+      },
+      "settle": 5
+    },
+    {
+      "command": {
+        "action": "system",
+        "value": "BACK"
+      },
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ],
+      "shot": "09-back",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.002
+      }
+    },
+    {
+      "command": {
+        "action": "system",
+        "value": "HOME"
+      },
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ],
+      "shot": "10-home",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.002
+      }
+    },
+    {
+      "command": {
+        "action": "system",
+        "value": "RECENT"
+      },
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ],
+      "shot": "11-recent",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.002
+      }
+    },
+    {
+      "command": {
+        "action": "system",
+        "value": "HOME"
+      },
+      "expectEvents": [
+        "input type=0 action=0 pointer=-1 sent=true",
+        "input type=0 action=1 pointer=-1 sent=true"
+      ],
+      "shot": "12-home",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.002
+      }
+    },
+    {
+      "command": {
+        "action": "rotateView"
+      },
+      "expectEvents": [],
+      "shot": "12-landscape-home",
+      "screen": {
+        "kind": "changed"
+      },
+      "crop": [
+        450,
+        1250,
+        300,
+        300
+      ],
+      "statusBarBottom": 1200,
+      "expectNoInput": true
+    },
+    {
+      "command": {
+        "action": "tap",
+        "x": 0.38306451612903225,
+        "y": 0.09074074074074075
+      },
+      "expectEvents": [
+        "input type=2 action=0 pointer=0 sent=true",
+        "input type=2 action=1 pointer=0 sent=true"
+      ],
+      "shot": "13-rotated-chrome",
+      "screen": {
+        "kind": "changed",
+        "tolerance": 0.002
+      },
+      "crop": [
+        450,
+        1250,
+        300,
+        300
+      ],
+      "statusBarBottom": 1200
+    },
+    {
+      "command": {
+        "action": "control",
+        "enabled": false
+      },
+      "expectEvents": [],
+      "expectNoInput": true
+    },
+    {
+      "command": {
+        "action": "hardware",
+        "usage": 4,
+        "value": "ignored"
+      },
+      "expectEvents": [],
+      "expectNoInput": true
+    },
+    {
+      "command": {
+        "action": "tap",
+        "x": 0.38306451612903225,
+        "y": 0.09074074074074075
+      },
+      "expectEvents": [],
+      "expectNoInput": true
+    },
+    {
+      "command": {
+        "action": "system",
+        "value": "HOME"
+      },
+      "expectEvents": [],
+      "shot": "14-display-only",
+      "screen": {
+        "kind": "same"
+      },
+      "crop": [
+        450,
+        1250,
+        300,
+        300
+      ],
+      "statusBarBottom": 1200,
+      "expectNoInput": true
+    }
+  ]
+}

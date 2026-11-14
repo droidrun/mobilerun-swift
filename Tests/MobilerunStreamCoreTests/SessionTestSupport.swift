@@ -47,7 +47,7 @@ enum FakeFailure: Error { case negotiation }
     var channels: [DataChannelSpec] = []
     var operations: [String] = []
     var restarts: [Bool] = []
-    var sends: [Int] = []
+    var packets: [(channel: Int, data: Data)] = []
     var closed = false
     var rejectAnswer = false
     var rejectRefresh = false
@@ -78,7 +78,7 @@ enum FakeFailure: Error { case negotiation }
         return !rejectRefresh
     }
     func send(_ data: Data, channelID: Int) -> Bool {
-        sends.append(channelID)
+        packets.append((channelID, data))
         return !closed
     }
     func close() {

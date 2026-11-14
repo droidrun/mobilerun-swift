@@ -26,6 +26,14 @@ def sim(*args):
     return result.stdout.strip()
 
 
+def create_simulator(name):
+    runtimes = json.loads(sim("list", "runtimes", "-j"))["runtimes"]
+    runtime = max((r for r in runtimes if r["isAvailable"] and r["name"].startswith("iOS")),
+                  key=lambda r: tuple(map(int, r["version"].split("."))))
+    device_type = next(d for d in runtime["supportedDeviceTypes"] if d["productFamily"] == "iPhone")
+    return sim("create", name, device_type["identifier"], runtime["identifier"])
+
+
 def frame_count(text):
     counts = re.findall(r"frames decoded=(\d+)", text)
     return int(counts[-1]) if counts else 0
@@ -92,15 +100,7 @@ def main():
             )
         print("example build exit=" + str(result.returncode), flush=True)
         result.check_returncode()
-        runtimes = json.loads(sim("list", "runtimes", "-j"))["runtimes"]
-        runtime = next(
-            r for r in runtimes
-            if r["isAvailable"] and r["version"] == "27.2" and r["name"].startswith("iOS")
-        )
-        device = sim(
-            "create", "Connection Validation", "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
-            runtime["identifier"],
-        )
+        device = create_simulator("Connection Validation")
         sim("boot", device)
         sim("bootstatus", device, "-b")
         sim("install", device, str(derived / "Build/Products/Debug-iphonesimulator/Connection.app"))
@@ -136,7 +136,8 @@ def main():
                 point = json.loads(args.tap_coordinates_file.read_text())
                 x, y = point["x"], point["y"]
             command("tap", x=x, y=y)
-            wait_for(lambda text: "tap down=true up=true" in text, "raw control tap")
+            wait_for(lambda text: "view tap complete" in text and
+                     "input type=2 action=1 pointer=0 sent=true" in text, "view control tap")
             time.sleep(3)
             screenshot("02-after-tap")
         command("mute")

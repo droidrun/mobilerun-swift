@@ -13,8 +13,8 @@
     @MainActor public final class DeviceStreamSession: ObservableObject {
         @Published public private(set) var status: StreamStatus = .connecting
         @Published public private(set) var videoSize: VideoSize?
-        // Raw native tracks stay inside the package until the renderer is available.
-        @Published private(set) var videoTrack: LKRTCVideoTrack?
+        // Only the package's native renderer consumes tracks; apps use DeviceStreamView.
+        @Published package private(set) var videoTrack: LKRTCVideoTrack?
         private weak var signalling: URLSessionSignalling?
         private weak var peer: WebRTCPeer?
         private var muted: Bool
@@ -74,9 +74,9 @@
             peer?.setMuted(muted)
         }
         /// Drops bytes and returns false unless the reliable control channel is open.
-        @discardableResult public func sendControl(_ data: Data) -> Bool { engine.sendControl(data) }
+        @discardableResult package func sendControl(_ data: Data) -> Bool { engine.sendControl(data) }
         /// Uses only the unreliable hover channel; never falls back to control.
-        @discardableResult public func sendHover(_ data: Data) -> Bool { engine.sendHover(data) }
+        @discardableResult package func sendHover(_ data: Data) -> Bool { engine.sendHover(data) }
         public func openURL(_ url: String) { engine.openURL(url) }
         public func screenshot(
             timeout: TimeInterval = TimeInterval(SignallingTiming.screenshotTimeoutMs) / 1000
@@ -85,6 +85,14 @@
         }
 
         #if DEBUG
+            /// Keeps transport recording tests on the same session-to-engine path as the native adapter.
+            init(engine: StreamSessionEngine, videoSize: VideoSize) {
+                muted = true
+                self.engine = engine
+                self.videoSize = videoSize
+                engine.onStatus = { [weak self] in self?.status = $0 }
+            }
+
             func forceSignallingClose() { signalling?.forceClose() }
             func requestConfigurationRefresh() { engine.requestConfigurationRefresh() }
         #endif

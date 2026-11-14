@@ -24,3 +24,9 @@ jobs:
           xcodebuild -project Examples/Connection/Connection.xcodeproj
           -scheme Connection -configuration Debug -destination 'generic/platform=iOS Simulator'
           -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO
+      - name: Test UIKit input on simulator
+        run: >-
+          xcodebuild -scheme MobilerunStream-Package
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
+          -parallel-testing-enabled NO -only-testing:MobilerunConformanceTests/NativeInputTests
+          -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO

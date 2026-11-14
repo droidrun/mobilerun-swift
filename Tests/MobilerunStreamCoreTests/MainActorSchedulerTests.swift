@@ -20,7 +20,7 @@ private final class TaskMainScheduler: ReconnectScheduler {
     func schedule(delayMs: Int, action: @escaping @MainActor () -> Void) -> any ScheduledTask {
         delays.append(delayMs)
         return Handle(Task { @MainActor in
-            do { try await Task.sleep(for: .milliseconds(delayMs)) }
+            do { try await Task.sleep(nanoseconds: UInt64(max(0, delayMs)) * 1_000_000) }
             catch { return }
             guard !Task.isCancelled else { return }
             action()
