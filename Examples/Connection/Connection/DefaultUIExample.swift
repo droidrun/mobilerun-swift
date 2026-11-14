@@ -89,7 +89,16 @@ private enum ExampleFailure: LocalizedError {
             .onDisappear { probe.approval.stop(); probe.connection.session.close() }
     }
     @ViewBuilder private var content: some View {
-        if probe.mode.hasPrefix("approval") {
+        if probe.mode == "reconnecting-retained" {
+            VStack(spacing: 0) {
+                ZStack {
+                    // A bright stand-in frame makes any glass sampling/phone glyph regression visible offline.
+                    LinearGradient(colors: [.red, .blue], startPoint: .top, endPoint: .bottom)
+                    StreamPlaceholder(state: StreamOverlayState(status: .reconnecting(attempt: 3), hasVideo: true))
+                }
+                StreamNavigationBar()
+            }
+        } else if probe.mode.hasPrefix("approval") {
             ApprovalExample(probe: probe, model: probe.approval)
         } else {
             DeviceStream(session: probe.connection.session, hasControl: probe.mode != "display-only")

@@ -129,6 +129,11 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Connecting your phone"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["Go back"].exists)
         app.terminate()
+        _ = launch("reconnecting-retained")
+        XCTAssertTrue(app.staticTexts["reconnecting (3/6)"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.images["stream-phone-placeholder"].exists)
+        capture("reconnecting-retained-opaque-fixture")
+        app.terminate()
     }
     func testApprovalExpiryDecisionRefetchAndDeviceIdentity() {
         let app = launch("approval-expired")

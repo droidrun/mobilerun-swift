@@ -79,7 +79,7 @@ def main():
         for action in ['shutdown', 'delete']:
             sim(action, tablet)
         tablet = None
-        for mode in ['connecting', 'reconnecting', 'unavailable', 'dark', 'custom', 'approval', 'approval-expired',
+        for mode in ['connecting', 'reconnecting', 'reconnecting-retained', 'unavailable', 'dark', 'custom', 'approval', 'approval-expired',
                      'solid', 'solid-dark', 'unavailable-dark', 'unavailable-solid', 'unavailable-solid-dark',
                      'approval-dark', 'approval-solid', 'approval-solid-dark']:
             sim('ui', device, 'appearance', 'dark' if 'dark' in mode else 'light')
