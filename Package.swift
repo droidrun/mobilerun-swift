@@ -24,7 +24,7 @@ let package = Package(
         ]),
         .testTarget(
             name: "MobilerunConformanceTests",
-            dependencies: ["MobilerunProtocol", "MobilerunStreamCore"],
+            dependencies: ["MobilerunProtocol", "MobilerunStreamCore", "MobilerunStream"],
             path: "Tests"
         ),
     ],

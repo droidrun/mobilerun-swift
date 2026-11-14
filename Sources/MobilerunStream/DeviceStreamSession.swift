@@ -13,8 +13,8 @@
     @MainActor public final class DeviceStreamSession: ObservableObject {
         @Published public private(set) var status: StreamStatus = .connecting
         @Published public private(set) var videoSize: VideoSize?
-        // Raw native tracks stay inside the package until the renderer is available.
-        @Published private(set) var videoTrack: LKRTCVideoTrack?
+        // Only the package's native renderer consumes tracks; apps use DeviceStreamView.
+        @Published package private(set) var videoTrack: LKRTCVideoTrack?
         private weak var signalling: URLSessionSignalling?
         private weak var peer: WebRTCPeer?
         private var muted: Bool

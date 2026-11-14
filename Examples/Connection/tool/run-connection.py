@@ -136,7 +136,8 @@ def main():
                 point = json.loads(args.tap_coordinates_file.read_text())
                 x, y = point["x"], point["y"]
             command("tap", x=x, y=y)
-            wait_for(lambda text: "tap down=true up=true" in text, "raw control tap")
+            wait_for(lambda text: "view tap complete" in text and
+                     "input type=2 action=1 pointer=0 sent=true" in text, "view control tap")
             time.sleep(3)
             screenshot("02-after-tap")
         command("mute")

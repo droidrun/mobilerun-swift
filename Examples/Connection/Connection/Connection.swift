@@ -9,9 +9,11 @@ import SwiftUI
     @preconcurrency import LiveKitWebRTC
     @testable import MobilerunStream
 
-    /// A debug validation harness, not a reusable renderer or input-mapping component.
+    /// Debug-only deterministic driver for connection and native-view validation.
     @MainActor final class ConnectionProbe: ObservableObject {
         let session: DeviceStreamSession
+        let controller = DeviceStreamViewController()
+        private let fingers = (0..<10).map { _ in NSObject() }
         private var timer: Timer?
         private var hostPlayer: AVAudioPlayer?
         private let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -61,11 +63,24 @@ import SwiftUI
                 let action: String
                 let x: Double?
                 let y: Double?
+                let endX: Double?
+                let endY: Double?
+                let value: String?
+                let usage: Int?
+                let enabled: Bool?
             }
             let url = documents.appendingPathComponent("command.json")
             guard let data = try? Data(contentsOf: url) else { return }
             try? FileManager.default.removeItem(at: url)
             guard let command = try? JSONDecoder().decode(Command.self, from: data) else { return }
+            if let view = controller.view {
+                view.onInput = { [weak self] data, sent in
+                    guard let type = data.first else { return }
+                    let action = type == 0 || type == 2 ? Int(data[1]) : -1
+                    let pointer = type == 2 ? Int(data[9]) : -1
+                    self?.mark("input type=\(type) action=\(action) pointer=\(pointer) sent=\(sent)")
+                }
+            }
             switch command.action {
             case "close":
                 mark("forcing socket close")
@@ -75,6 +90,53 @@ import SwiftUI
                 session.requestConfigurationRefresh()
             case "tap":
                 tap(x: command.x ?? 0, y: command.y ?? 0)
+            case "swipe":
+                gesture(x: command.x ?? 0.5, y: command.y ?? 0.8,
+                        endX: command.endX ?? 0.5, endY: command.endY ?? 0.2, pinch: false)
+            case "pinch":
+                gesture(x: 0.3, y: 0.5, endX: 0.1, endY: 0.5, pinch: true)
+            case "text":
+                textInput()?.insertText(command.value ?? "")
+                mark("soft text requested")
+            case "compose":
+                let input = textInput()
+                input?.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
+                input?.setMarkedText(command.value ?? "你", selectedRange: NSRange(location: 1, length: 0))
+                mark("composition marked")
+                input?.unmarkText()
+                mark("composition committed")
+            case "delete":
+                textInput()?.deleteBackward()
+            case "hardware":
+                if let view = controller.view {
+                    view.routeKey(usage: command.usage ?? 4, text: command.value ?? "a", down: true)
+                    view.routeKey(usage: command.usage ?? 4, text: command.value ?? "a", down: false)
+                }
+            case "paste":
+                UIPasteboard.general.string = command.value ?? ""
+                controller.view?.routeKey(usage: 25, text: "v", down: true, flags: .command)
+                controller.view?.routeKey(usage: 25, text: "v", down: false, flags: .command)
+            case "keyboard":
+                controller.showKeyboard()
+            case "hideKeyboard":
+                controller.hideKeyboard()
+            case "control":
+                controller.view?.hasControl = command.enabled ?? false
+                mark("control enabled=\(controller.view?.hasControl == true)")
+            case "system":
+                switch command.value {
+                case "BACK": controller.sendSystemKey(.back)
+                case "RECENT": controller.sendSystemKey(.recent)
+                default: controller.sendSystemKey(.home)
+                }
+                mark("system requested")
+            case "rotateView":
+                if let view = controller.view {
+                    view.bounds.size = CGSize(width: view.bounds.height, height: view.bounds.width)
+                    view.setNeedsLayout()
+                    view.layoutIfNeeded()
+                    mark("view rotated")
+                }
             case "mute":
                 session.setMuted(true)
                 auditHostAudio()
@@ -90,26 +152,52 @@ import SwiftUI
             }
         }
 
+        private func textInput() -> StreamTextInput? {
+            controller.view?.subviews.compactMap { $0 as? StreamTextInput }.first
+        }
+
+        private func localPoint(_ x: Double, _ y: Double) -> CGPoint? {
+            guard let rect = controller.view?.renderedVideoRect else { return nil }
+            return CGPoint(x: rect.minX + x * rect.width, y: rect.minY + y * rect.height)
+        }
+
         private func tap(x: Double, y: Double) {
-            guard let size = session.videoSize else {
+            guard let view = controller.view, let size = session.videoSize else {
                 mark("tap rejected")
                 return
             }
-            let down = session.sendControl(
-                ControlMessages.touch(
-                    action: MotionEvent.actionDown, pointerID: 0,
-                    videoWidth: size.width, videoHeight: size.height, x: x, y: y, actionButton: 1, buttons: 1
-                ))
-            Task { @MainActor [weak self] in
+            let swapped = size.rotation % 180 != 0
+            let width = swapped ? size.height : size.width
+            let height = swapped ? size.width : size.height
+            guard let point = localPoint(x / Double(width), y / Double(height)) else { return }
+            let id = ObjectIdentifier(fingers[0])
+            view.beginPointer(id, at: point)
+            Task { @MainActor [weak self, weak view] in
                 try? await Task.sleep(nanoseconds: 80_000_000)
-                guard let self else { return }
-                let up = session.sendControl(
-                    ControlMessages.touch(
-                        action: MotionEvent.actionUp, pointerID: 0,
-                        videoWidth: size.width, videoHeight: size.height, x: x, y: y, actionButton: 1,
-                        buttons: 1
-                    ))
-                mark("tap down=\(down) up=\(up) x=\(Int(x)) y=\(Int(y))")
+                view?.endPointer(id)
+                self?.mark("view tap complete")
+            }
+        }
+
+        private func gesture(x: Double, y: Double, endX: Double, endY: Double, pinch: Bool) {
+            guard let view = controller.view, let start = localPoint(x, y) else { return }
+            let id = ObjectIdentifier(fingers[0])
+            let second = ObjectIdentifier(fingers[1])
+            view.beginPointer(id, at: start)
+            if pinch, let point = localPoint(1 - x, y) { view.beginPointer(second, at: point) }
+            Task { @MainActor [weak self, weak view] in
+                guard let self, let view else { return }
+                for step in 1...30 {
+                    let progress = Double(step) / 30
+                    let px = x + (endX - x) * progress
+                    let py = y + (endY - y) * progress
+                    if let point = localPoint(px, py) { view.movePointer(id, to: point) }
+                    if pinch, let point = localPoint(1 - px, py) { view.movePointer(second, to: point) }
+                    try? await Task.sleep(nanoseconds: 16_666_667)
+                }
+                view.endPointer(id)
+                if pinch { view.endPointer(second) }
+                mark(pinch ? "pinch complete" : "swipe complete")
             }
         }
 
@@ -167,27 +255,6 @@ import SwiftUI
         }
     }
 
-    private struct Preview: UIViewRepresentable {
-        let track: LKRTCVideoTrack?
-        final class Coordinator { var track: LKRTCVideoTrack? }
-        func makeCoordinator() -> Coordinator { Coordinator() }
-        func makeUIView(context: Context) -> LKRTCMTLVideoView {
-            let view = LKRTCMTLVideoView(frame: .zero)
-            view.videoContentMode = .scaleAspectFit
-            return view
-        }
-        func updateUIView(_ view: LKRTCMTLVideoView, context: Context) {
-            guard context.coordinator.track !== track else { return }
-            context.coordinator.track?.remove(view)
-            context.coordinator.track = track
-            track?.add(view)
-        }
-        static func dismantleUIView(_ view: LKRTCMTLVideoView, coordinator: Coordinator) {
-            coordinator.track?.remove(view)
-            coordinator.track = nil
-        }
-    }
-
     private struct ConnectionView: View {
         @ObservedObject var session: DeviceStreamSession
         let probe: ConnectionProbe
@@ -198,7 +265,8 @@ import SwiftUI
                 if let size = session.videoSize {
                     Text("\(size.width) × \(size.height) · \(size.rotation)°").font(.caption)
                 }
-                Preview(track: session.videoTrack).background(Color.black)
+                DeviceStreamView(session: session, hasControl: true, controller: probe.controller)
+                    .background(Color.black)
             }.padding(8)
                 .onReceive(session.$status) { probe.mark("status \($0)") }
                 .onReceive(session.$videoSize) {
