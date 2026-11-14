@@ -33,7 +33,11 @@ import MobilerunProtocol
             guard let self, !self.closed else { return }
             switch snapshot.status {
             case .connecting: self.status = .connecting
-            case .connected: self.status = .connected
+            case .connected:
+                // A peer may recover before the scheduled remount. Discard that cycle's
+                // unused prefetch so a later heal always asks for fresh credentials.
+                self.credentialTask?.cancel(); self.credentialTask = nil
+                self.status = .connected
             case .reconnecting:
                 self.status = .reconnecting(attempt: snapshot.attempt)
                 if self.attempt == nil { self.mountTask?.cancel(); self.mountTask = nil }

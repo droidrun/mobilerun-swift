@@ -323,3 +323,22 @@ func sessionHandshakeTimeout(opened: Bool) async throws {
     #expect(h.sockets.count == 1)
     #expect(h.clock.pendingCount == 0)
 }
+
+@Test("Self recovery discards unused credentials before the next heal") @MainActor
+func sessionRecoveryCredentials() async throws {
+    let h = try SessionHarness()
+    defer { h.engine.close() }
+    try await h.negotiate()
+    let peer = h.peers[0]
+    peer.onEvent?(.state(.connected))
+    peer.onEvent?(.state(.disconnected))
+    await settle { h.credentialCalls == 2 }
+    peer.onEvent?(.state(.connected))
+    h.clock.advance(to: ReconnectPolicy.stabilityMs)
+    #expect(h.sockets.count == 1)
+    peer.onEvent?(.state(.failed))
+    await settle { h.credentialCalls == 3 }
+    h.clock.advance(to: ReconnectPolicy.stabilityMs + 1000)
+    await settle { h.sockets.count == 2 }
+    #expect(h.credentialCalls == 3)
+}
