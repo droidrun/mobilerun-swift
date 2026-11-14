@@ -131,7 +131,8 @@ enum FakeFailure: Error { case negotiation }
     func credentials() async throws -> StreamCredentials? {
         credentialCalls += 1
         if hangCredentials {
-            do { try await Task.sleep(nanoseconds: UInt64.max) } catch {
+            // A day-long wait stays pending throughout a test without overflowing older runtimes.
+            do { try await Task.sleep(nanoseconds: 86_400_000_000_000) } catch {
                 credentialCancellations += 1
                 throw error
             }
