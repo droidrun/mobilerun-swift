@@ -1,0 +1,19 @@
+name: Swift
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - name: Check generated constants
+        run: |
+          python3 tool/generate-constants.py
+          git diff --exit-code
+      - run: swift build
+      - run: swift test
