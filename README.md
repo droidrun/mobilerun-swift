@@ -14,7 +14,6 @@ Add the `MobilerunStream` library product to your app. It pins LiveKitWebRTC to 
 
 ```swift
 import MobilerunStream
-import MobilerunProtocol
 
 // Create and use the session on the main actor. The provider may fetch from your API.
 let session = DeviceStreamSession(credentials: {
@@ -25,10 +24,6 @@ session.start()
 // Observe session.status and session.videoSize.
 // Use DeviceStreamView(session: session, hasControl: true) in your SwiftUI hierarchy.
 
-let sent = session.sendControl(ControlMessages.touch(
-    action: MotionEvent.actionDown, pointerID: 0,
-    videoWidth: 1080, videoHeight: 1920, x: 200, y: 300
-))
 session.openURL("https://example.com")
 let image = try await session.screenshot(timeout: 30)
 // When finished:
@@ -50,8 +45,8 @@ configuration. Live configuration updates replace ICE servers and send an ICE-re
 non-terminal state dips are suppressed for up to 15 seconds, with a deadline recheck. The host
 owns app lifecycle decisions; the session installs no app lifecycle observers.
 
-`sendControl` and `sendHover` return false when their respective channels are not open. Hover
-uses channel 2 only; it never falls back to control channel 1. `openURL` sends now if control is
+The view sends input only when its channel is open. Raw transport methods are package-only.
+Hover uses channel 2 only, including its pressed-button mask; it never falls back to control channel 1. `openURL` sends now if control is
 open, otherwise queues the latest URL for the next channel opening. `screenshot` returns decoded
 image bytes, or throws `StreamError` on disconnect, timeout, failure or no open socket; cancelling
 the caller cancels its pending request. Timeouts use the protocol default and are capped at 24 hours.
@@ -107,15 +102,17 @@ closing the session.
 Mapping uses post-rotation video dimensions (90°/270° frames swap width and height). A touch
 starting in the letterbox is ignored. Moves outside are ignored; UP/CANCEL releases at the last
 in-video position. Each of up to ten fingers has a stable slot, with at most one MOVE per display
-frame. iPad mouse clicks use pointer −1; unpressed pointer hover uses the separate lossy channel.
+frame. iPad mouse clicks use pointer −1; pointer hover, including pressed buttons, uses the separate lossy channel.
 Mouse/trackpad scrolling uses wheel messages; a finger drag remains a touch gesture.
 
 Tap the video to focus hardware input. Printable hardware characters inject text; navigation,
 function and modifier keys inject Android keycodes. Cmd/Ctrl+V pastes the local string using
 SET_CLIPBOARD; Cmd/Ctrl+M sends Menu. Modifier masks and physical HID-to-Android mapping follow
-the protocol's keyboard code table. `showKeyboard()` explicitly focuses a UIKit text-input client;
-marked IME text stays local until committed. Committed Unicode text injects text, an empty-buffer
-backspace sends DEL, and return sends ENTER. Paste uses `UIPasteboard` and follows the platform's
+the protocol's keyboard code table. Unmapped media/volume/gamepad keys pass through to the host;
+numpad Enter is a control key, and control characters are never injected as text. `showKeyboard()` explicitly focuses a UIKit text-input client;
+marked IME text stays local until committed or finalized by UIKit. Committed Unicode text injects text, an empty-buffer
+backspace sends DEL, and return sends ENTER. Keyboard hiding only resigns this view's own responder;
+it leaves the host app's input alone. Paste uses `UIPasteboard` and follows the platform's
 clipboard access behavior.
 
 `hasControl: false` keeps rendering and suppresses all local forwarding, including keyboard,
@@ -163,10 +160,23 @@ python3 tool/generate-constants.py
 Licensed under Apache-2.0; see [LICENSE](LICENSE).
 
 The input runner `Examples/Connection/tool/run-input.py` additionally runs UIKit tests on its
-disposable simulator and drives touch, swipe, two-pointer pinch, hardware routing, text/IME,
-clipboard, control suppression, system keys and local geometry rotation. Its `--scenario` argument
-accepts a JSON array of steps; omit it to supply `next-step.json` interactively in the evidence
-directory. Each step has a `command`, optional `settle` seconds and optional screenshot name
-`shot`; a final `{"finish": true}` stops the session. See the script's help for the command shapes.
-Use screen coordinates from a current screenshot and inspect before/after results. The driver
-shares native handlers but does not synthesize operating-system touch or hardware events.
+disposable simulator, including exact packet bytes recorded by the session's fake transport.
+Run it with `--credentials`, `--evidence`, `--shots` and a required `--scenario` JSON file. The
+scenario contains `crop: [x, y, width, height]` in screenshot pixels, `statusBarBottom` (the bottom
+of both host and device status bars), and a `steps` array. The crop must start below that boundary.
+Coordinates and expected behavior are supplied beforehand; the runner does not select targets.
+
+Every step has a `command` and at least one behavior assertion: `expectEvents` (required log
+substrings), `expectNoInput: true`, or `screen: {"kind": "changed"}` / `{"kind": "same"}`. Optional
+`settle` controls the wait and `shot` captures a new screenshot baseline (also for packet-only setup steps). Screen assertions compare cropped
+pixel data against the preceding cropped screenshot, ignoring color changes of at most 12 levels
+and allowing a configurable changed-byte fraction `tolerance` (default 0.002). This excludes status
+bar clock changes and image metadata from the result. Both original and cropped PNGs are saved. A step may override `crop` and `statusBarBottom`
+when rotation moves the video; both reference and result are cropped with the same rectangle.
+
+The driver covers tap, swipe, two-pointer pinch, hardware routing, text/IME, clipboard, control
+suppression, system keys and local geometry rotation through shared native handlers. It does not
+synthesize operating-system touch or hardware events. See `--help` and the example command switch
+for command fields. `--skip-native-tests` reuses existing native-test evidence when replaying an
+external scenario against unchanged Swift sources. Credentials remain outside the bundle and are
+removed during cleanup.

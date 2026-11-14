@@ -9,7 +9,7 @@
         var onCommit: ((String) -> Void)?
         var onDelete: (() -> Void)?
         var onPaste: (() -> Void)?
-        var onPresses: ((Set<UIPress>, Bool) -> Bool)?
+        var onPresses: ((Set<UIPress>, Bool) -> Set<UIPress>)?
         private var updatingMarkedText = false
 
         override init(frame: CGRect, textContainer: NSTextContainer?) {
@@ -20,6 +20,7 @@
             spellCheckingType = .no
             smartQuotesType = .no
             smartDashesType = .no
+            smartInsertDeleteType = .no
         }
 
         @available(*, unavailable)
@@ -29,6 +30,7 @@
             updatingMarkedText = true
             super.setMarkedText(markedText, selectedRange: selectedRange)
             updatingMarkedText = false
+            commitIfReady()
         }
 
         override func unmarkText() {
@@ -49,6 +51,7 @@
         override func paste(_ sender: Any?) { onPaste?() }
 
         func textViewDidChange(_ textView: UITextView) { commitIfReady() }
+        func textViewDidEndEditing(_ textView: UITextView) { commitIfReady() }
 
         func discardComposition() {
             updatingMarkedText = true
@@ -65,15 +68,18 @@
         }
 
         override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            if onPresses?(presses, true) != true { super.pressesBegan(presses, with: event) }
+            let remaining = presses.subtracting(onPresses?(presses, true) ?? [])
+            if !remaining.isEmpty { super.pressesBegan(remaining, with: event) }
         }
 
         override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            if onPresses?(presses, false) != true { super.pressesEnded(presses, with: event) }
+            let remaining = presses.subtracting(onPresses?(presses, false) ?? [])
+            if !remaining.isEmpty { super.pressesEnded(remaining, with: event) }
         }
 
         override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            _ = onPresses?(presses, false)
+            let remaining = presses.subtracting(onPresses?(presses, false) ?? [])
+            if !remaining.isEmpty { super.pressesCancelled(remaining, with: event) }
         }
     }
 #endif

@@ -18,7 +18,7 @@ package enum KeyInput {
     private static let controlCodes: Set<String> = Set([
         "Backspace", "Delete", "Enter", "Tab", "Escape", "Home", "End", "PageUp", "PageDown", "Insert",
         "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "ShiftLeft", "ShiftRight", "ControlLeft",
-        "ControlRight", "AltLeft", "AltRight", "MetaLeft", "MetaRight",
+        "ControlRight", "AltLeft", "AltRight", "MetaLeft", "MetaRight", "NumpadEnter",
     ] + (1...12).map { "F\($0)" })
 
     /// Clipboard is read lazily, only for the paste shortcut. The S1 map owns Android keycodes.
@@ -40,7 +40,8 @@ package enum KeyInput {
         if modifiers.contains(.control) { meta |= AndroidKey.metaCtrlOn }
         if modifiers.contains(.alternate) { meta |= AndroidKey.metaAltOn }
         if modifiers.contains(.command) { meta |= AndroidKey.metaMetaOn }
-        if controlCodes.contains(code) || shortcut {
+        let controlCharacter = text.unicodeScalars.contains { $0.properties.generalCategory == .control }
+        if controlCodes.contains(code) || shortcut || controlCharacter {
             return [ControlMessages.keycode(action: down ? AndroidKey.actionDown : AndroidKey.actionUp,
                                             keycode: keycode, metaState: meta)]
         }
@@ -61,10 +62,13 @@ package enum KeyInput {
         var packets: [Data] = []
         var pending = ""
         for character in text {
-            if character == "\n" || character == "\r" || character == "\r\n" {
+            let newline = character == "\n" || character == "\r" || character == "\r\n"
+            let control = character.unicodeScalars.contains { $0.properties.generalCategory == .control }
+            if control {
                 if !pending.isEmpty { packets.append(ControlMessages.text(pending)) }
                 pending = ""
-                packets += press(AndroidKey.enter)
+                if newline { packets += press(AndroidKey.enter) }
+                else if character == "\t" { packets += press(AndroidKey.keycodeTab) }
             } else { pending.append(character) }
         }
         if !pending.isEmpty { packets.append(ControlMessages.text(pending)) }

@@ -16,8 +16,6 @@ package struct PointerInput<Identity: Hashable> {
 
     package init() {}
 
-    package var mouseIsDown: Bool { active.values.contains { $0.slot == -1 } }
-
     package mutating func down(
         _ id: Identity, at point: CGPoint, geometry: InputGeometry, mouse: Bool = false
     ) -> Data? {

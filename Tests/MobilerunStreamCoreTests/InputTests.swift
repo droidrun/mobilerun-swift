@@ -71,12 +71,10 @@ struct InputTests {
         #expect(input.down(10, at: CGPoint(x: 60, y: 20), geometry: geometry) == nil)
         #expect(input.down(100, at: CGPoint(x: 60, y: 20), geometry: geometry, mouse: true)
                 == touch(0, -1, 10, 20))
-        #expect(input.mouseIsDown)
         #expect(input.down(101, at: CGPoint(x: 60, y: 20), geometry: geometry, mouse: true) == nil)
         #expect(input.up(4, cancelled: true) == touch(3, 4, 10, 20))
         #expect(input.down(40, at: CGPoint(x: 60, y: 20), geometry: geometry) == touch(0, 4, 10, 20))
         #expect(input.cancel().count == 11)
-        #expect(!input.mouseIsDown)
         #expect(input.up(0) == nil)
     }
 
@@ -134,6 +132,11 @@ struct InputTests {
         (42, "", true, [], [ControlMessages.keycode(action: 0, keycode: 67)]),
         (76, "", false, [], [ControlMessages.keycode(action: 1, keycode: 112)]),
         (40, "\r", true, [], [ControlMessages.keycode(action: 0, keycode: 66)]),
+        (88, "\r", true, [], [ControlMessages.keycode(action: 0, keycode: 160)]),
+        (88, "\r", false, [], [ControlMessages.keycode(action: 1, keycode: 160)]),
+        (89, "\u{1}", true, [], [ControlMessages.keycode(action: 0, keycode: 145)]),
+        (89, "\u{1}", false, [], [ControlMessages.keycode(action: 1, keycode: 145)]),
+        (9, "F", true, .shift, [ControlMessages.text("F")]),
         (79, "", true, [], [ControlMessages.keycode(action: 0, keycode: 22)]),
         (58, "", false, [], [ControlMessages.keycode(action: 1, keycode: 131)]),
         (225, "", true, .shift, [ControlMessages.keycode(action: 0, keycode: 59, metaState: 1)]),
@@ -159,5 +162,8 @@ struct InputTests {
                 [ControlMessages.text("你好🙂")] + KeyInput.press(66)
                 + [ControlMessages.text("next")] + KeyInput.press(66))
         #expect(KeyInput.committedText("").isEmpty)
+        #expect(KeyInput.committedText("👩‍💻") == [ControlMessages.text("👩‍💻")])
+        #expect(KeyInput.committedText("a\u{1}\tb") ==
+                [ControlMessages.text("a")] + KeyInput.press(61) + [ControlMessages.text("b")])
     }
 }

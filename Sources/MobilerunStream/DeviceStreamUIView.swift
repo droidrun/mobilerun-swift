@@ -33,8 +33,7 @@
             didSet {
                 if !hasControl {
                     textClient.discardComposition()
-                    textClient.resignFirstResponder()
-                    resignFirstResponder()
+                    hideKeyboard()
                 }
             }
         }
@@ -57,7 +56,7 @@
             textClient.onCommit = { [weak self] in self?.send(KeyInput.committedText($0)) }
             textClient.onDelete = { [weak self] in self?.send(KeyInput.press(AndroidKey.del)) }
             textClient.onPaste = { [weak self] in self?.paste(nil) }
-            textClient.onPresses = { [weak self] in self?.handlePresses($0, down: $1) ?? false }
+            textClient.onPresses = { [weak self] in self?.handlePresses($0, down: $1) ?? [] }
             addSubview(textClient)
             addGestureRecognizer(UIHoverGestureRecognizer(target: self, action: #selector(hover(_:))))
             let scroll = UIPanGestureRecognizer(target: self, action: #selector(scroll(_:)))
@@ -89,8 +88,8 @@
         }
 
         public func hideKeyboard() {
-            textClient.resignFirstResponder()
-            resignFirstResponder()
+            if textClient.isFirstResponder { textClient.resignFirstResponder() }
+            if isFirstResponder { resignFirstResponder() }
         }
 
         public func sendSystemKey(_ key: SystemKey) {
@@ -209,7 +208,7 @@
             pressedKeys.removeAll()
         }
 
-        fileprivate func flushMoves() { send(pointers.flushMoves()) }
+        func flushMoves() { send(pointers.flushMoves()) }
 
         public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
             guard hasControl else { return }
@@ -257,42 +256,53 @@
         }
 
         @objc private func hover(_ recognizer: UIHoverGestureRecognizer) {
-            guard hasControl, !pointers.mouseIsDown,
-                  recognizer.state == .began || recognizer.state == .changed,
-                  let geometry, let point = geometry.map(recognizer.location(in: self)) else { return }
+            guard recognizer.state == .began || recognizer.state == .changed else { return }
+            routeHover(at: recognizer.location(in: self), buttons: recognizer.buttonMask)
+        }
+
+        func routeHover(at location: CGPoint, buttons: UIEvent.ButtonMask) {
+            guard hasControl, let geometry, let point = geometry.map(location) else { return }
             session.sendHover(ControlMessages.hover(
-                videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight, x: point.x, y: point.y
+                videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight,
+                x: point.x, y: point.y, buttons: Int(buttons.rawValue)
             ))
         }
 
         @objc private func scroll(_ recognizer: UIPanGestureRecognizer) {
             let delta = recognizer.translation(in: self)
             recognizer.setTranslation(.zero, in: self)
-            guard hasControl, recognizer.state == .changed,
-                  let geometry, let point = geometry.map(recognizer.location(in: self)) else { return }
+            guard recognizer.state == .changed else { return }
+            routeScroll(at: recognizer.location(in: self), translation: delta, buttons: recognizer.buttonMask)
+        }
+
+        func routeScroll(at location: CGPoint, translation: CGPoint, buttons: UIEvent.ButtonMask) {
+            guard hasControl, let geometry, let point = geometry.map(location) else { return }
             // Pan translation follows the pointer/content; browser wheel deltas have the opposite sign.
-            let ticks = ScrollInput.ticks(horizontal: -delta.x, vertical: -delta.y, unit: .pixel)
+            let ticks = ScrollInput.ticks(horizontal: -translation.x, vertical: -translation.y, unit: .pixel)
             send([ControlMessages.scroll(
                 videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight, x: point.x, y: point.y,
-                hscrollTicks: ticks.0, vscrollTicks: ticks.1
+                hscrollTicks: ticks.0, vscrollTicks: ticks.1, buttons: Int(buttons.rawValue)
             )])
         }
 
         public override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            if !handlePresses(presses, down: true) { super.pressesBegan(presses, with: event) }
+            let remaining = presses.subtracting(handlePresses(presses, down: true))
+            if !remaining.isEmpty { super.pressesBegan(remaining, with: event) }
         }
 
         public override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            if !handlePresses(presses, down: false) { super.pressesEnded(presses, with: event) }
+            let remaining = presses.subtracting(handlePresses(presses, down: false))
+            if !remaining.isEmpty { super.pressesEnded(remaining, with: event) }
         }
 
         public override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            _ = handlePresses(presses, down: false)
+            let remaining = presses.subtracting(handlePresses(presses, down: false))
+            if !remaining.isEmpty { super.pressesCancelled(remaining, with: event) }
         }
 
-        private func handlePresses(_ presses: Set<UIPress>, down: Bool) -> Bool {
-            guard hasControl else { return false }
-            var handled = false
+        private func handlePresses(_ presses: Set<UIPress>, down: Bool) -> Set<UIPress> {
+            guard hasControl else { return [] }
+            var handled = Set<UIPress>()
             for press in presses {
                 guard let key = press.key else { continue }
                 let usage = key.keyCode.rawValue
@@ -302,18 +312,21 @@
                 let shortcut = !modifiers.intersection([.control, .command]).isEmpty
                 routeKey(usage: usage, text: shortcut ? key.charactersIgnoringModifiers : key.characters,
                          down: down, flags: key.modifierFlags)
-                handled = true
+                handled.insert(press)
             }
             return handled
         }
 
-        func routeKey(usage: Int, text: String, down: Bool, flags: UIKeyModifierFlags = []) {
-            guard hasControl else { return }
+        @discardableResult func routeKey(
+            usage: Int, text: String, down: Bool, flags: UIKeyModifierFlags = []
+        ) -> Bool {
+            guard hasControl, HIDCode.values[usage] != nil else { return false }
             let modifiers = Self.modifiers(flags)
             if down { pressedKeys[usage] = (text, modifiers) }
             else { pressedKeys.removeValue(forKey: usage) }
             send(KeyInput.route(usage: usage, text: text, down: down, modifiers: modifiers,
                                 clipboard: { UIPasteboard.general.string }))
+            return true
         }
 
         private static func modifiers(_ flags: UIKeyModifierFlags) -> InputModifiers {
