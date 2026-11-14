@@ -17,3 +17,10 @@ jobs:
           git diff --exit-code
       - run: swift build
       - run: swift test
+      - name: Build iOS simulator library
+        run: xcodebuild -scheme MobilerunStream -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO
+      - name: Build connection example
+        run: >-
+          xcodebuild -project Examples/Connection/Connection.xcodeproj
+          -scheme Connection -configuration Debug -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /// State of a stream's initial connection or recovery cycle.
-public enum StreamReconnectStatus: String, Sendable {
+package enum StreamReconnectStatus: String, Sendable {
     /// A fresh connection is negotiating.
     case connecting
     /// The connection is established.
@@ -14,16 +14,16 @@ public enum StreamReconnectStatus: String, Sendable {
 }
 
 /// Immutable state emitted by the reconnect controller.
-public struct StreamReconnectSnapshot: Sendable, Equatable {
+package struct StreamReconnectSnapshot: Sendable, Equatable {
     /// Current connection state.
-    public let status: StreamReconnectStatus
+    package let status: StreamReconnectStatus
     /// Consecutive failures; zero on a fresh connection or after stability refills the budget.
-    public let attempt: Int
+    package let attempt: Int
 }
 
 /// Main-actor cancellation handle for one scheduled action, usable by a main-actor host.
 @MainActor
-public protocol ScheduledTask {
+package protocol ScheduledTask {
     /// Cancels the action; harmless if already fired or cancelled.
     func cancel()
 }
@@ -32,7 +32,7 @@ public protocol ScheduledTask {
 /// to the main actor, allowing Swift 6 hosts to conform without unsafe isolation bridges.
 /// The core creates no real timers.
 @MainActor
-public protocol ReconnectScheduler {
+package protocol ReconnectScheduler {
     /// Schedules an action after the given milliseconds. Never invoke it synchronously.
     /// Equal deadlines fire in scheduling order on the main actor.
     func schedule(delayMs: Int, action: @escaping @MainActor () -> Void) -> any ScheduledTask
@@ -42,7 +42,7 @@ public protocol ReconnectScheduler {
 /// Every entry point, scheduled action, and callback runs on the main actor. Call dispose to cancel
 /// pending actions before releasing the controller. After disposal, entry points have no effects.
 @MainActor
-public final class StreamReconnectController {
+package final class StreamReconnectController {
     private let onRemount: () -> Void
     private let onSnapshot: (StreamReconnectSnapshot) -> Void
     private let onHeal: () -> Void
@@ -62,7 +62,7 @@ public final class StreamReconnectController {
     /// Creates a controller. The host calls attemptMounted after each requested remount.
     /// onHeal refreshes credentials once per recovery cycle; onSnapshot reports state changes.
     /// Callbacks are retained privately. The random source returns a value in [0, 1).
-    public init(
+    package init(
         scheduler: any ReconnectScheduler,
         random: @escaping () -> Double = { Double.random(in: 0..<1) },
         onRemount: @escaping () -> Void,
@@ -77,12 +77,12 @@ public final class StreamReconnectController {
     }
 
     /// Current snapshot, including after disposal.
-    public var snapshot: StreamReconnectSnapshot {
+    package var snapshot: StreamReconnectSnapshot {
         StreamReconnectSnapshot(status: status, attempt: attempt)
     }
 
     /// A connection started or restarted; arms its watchdog. Stale mounts during backoff are ignored.
-    public func attemptMounted() {
+    package func attemptMounted() {
         guard !disposed else { return }
         enabled = true
         guard !recoveryIsScheduled else { return }
@@ -102,7 +102,7 @@ public final class StreamReconnectController {
     }
 
     /// Removes the target, cancels timers, and resets the retry budget.
-    public func disable() {
+    package func disable() {
         guard enabled else { return }
         enabled = false
         clearAllTimers()
@@ -117,7 +117,7 @@ public final class StreamReconnectController {
     }
 
     /// The connection reached connected; cancels a pending remount and starts the stability window.
-    public func handleConnected() {
+    package func handleConnected() {
         guard enabled else { return }
         cancel(&watchdogTimer)
         cancel(&backoffTimer)
@@ -140,38 +140,39 @@ public final class StreamReconnectController {
     }
 
     /// Counts a disconnected state only if this mount had connected, once per mount.
-    public func handleDisconnected() {
+    package func handleDisconnected() {
         guard enabled, everConnectedThisEpoch, !failureLatched else { return }
         countFailure()
     }
 
     /// Counts a terminal negotiation, socket, or peer-connection failure, once per mount.
-    public func handleFailure() {
+    package func handleFailure() {
         guard enabled, !failureLatched else { return }
         countFailure()
     }
 
     /// Defers a target or credential change only during backoff or while unavailable; false after disposal.
-    public var shouldDeferTargetChange: Bool { !disposed && recoveryIsScheduled }
+    package var shouldDeferTargetChange: Bool { !disposed && recoveryIsScheduled }
 
     /// Foreground or network recovery: skips backoff, or restarts an exhausted retry cycle.
-    public func handleWake() {
+    package func handleWake() {
         guard enabled else { return }
-        if status == .unavailable { freshCycle() }
-        else if backoffTimer != nil {
+        if status == .unavailable {
+            freshCycle()
+        } else if backoffTimer != nil {
             cancel(&backoffTimer)
             onRemount()
         }
     }
 
     /// Manual retry; only starts a cycle when unavailable.
-    public func retry() {
+    package func retry() {
         guard enabled else { return }
         if status == .unavailable { freshCycle() }
     }
 
     /// Permanently stops timers. Subsequent mutating entry points are no-ops.
-    public func dispose() {
+    package func dispose() {
         disposed = true
         enabled = false
         clearAllTimers()
