@@ -9,6 +9,7 @@ public struct StreamConfig: Sendable {
     /// Automatic prefers VP9, H.265, then H.264; without an H.265 decoder it offers H.264 only.
     public var videoCodec: VideoCodec
     public init(muted: Bool = true, videoCodec: VideoCodec = .automatic) {
-        self.muted = muted; self.videoCodec = videoCodec
+        self.muted = muted
+        self.videoCodec = videoCodec
     }
 }

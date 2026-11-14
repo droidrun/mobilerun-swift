@@ -4,21 +4,21 @@
 import Foundation
 
 /// Retry budgets and exponential backoff shared by the streaming clients.
-public enum ReconnectPolicy {
+package enum ReconnectPolicy {
     /// Maximum scheduled retries before a failure declares the stream unavailable.
-    public static let maxAttempts = 6
+    package static let maxAttempts = 6
     /// Whole-attempt watchdog; exceeds the combined signalling phase budgets.
-    public static let connectTimeoutMs = 45_000
+    package static let connectTimeoutMs = 45_000
     /// Continuous connection duration that refills the retry budget.
-    public static let stabilityMs = 30_000
+    package static let stabilityMs = 30_000
     /// First retry delay before jitter.
-    public static let baseDelayMs = 1_000
+    package static let baseDelayMs = 1_000
     /// Backoff cap before jitter.
-    public static let maxDelayMs = 30_000
+    package static let maxDelayMs = 30_000
 
     /// Delay for the one-based attempt with ±25% jitter, rounded half toward positive infinity.
     /// Values below one count as one. Supply random in [0, 1); 0.5 disables jitter.
-    public static func delayMs(attempt: Int, random: Double) -> Int {
+    package static func delayMs(attempt: Int, random: Double) -> Int {
         let exponent = max(1, attempt) - 1
         let base = min(Double(baseDelayMs) * pow(2, Double(exponent)), Double(maxDelayMs))
         return Int(floor(base * (0.75 + random * 0.5) + 0.5))

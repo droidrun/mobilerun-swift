@@ -2,7 +2,7 @@
 {
 archiveVersion = 1; classes = {}; objectVersion = 56;
 objects = {
-A00000000000000000000001 = {isa = PBXProject; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; mainGroup = A00000000000000000000002; productRefGroup = A00000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000004,); packageReferences = (A00000000000000000000020,A00000000000000000000023,); };
+A00000000000000000000001 = {isa = PBXProject; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; mainGroup = A00000000000000000000002; productRefGroup = A00000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000004,); packageReferences = (A00000000000000000000020,); };
 A00000000000000000000002 = {isa = PBXGroup; children = (A00000000000000000000005,A00000000000000000000003,); sourceTree = "<group>";};
 A00000000000000000000003 = {isa = PBXGroup; children = (A00000000000000000000006,); name = Products; sourceTree = "<group>";};
 A00000000000000000000004 = {isa = PBXNativeTarget; buildConfigurationList = A00000000000000000000011; buildPhases = (A00000000000000000000007,A00000000000000000000008,); buildRules = (); dependencies = (); name = Connection; productName = Connection; productReference = A00000000000000000000006; productType = "com.apple.product-type.application"; packageProductDependencies = (A00000000000000000000021,);};
@@ -13,15 +13,12 @@ A00000000000000000000008 = {isa = PBXFrameworksBuildPhase; buildActionMask = 214
 A00000000000000000000009 = {isa = PBXBuildFile; fileRef = A00000000000000000000005;};
 A00000000000000000000010 = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000012,A00000000000000000000013,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
 A00000000000000000000011 = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000014,A00000000000000000000015,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
-A00000000000000000000012 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 6.0; CLANG_ENABLE_MODULES = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone";};};
+A00000000000000000000012 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 6.0; CLANG_ENABLE_MODULES = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; ENABLE_TESTABILITY = YES;};};
 A00000000000000000000013 = {isa = XCBuildConfiguration; name = Release; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 6.0; CLANG_ENABLE_MODULES = YES; SWIFT_OPTIMIZATION_LEVEL = "-O";};};
 A00000000000000000000014 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.Connection; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = Connection/Info.plist; TARGETED_DEVICE_FAMILY = 1; CODE_SIGNING_ALLOWED = NO; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";};};
 A00000000000000000000015 = {isa = XCBuildConfiguration; name = Release; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.Connection; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = Connection/Info.plist; TARGETED_DEVICE_FAMILY = 1; CODE_SIGNING_ALLOWED = NO; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";};};
 A00000000000000000000020 = {isa = XCLocalSwiftPackageReference; relativePath = ../..;};
 A00000000000000000000021 = {isa = XCSwiftPackageProductDependency; package = A00000000000000000000020; productName = MobilerunStream;};
 A00000000000000000000022 = {isa = PBXBuildFile; productRef = A00000000000000000000021;};
-A00000000000000000000023 = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/livekit/webrtc-xcframework"; requirement = {kind = exactVersion; version = 150.7871.05;};};
-A00000000000000000000024 = {isa = XCSwiftPackageProductDependency; package = A00000000000000000000023; productName = LiveKitWebRTC;};
-A00000000000000000000025 = {isa = PBXBuildFile; productRef = A00000000000000000000024;};
 }; rootObject = A00000000000000000000001;
 }
