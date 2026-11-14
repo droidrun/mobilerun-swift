@@ -162,9 +162,8 @@ struct StreamButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.padding(.horizontal, 12).padding(.vertical, 10)
             .font(theme.typography)
-            .foregroundColor(outline ? theme.foreground : theme.primaryForeground)
+            .foregroundColor(configuration.isPressed ? theme.accentForeground : (outline ? theme.foreground : theme.primaryForeground))
             .background(configuration.isPressed ? theme.accent : (outline ? theme.background : theme.primary))
-            .foregroundColor(configuration.isPressed ? theme.accentForeground : nil)
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(outline ? theme.border : .clear, lineWidth: 1))
             .opacity(enabled ? 1 : 0.5)
