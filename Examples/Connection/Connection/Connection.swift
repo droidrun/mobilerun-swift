@@ -141,8 +141,10 @@ import SwiftUI
         /// A quiet generated tone proves that the embedding app's audio keeps playing.
         private static func tone() -> Data {
             let rate = 22050
-            let samples = (0..<(rate * 2)).map { index in
-                Int16(sin(2 * .pi * 220 * Double(index) / Double(rate)) * 1000)
+            let phaseStep = 2.0 * Double.pi * 220.0 / Double(rate)
+            let samples: [Int16] = (0..<(rate * 2)).map { index in
+                let amplitude = sin(phaseStep * Double(index)) * 1000.0
+                return Int16(amplitude)
             }
             var data = Data("RIFF".utf8)
             func append<T: FixedWidthInteger>(_ value: T) {
