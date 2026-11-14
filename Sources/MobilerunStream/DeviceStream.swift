@@ -87,8 +87,7 @@ import MobilerunStreamCore
         }
         .font(theme.typography).foregroundColor(theme.mutedForeground)
         .padding(.horizontal, 12).padding(.vertical, 6)
-        .background(theme.card.opacity(0.8)).clipShape(Capsule())
-        .overlay(Capsule().stroke(theme.border, lineWidth: 1))
+        .modifier(StreamSurfaceModifier(shape: Capsule(), fill: theme.card))
         .accessibilityElement(children: .combine)
     }
 }
@@ -123,8 +122,10 @@ import MobilerunStreamCore
             Image(systemName: "wifi.slash").font(.system(size: 40)).opacity(0.5)
             Text(labels.unavailable)
             Button(action: state.retry) { Label(labels.retry, systemImage: "arrow.clockwise") }
-                .buttonStyle(StreamButtonStyle(outline: true))
-        }.font(theme.typography).foregroundColor(theme.mutedForeground)
+                .modifier(StreamChromeButton(primary: true))
+        }.padding(24)
+            .modifier(StreamSurfaceModifier(shape: RoundedRectangle(cornerRadius: theme.radius), fill: theme.card))
+            .font(theme.typography).foregroundColor(theme.mutedForeground)
             .frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background)
     }
 }
@@ -134,20 +135,22 @@ import MobilerunStreamCore
     public var state: StreamNavigationState
     public init(state: StreamNavigationState = StreamNavigationState()) { self.state = state }
     public var body: some View {
-        HStack(spacing: 0) {
-            key(.back, symbol: "chevron.left", label: labels.back)
-            key(.home, symbol: "house", label: labels.home)
-            key(.recent, symbol: "square.grid.2x2", label: labels.recent)
-        }.frame(height: 40).background(theme.background)
+        StreamGlassGroup {
+            HStack(spacing: 8) {
+                key(.back, symbol: "chevron.left", label: labels.back)
+                key(.home, symbol: "house", label: labels.home)
+                key(.recent, symbol: "square.grid.2x2", label: labels.recent)
+            }.frame(height: 40)
+        }.background(theme.background)
             .overlay(alignment: .top) { Rectangle().fill(theme.border).frame(height: 1) }
     }
     private func key(_ key: SystemKey, symbol: String, label: String) -> some View {
         Button { if state.canControl { state.onAction(key) } } label: {
             Image(systemName: symbol).frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(StreamNavigationButtonStyle()).accessibilityLabel(label).disabled(!state.canControl)
+        }.modifier(StreamChromeButton(navigation: true)).accessibilityLabel(label).disabled(!state.canControl)
     }
 }
-private struct StreamNavigationButtonStyle: ButtonStyle {
+struct StreamNavigationButtonStyle: ButtonStyle {
     @Environment(\.streamTheme) private var theme
     @Environment(\.isEnabled) private var enabled
     func makeBody(configuration: Configuration) -> some View {

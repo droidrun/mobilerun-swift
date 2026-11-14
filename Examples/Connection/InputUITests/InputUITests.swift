@@ -42,6 +42,72 @@ import XCTest
         app.launch()
         return app
     }
+    func testGlassSolidSwitchAndAccessibility() {
+        let app = launch("approval-glass-switch")
+        XCTAssertTrue(app.staticTexts["surface-style"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["surface-style"].label, "glass")
+        XCTAssertTrue(app.buttons["Approve"].exists)
+        capture("glass-default-light")
+        app.buttons["Use solid"].tap()
+        XCTAssertEqual(app.staticTexts["surface-style"].label, "solid")
+        XCTAssertTrue(app.buttons["Approve"].isEnabled)
+        capture("solid-override-light")
+        app.buttons["Use glass"].tap()
+        app.buttons["Use solid"].tap()
+        app.buttons["Approve"].tap()
+        XCTAssertTrue(app.staticTexts["Decision sent: approve"].waitForExistence(timeout: 10))
+        app.terminate()
+    }
+    func testGlassAccessibilityPreferences() throws {
+        guard #available(iOS 26, *) else { throw XCTSkip("Native glass requires iOS 26") }
+        let app = launch("approval-glass-switch")
+        XCTAssertTrue(app.staticTexts["Effective surface: glass"].waitForExistence(timeout: 10))
+        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        settings.launch()
+        // Settings rows expose a button with a text descendant on current iOS.
+        let accessibility = settings.staticTexts["Accessibility"]
+        for _ in 0..<5 {
+            if accessibility.isHittable { break }
+            settings.swipeUp()
+        }
+        accessibility.tap()
+        settings.staticTexts["Display & Text Size"].tap()
+        func set(_ name: String, enabled: Bool) {
+            let toggle = settings.switches[name]
+            for _ in 0..<5 {
+                if toggle.isHittable { break }
+                settings.swipeUp()
+            }
+            XCTAssertTrue(toggle.exists)
+            if (toggle.value as? String == "1") != enabled {
+                // The Settings accessibility element spans the row; hit the trailing switch.
+                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            }
+            XCTAssertEqual(toggle.value as? String, enabled ? "1" : "0", toggle.debugDescription)
+        }
+        defer {
+            settings.activate()
+            set("Reduce Transparency", enabled: false)
+            set("Increase Contrast", enabled: false)
+            app.terminate()
+        }
+        set("Reduce Transparency", enabled: true)
+        app.activate()
+        XCTAssertTrue(app.staticTexts["Effective surface: solid"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Approve"].isEnabled)
+        capture("glass-system-reduce-transparency")
+        settings.activate()
+        set("Reduce Transparency", enabled: false)
+        set("Increase Contrast", enabled: true)
+        app.activate()
+        XCTAssertTrue(app.staticTexts["Effective surface: solid"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Approve"].isEnabled)
+        capture("glass-system-increase-contrast")
+        settings.activate()
+        set("Increase Contrast", enabled: false)
+        app.activate()
+        XCTAssertTrue(app.staticTexts["Effective surface: glass"].waitForExistence(timeout: 10))
+    }
     func testStreamStatesAndLabels() {
         let app = launch("connecting")
         XCTAssertTrue(app.staticTexts["connecting"].waitForExistence(timeout: 10))

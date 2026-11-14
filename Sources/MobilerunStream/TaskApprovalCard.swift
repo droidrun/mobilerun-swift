@@ -84,14 +84,16 @@ import MobilerunProtocol
         }
     }
     private var viewSwitch: some View {
-        HStack(spacing: 8) {
-            switchButton(labels.details, selected: !showDevice) { showDevice = false }
-            switchButton(labels.device, selected: showDevice) { showDevice = true }
+        StreamGlassGroup {
+            HStack(spacing: 8) {
+                switchButton(labels.details, selected: !showDevice) { showDevice = false }
+                switchButton(labels.device, selected: showDevice) { showDevice = true }
+            }
         }.accessibilityElement(children: .contain).accessibilityLabel(labels.viewSwitch)
     }
     private func switchButton(_ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) { Text(label).frame(maxWidth: .infinity) }
-            .buttonStyle(StreamButtonStyle(outline: !selected))
+            .modifier(StreamChromeButton(primary: selected))
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(selected ? theme.ring : .clear, lineWidth: 1))
             .accessibilityAddTraits(selected ? .isSelected : [])
     }
@@ -140,9 +142,11 @@ public extension TaskApprovalCard where Device == EmptyView {
     public var state: TaskApprovalActionsState
     public init(state: TaskApprovalActionsState = TaskApprovalActionsState()) { self.state = state }
     public var body: some View {
-        HStack(spacing: 8) {
-            action(.approve, label: labels.approve, symbol: "checkmark")
-            action(.deny, label: labels.deny, symbol: "xmark")
+        StreamGlassGroup {
+            HStack(spacing: 8) {
+                action(.approve, label: labels.approve, symbol: "checkmark")
+                action(.deny, label: labels.deny, symbol: "xmark")
+            }
         }
     }
     private func action(_ decision: ApprovalDecision, label: String, symbol: String) -> some View {
@@ -152,7 +156,7 @@ public extension TaskApprovalCard where Device == EmptyView {
                 else { Image(systemName: symbol) }
                 Text(label)
             }.frame(maxWidth: .infinity)
-        }.buttonStyle(StreamButtonStyle(outline: decision == .deny)).disabled(state.isDeciding)
+        }.modifier(StreamChromeButton(primary: decision == .approve)).disabled(state.isDeciding)
     }
 }
 

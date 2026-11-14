@@ -286,3 +286,16 @@ covers default states, labels, approve/deny/refetch, expiry, error and device id
 The runner also exercises a wide iPad container, narrows it below the breakpoint, and
 checks that widening it again preserves the mounted device. Run `run-ui.py --help` for
 evidence-directory and optional runtime credentials arguments.
+
+### Liquid Glass chrome
+
+On iOS 26+, chrome uses native Liquid Glass by default: the status pill and retry card
+use themed glass surfaces, navigation uses one glass-effect container, and Retry/Approve
+use prominent glass buttons. Secondary approval and navigation actions use glass buttons.
+The video renderer never receives a glass effect.
+
+Set `.streamTheme(.light.with { $0.surfaceStyle = .solid })` to keep opaque chrome,
+or apply the same override to `.dark`. Theme tokens still supply tint and text colors.
+The deployment target remains iOS 15; earlier systems use the existing solid styling.
+Reduce Transparency and Increase Contrast dynamically select the opaque token-based
+fallback for readable controls, including when preferences change while mounted.

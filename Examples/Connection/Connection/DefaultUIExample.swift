@@ -37,7 +37,7 @@ private enum ExampleFailure: LocalizedError {
     }
     func start() {
         if mode == "live" { connection.session.start() }
-        else if mode == "unavailable" { connection.session.presentForTesting(.unavailable) }
+        else if mode.contains("unavailable") { connection.session.presentForTesting(.unavailable) }
         else if mode == "reconnecting" { connection.session.presentForTesting(.reconnecting(attempt: 3)) }
         approval.start()
     }
@@ -49,13 +49,29 @@ private enum ExampleFailure: LocalizedError {
 
 @MainActor struct DefaultUIExample: View {
     @StateObject private var probe = DefaultUIProbe()
+    @State private var solid = false
+    private var theme: StreamTheme {
+        var result: StreamTheme = probe.mode.contains("dark") ? .dark : .light
+        if probe.mode == "custom" {
+            result.background = Color(red: 0.9, green: 0.95, blue: 1)
+            result.primary = Color(red: 0.15, green: 0.25, blue: 0.5)
+            result.radius = 20
+        }
+        result.surfaceStyle = solid || probe.mode.contains("solid") ? .solid : .glass
+        return result
+    }
     var body: some View {
-        content
-            .streamTheme(probe.mode == "dark" ? .dark : probe.mode == "custom" ? .light.with {
-                $0.background = Color(red: 0.9, green: 0.95, blue: 1)
-                $0.primary = Color(red: 0.15, green: 0.25, blue: 0.5)
-                $0.radius = 20
-            } : .light)
+        VStack(spacing: 8) {
+            if probe.mode == "approval-glass-switch" {
+                HStack {
+                    Button(solid ? "Use glass" : "Use solid") { solid.toggle() }
+                }
+                Text(theme.surfaceStyle == .solid ? "solid" : "glass").accessibilityIdentifier("surface-style")
+                SurfacePolicyProbe()
+            }
+            content
+        }
+            .streamTheme(theme)
             .streamLabels(probe.mode == "custom" ? StreamLabels().with {
                 $0.connecting = "Connecting your phone"; $0.back = "Go back"; $0.retry = "Try again"
             } : StreamLabels())
@@ -94,6 +110,19 @@ private enum ExampleFailure: LocalizedError {
                 Text("Device mounts: \(probe.deviceMounts)").accessibilityIdentifier("device-mounts")
             }.padding(16)
         }
+    }
+}
+private struct SurfacePolicyProbe: View {
+    @Environment(\.streamTheme) private var theme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+    var body: some View {
+        let supported: Bool
+        if #available(iOS 26, *) { supported = true } else { supported = false }
+        let glass = StreamSurface.usesGlass(style: theme.surfaceStyle, supported: supported,
+                                           reduceTransparency: reduceTransparency, increasedContrast: contrast == .increased)
+        return Text(glass ? "Effective surface: glass" : "Effective surface: solid")
+            .accessibilityIdentifier("effective-surface")
     }
 }
 private struct MountProbe: UIViewRepresentable {

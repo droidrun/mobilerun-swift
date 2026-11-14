@@ -4,10 +4,27 @@
 #if os(iOS)
 import SwiftUI
 import UIKit
-import MobilerunStream
+@testable import MobilerunStream
 import Testing
 
 @Suite @MainActor struct ThemeTests {
+    @Test func surfaceStyleAndAccessibility() {
+        #expect(StreamTheme().surfaceStyle == .glass)
+        #expect(StreamTheme.light.surfaceStyle == .glass)
+        #expect(StreamTheme.dark.surfaceStyle == .glass)
+        #expect(StreamTheme.light.with { $0.surfaceStyle = .solid }.surfaceStyle == .solid)
+        for supported in [false, true] {
+            for reduce in [false, true] {
+                for contrast in [false, true] {
+                    for style: StreamSurfaceStyle in [.glass, .solid] {
+                        #expect(StreamSurface.usesGlass(style: style, supported: supported,
+                                                       reduceTransparency: reduce, increasedContrast: contrast) ==
+                                (style == .glass && supported && !reduce && !contrast))
+                    }
+                }
+            }
+        }
+    }
     @Test func reactDefaults() {
         // CSS Color 4 conversions, rounded to 8-bit sRGB. Alpha is checked separately.
         let light = StreamTheme.light, dark = StreamTheme.dark

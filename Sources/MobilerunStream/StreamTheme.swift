@@ -22,6 +22,7 @@ public struct StreamTheme {
     public var destructive: Color
     public var radius: CGFloat
     public var typography: Font
+    public var surfaceStyle: StreamSurfaceStyle
     public init(
         background: Color = Color(.sRGB, red: 1.00000000, green: 1.00000000, blue: 1.00000000, opacity: 1),
         foreground: Color = Color(.sRGB, red: 0.03938824, green: 0.03938823, blue: 0.03938823, opacity: 1),
@@ -36,7 +37,8 @@ public struct StreamTheme {
         accent: Color = Color(.sRGB, red: 0.96058699, green: 0.96058699, blue: 0.96058699, opacity: 1),
         accentForeground: Color = Color(.sRGB, red: 0.09052741, green: 0.09052741, blue: 0.09052741, opacity: 1),
         destructive: Color = Color(.sRGB, red: 0.90645756, green: 0.00000000, blue: 0.04221455, opacity: 1),
-        radius: CGFloat = 12, typography: Font = .system(size: 14)
+        radius: CGFloat = 12, typography: Font = .system(size: 14),
+        surfaceStyle: StreamSurfaceStyle = .glass
     ) {
         self.background = background
         self.foreground = foreground
@@ -51,7 +53,7 @@ public struct StreamTheme {
         self.accent = accent
         self.accentForeground = accentForeground
         self.destructive = destructive
-        self.radius = radius; self.typography = typography
+        self.radius = radius; self.typography = typography; self.surfaceStyle = surfaceStyle
     }
     public static var light: Self { Self() }
     public static var dark: Self { Self(

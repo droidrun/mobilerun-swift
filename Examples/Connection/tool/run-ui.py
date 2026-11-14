@@ -78,7 +78,10 @@ def main():
         for action in ['shutdown', 'delete']:
             sim(action, tablet)
         tablet = None
-        for mode in ['connecting', 'reconnecting', 'unavailable', 'dark', 'custom', 'approval', 'approval-expired']:
+        for mode in ['connecting', 'reconnecting', 'unavailable', 'dark', 'custom', 'approval', 'approval-expired',
+                     'solid', 'solid-dark', 'unavailable-dark', 'unavailable-solid', 'unavailable-solid-dark',
+                     'approval-dark', 'approval-solid', 'approval-solid-dark']:
+            sim('ui', device, 'appearance', 'dark' if 'dark' in mode else 'light')
             launch(mode); time.sleep(2); shot(mode)
         if args.credentials:
             source = json.loads(args.credentials.read_text())
@@ -88,6 +91,7 @@ def main():
             events = documents / 'events.log'; events.unlink(missing_ok=True)
             injected = documents / 'credentials.json'
             injected.write_text(json.dumps(config)); injected.chmod(0o600)
+            sim('ui', device, 'appearance', 'light')
             launch('live')
             deadline = time.monotonic() + 75
             while time.monotonic() < deadline:
