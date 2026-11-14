@@ -1,6 +1,21 @@
 // Copyright 2026 Mobilerun
 // SPDX-License-Identifier: Apache-2.0
 
+/// Ignores initial/replayed values; only real transitions wake a session.
+struct StreamWakeTransitions {
+    private var foreground: Bool
+    private var online: Bool?
+    init(foreground: Bool) { self.foreground = foreground }
+    mutating func setForeground(_ value: Bool) -> Bool {
+        defer { foreground = value }
+        return !foreground && value
+    }
+    mutating func setOnline(_ value: Bool) -> Bool {
+        defer { online = value }
+        return online == false && value
+    }
+}
+
 #if os(iOS)
 import Combine
 import Network
@@ -17,6 +32,14 @@ import MobilerunStreamCore
     public init(session: DeviceStreamSession) {
         self.session = session
         transitions = StreamWakeTransitions(foreground: UIApplication.shared.applicationState != .background)
+    }
+    /// Rebind an existing visible adapter when the host replaces its session.
+    public func rebind(session: DeviceStreamSession) {
+        guard self.session !== session else { return }
+        let running = monitor != nil
+        stop()
+        self.session = session
+        if running { start() }
     }
     public func start() {
         guard monitor == nil else { return }

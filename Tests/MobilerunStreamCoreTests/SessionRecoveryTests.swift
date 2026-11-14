@@ -104,23 +104,28 @@ func sessionHandshakeTimeout(event: SignallingEvent?) async throws {
     #expect(h.clock.pendingCount == 0)
 }
 
-@Test("Self recovery discards unused credentials before the next heal") @MainActor
+@Test("Heal prefetch survives remount and its result is reused") @MainActor
 func sessionRecoveryCredentials() async throws {
-    let h = try SessionHarness()
-    defer { h.engine.close() }
-    try await h.negotiate()
-    let peer = h.peers[0]
-    peer.onEvent?(.state(.connected))
-    peer.onEvent?(.state(.disconnected))
+    let h = try SessionHarness(); defer { h.engine.close() }
+    try await h.connected()
+    let original = h.sockets[0].credentials?.token
+    h.hangCredentials = true
+    h.peers[0].onEvent?(.state(.disconnected))
     await settle { h.credentialCalls == 2 }
-    peer.onEvent?(.state(.connected))
-    h.clock.advance(to: ReconnectPolicy.stabilityMs)
-    #expect(h.sockets.count == 1)
-    peer.onEvent?(.state(.failed))
-    await settle { h.credentialCalls >= 3 }
-    h.clock.advance(to: ReconnectPolicy.stabilityMs + 1000)
-    await settle { h.sockets.count == 2 }
-    #expect(h.credentialCalls >= 3)
+    h.clock.advance(to: 1000)
+    #expect(h.sockets.count == 2)
+    #expect(h.sockets[1].credentials?.token == original)
+    #expect(h.credentialCancellations == 0)
+    // Complete the same in-flight heal after remount; do not call the provider again.
+    h.credentialGate?.resume(returning: StreamCredentials(url: URL(string: "wss://stream.example.test")!, token: "fresh"))
+    h.credentialGate = nil
+    await settle { h.sockets.count == 3 }
+    #expect(h.sockets.last?.credentials?.token == "fresh")
+    #expect(h.credentialCalls == 2)
+    h.sockets.last?.onEvent?(.closed)
+    h.clock.advance(to: h.clock.now + ReconnectPolicy.delayMs(attempt: 2, random: 0.5))
+    #expect(h.sockets.last?.credentials?.token == "fresh")
+    #expect(h.credentialCalls == 2)
 }
 
 @Test("Dropping a session closes its transports without explicit close") @MainActor
@@ -134,41 +139,44 @@ func sessionDropClosesTransports() async throws {
     await settle { released == nil && socket.closed && peer.closed }
 }
 
-@Test("Watchdog replaces a never-returning credentials request") @MainActor
+@Test("Provider deadline releases a hung request before initial polling resumes") @MainActor
 func sessionHungCredentials() async throws {
-    let h = try SessionHarness()
-    defer { h.engine.close() }
+    let h = try SessionHarness(); defer { h.engine.close() }
     h.hangCredentials = true
-    h.engine.start()
-    await settle { h.credentialCalls == 1 }
+    h.engine.start(); await settle { h.credentialCalls == 1 }
     h.clock.advance(to: ReconnectPolicy.connectTimeoutMs)
-    await settle { h.credentialCancellations >= 1 && h.credentialCalls >= 2 }
+    await settle { h.credentialCancellations == 1 }
+    #expect(h.engine.status == .connecting)
     h.hangCredentials = false
-    h.clock.advance(to: ReconnectPolicy.connectTimeoutMs + 1000)
-    await settle { h.credentialCancellations >= 2 && h.sockets.count == 1 }
-    #expect(h.credentialCalls >= 3)
+    h.clock.advance(to: ReconnectPolicy.connectTimeoutMs + 2999)
+    #expect(h.credentialCalls == 1)
+    h.clock.advance(to: ReconnectPolicy.connectTimeoutMs + 3000)
+    await settle { h.sockets.count == 1 }
+    #expect(h.credentialCalls == 2)
 }
 
-@Test("Manual retry discards the budget-exhausting token prefetch") @MainActor
+@Test("Nil after a target cannot bypass the retry budget; Retry reuses cached credentials") @MainActor
 func sessionExhaustedTokenRetry() async throws {
-    let h = try SessionHarness()
-    defer { h.engine.close() }
-    await h.start()
+    let h = try SessionHarness(); defer { h.engine.close() }
+    try await h.connected()
+    let token = h.sockets[0].credentials?.token
+    h.returnNil = true
     for failure in 1...ReconnectPolicy.maxAttempts {
-        h.sockets.last?.onEvent?(.failed(httpStatus: 401))
+        h.sockets.last?.onEvent?(.closed)
+        await drain()
         let count = h.sockets.count
         h.clock.advance(to: h.clock.now + ReconnectPolicy.delayMs(attempt: failure, random: 0.5))
-        await settle { h.sockets.count == count + 1 }
+        #expect(h.sockets.count == count + 1)
+        #expect(h.sockets.last?.credentials?.token == token)
     }
-    h.sockets.last?.onEvent?(.failed(httpStatus: 401))
+    h.sockets.last?.onEvent?(.closed)
     #expect(h.engine.status == .unavailable)
-    let callsAtFailure = h.credentialCalls
-    await settle { h.credentialCalls > callsAtFailure }
-    let staleToken = "test-token-\(h.credentialCalls)"
-    let socketCount = h.sockets.count
+    let count = h.sockets.count
     h.engine.retry()
-    await settle { h.sockets.count == socketCount + 1 }
-    #expect(h.sockets.last?.credentials?.token != staleToken)
+    #expect(h.sockets.count == count + 1)
+    #expect(h.sockets.last?.credentials?.token == token)
+    h.peers.last?.onEvent?(.state(.connected)) // The released peer cannot revive the old mount.
+    #expect(h.engine.status == .reconnecting(attempt: 0))
 }
 
 enum PendingPhase: CaseIterable, Sendable { case credentials, offer }
@@ -252,4 +260,58 @@ func sessionFailurePaths(failure: SessionFailure) async throws {
         #expect(peer.restarts == [false])
         #expect(h.engine.status == .connected)
     }
+}
+
+@Test("Credentials poll at 3000ms without consuming recovery budget") @MainActor
+func sessionCredentialsPoll() async throws {
+    let h = try SessionHarness(); h.returnNil = true
+    h.engine.start(); await settle { h.credentialCalls == 1 }; await drain()
+    #expect(h.engine.status == .connecting)
+    for n in 1...12 {
+        h.clock.advance(to: n * 3000 - 1); #expect(h.credentialCalls == n)
+        h.clock.advance(to: n * 3000); await settle { h.credentialCalls == n + 1 }; await drain()
+        #expect(h.engine.status == .connecting)
+    }
+    h.returnNil = false; h.engine.handleWake()
+    await settle { h.sockets.count == 1 }
+    h.engine.close(); h.clock.advance(to: 100000); await drain()
+    #expect(h.credentialCalls == 14)
+}
+
+@Test("Background stops keepalive; foreground resumes and wake skips backoff") @MainActor
+func sessionLifecycle() async throws {
+    let h = try SessionHarness(); defer { h.engine.close() }
+    try await h.connected(); let ws = h.sockets[0]
+    h.engine.setHidden(true); h.clock.advance(to: 30000)
+    #expect(ws.frames("keepAlive").isEmpty)
+    h.engine.setHidden(false); h.clock.advance(to: 40000)
+    #expect(ws.frames("keepAlive").count == 1)
+    ws.onEvent?(.closed); #expect(h.engine.status == .reconnecting(attempt: 1))
+    h.engine.handleWake(); await settle { h.sockets.count == 2 }
+}
+
+@Test("Initial provider throws poll as nil; a hung heal cannot stall the recovery budget") @MainActor
+func sessionProviderFailures() async throws {
+    let initial = try SessionHarness(); defer { initial.engine.close() }
+    initial.throwCredentials = true
+    initial.engine.start(); await settle { initial.credentialCalls == 1 }; await drain()
+    #expect(initial.engine.status == .connecting)
+    initial.clock.advance(to: 3000); await settle { initial.credentialCalls == 2 }; await drain()
+    #expect(initial.sockets.isEmpty)
+    initial.throwCredentials = false
+    initial.clock.advance(to: 6000); await settle { initial.sockets.count == 1 }
+
+    let recovery = try SessionHarness(); defer { recovery.engine.close() }
+    try await recovery.connected()
+    recovery.hangCredentials = true
+    recovery.sockets[0].onEvent?(.closed)
+    await settle { recovery.credentialCalls == 2 }
+    for _ in 0..<20 {
+        recovery.clock.advance(to: recovery.clock.now + ReconnectPolicy.connectTimeoutMs)
+        await drain()
+        if recovery.engine.status == .unavailable { break }
+    }
+    #expect(recovery.engine.status == .unavailable)
+    #expect(recovery.credentialCalls == 2)
+    #expect(recovery.credentialCancellations == 1)
 }

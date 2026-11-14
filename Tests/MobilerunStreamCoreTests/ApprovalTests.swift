@@ -18,13 +18,14 @@ struct ApprovalValueTests {
         #expect(parsePaymentCardDetails(.object(["label": .string(""), "credentialName": .string("corp"), "targetPackage": .string("a")]))?.card == "corp")
     }
     @Test func labelDefaults() {
-        let t = StreamLabels()
+        let t = TaskApprovalLabels()
         #expect([t.paymentCardTitle, t.waiting, t.card, t.app, t.domain, t.timeLeft,
                  t.expired, t.approve, t.deny, t.viewSwitch, t.details, t.device] ==
                 ["Approve payment", "Waiting for approval", "Card", "App", "Domain", "{time} left",
                  "Approval expired", "Approve", "Deny", "Approval view", "Details", "Device"])
-        #expect([t.connecting, t.reconnecting, t.reconnectingAttempt, t.unavailable, t.retry,
-                 t.back, t.home, t.recent] ==
+        let stream = StreamLabels()
+        #expect([stream.connecting, stream.reconnecting, stream.reconnectingAttempt, stream.unavailable, stream.retry,
+                 stream.back, stream.home, stream.recent] ==
                 ["connecting", "reconnecting", "reconnecting ({attempt}/{max})", "device stream unavailable",
                  "Retry", "Back", "Home", "Recent"])
     }
@@ -41,8 +42,9 @@ struct ApprovalValueTests {
     @Test func extensiblePayload() throws {
         let approval = PendingApproval(approvalId: "a", kind: "future", details: ["nested": .object(["x": .bool(true)])], expiresAt: "nope")
         #expect(try JSONDecoder().decode(PendingApproval.self, from: JSONEncoder().encode(approval)) == approval)
-        #expect(approval.with { $0.deviceId = "device" }.kind == "future")
-        #expect(StreamLabels().with { $0.connecting = "Loading" }.approve == "Approve")
+        #expect(approval.paymentCardDetails() == nil)
+        #expect(PendingApproval(kind: "payment_card", details: ["label": .string("x"), "targetPackage": .string("a")]).paymentCardDetails()?.card == "x")
+        #expect(TaskApprovalLabels().with { $0.waiting = "Loading" }.approve == "Approve")
     }
     @Test func stateMapping() {
         let statuses: [StreamStatus] = [.connecting, .reconnecting(attempt: 2), .connected, .unavailable, .closed]
@@ -54,6 +56,22 @@ struct ApprovalValueTests {
                 #expect(mapping.showsPlaceholder == (status == .connecting || status == .reconnecting(attempt: 2)))
             }
         }
+    }
+    @Test func errorsAndLabels() {
+        #expect(TaskApprovalState(error: "failed") == TaskApprovalState(error: "failed"))
+        #expect(TaskApprovalState(error: "failed") != TaskApprovalState())
+        var announcement = ApprovalErrorAnnouncement()
+        #expect(announcement.update("failed"))
+        #expect(!announcement.update("failed"))
+        #expect(announcement.update("different"))
+        #expect(!announcement.update(nil))
+        #expect(announcement.update("different"))
+        let labels = StreamLabels().with { $0.reconnectingAttempt = "{attempt} of {max}" }
+        #expect(labels.statusLabel(.connecting) == "connecting")
+        #expect(labels.statusLabel(.reconnecting(attempt: 1)) == "reconnecting")
+        #expect(labels.statusLabel(.reconnecting(attempt: 2)) == "2 of 6")
+        #expect(labels.statusLabel(.connected) == "connecting")
+        #expect(labels.statusLabel(.unavailable) == "connecting")
     }
     @Test func wakeTransitions() {
         var transitions = StreamWakeTransitions(foreground: true)
@@ -84,7 +102,7 @@ struct ApprovalValueTests {
         try await withCheckedThrowingContinuation { requests.append($0) }
     }
 }
-enum ApprovalFailure: Error { case http404, http409, timeout }
+enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
 
 @Suite @MainActor struct ApprovalControllerTests {
     private var approval: PendingApproval { PendingApproval(approvalId: "a", kind: "payment_card", expiresAt: "2000-01-01T00:00:00Z") }
@@ -124,7 +142,7 @@ enum ApprovalFailure: Error { case http404, http409, timeout }
     func decideFailureAlwaysRefetches(_ failure: ApprovalFailure) async {
         let pending = approval, clock = FakeClock()
         var fetches = 0, reported = 0
-        let model = TaskApprovalModel(taskId: "t", fetchApproval: { _ in fetches += 1; return fetches == 1 ? pending : nil }, decide: { _, _, _ in throw failure }, onError: { _ in reported += 1; throw ApprovalFailure.timeout }, scheduler: clock)
+        let model = TaskApprovalModel(taskId: "t", fetchApproval: { _ in fetches += 1; return fetches == 1 ? pending : nil }, decide: { _, _, _ in throw failure }, onError: { _ in reported += 1 }, scheduler: clock)
         model.start(); await settle { model.state.approval != nil }
         model.decide(.deny)
         await settle { fetches == 2 && !model.state.isDeciding && model.state.approval == nil }
@@ -140,32 +158,50 @@ enum ApprovalFailure: Error { case http404, http409, timeout }
             return pending
         }, decide: { _, _, _ in throw CancellationError() }, onError: { _ in reported += 1 }, scheduler: clock)
         model.start(); await settle { !model.state.isLoading }
-        #expect(model.state.error is CancellationError)
+        #expect(model.error is CancellationError)
         clock.advance(to: 3000); await settle { model.state.approval != nil }
         #expect(model.state.error == nil)
         model.decide(.approve)
         await settle { fetches == 3 && !model.state.isDeciding }
-        #expect(model.state.error is CancellationError); #expect(reported == 2)
+        #expect(model.error is CancellationError); #expect(reported == 2)
         model.stop()
     }
-    @Test func allCallbacksGuardTimeouts() async {
+    @Test func subscriptionFailuresAndCleanupAreSeparate() async {
         let clock = FakeClock()
         var reported = 0
-        let model = TaskApprovalModel(taskId: "t", fetchApproval: { _ in throw ApprovalFailure.timeout }, decide: { _, _, _ in }, subscribe: { _, _ in throw ApprovalFailure.timeout }, onError: { _ in reported += 1; throw ApprovalFailure.timeout }, scheduler: clock)
+        let model = TaskApprovalModel(taskId: "t", fetchApproval: { _ in throw ApprovalFailure.http404 }, decide: { _, _, _ in },
+            subscribe: { _, _ in .failure(ApprovalFailure.timeout) }, onError: { _ in reported += 1 }, scheduler: clock)
         model.start(); await settle { !model.state.isLoading }
-        #expect(model.state.error != nil); #expect(reported == 2)
-        #expect(clock.pendingCount == 0) // A supplied push source suppresses polling.
+        #expect(model.error as? ApprovalFailure == .http404); #expect(reported == 2)
+        #expect(clock.pendingCount == 0)
         model.stop()
-        let cleanup = TaskApprovalModel(taskId: "t", fetchApproval: { _ in nil }, decide: { _, _, _ in }, subscribe: { _, _ in { throw ApprovalFailure.timeout } }, onError: { _ in reported += 1; throw ApprovalFailure.timeout }, scheduler: clock)
-        cleanup.start(); await settle { !cleanup.state.isLoading }; cleanup.stop()
-        #expect(reported == 3)
+        let cleanup = TaskApprovalModel(taskId: "t", fetchApproval: { _ in throw ApprovalFailure.http409 }, decide: { _, _, _ in },
+            subscribe: { _, _ in .success { .failure(ApprovalFailure.timeout) } }, onError: { _ in reported += 1 }, scheduler: clock)
+        cleanup.start(); await settle { !cleanup.state.isLoading }
+        let before = cleanup.state.error
+        cleanup.stop()
+        #expect(cleanup.state.error == before)
+        #expect(cleanup.error as? ApprovalFailure == .http409)
+        #expect(reported == 4)
+    }
+    @Test func emptyTaskRetainsRunningIntent() async {
+        var tasks: [String] = []
+        let model = TaskApprovalModel(taskId: "a", fetchApproval: { tasks.append($0); return nil }, decide: { _, _, _ in }, scheduler: FakeClock())
+        model.start(); await settle { tasks == ["a"] }
+        model.setTaskId(""); await drain()
+        #expect(!model.state.isLoading)
+        model.setTaskId("b"); await settle { tasks == ["a", "b"] }
+        model.stop(); model.setTaskId("c"); await drain()
+        #expect(tasks == ["a", "b"])
+        model.start(); await settle { tasks == ["a", "b", "c"] }
+        model.stop()
     }
     @Test func subscriptionRefetchDoesNotResubscribe() async {
         var subscriptions = 0, cleanups = 0, fetches = 0
         var changed: (@MainActor () -> Void)?
         let clock = FakeClock()
         let model = TaskApprovalModel(taskId: "t", fetchApproval: { _ in fetches += 1; return nil }, decide: { _, _, _ in }, subscribe: { _, onChange in
-            subscriptions += 1; changed = onChange; return { cleanups += 1 }
+            subscriptions += 1; changed = onChange; return .success { cleanups += 1; return .success(()) }
         }, scheduler: clock)
         model.start(); await settle { fetches == 1 }
         changed?(); await settle { fetches == 2 }
@@ -185,32 +221,4 @@ enum ApprovalFailure: Error { case http404, http409, timeout }
         #expect(!model.state.isDeciding); #expect(model.state.error == nil); #expect(reported == 0)
         model.stop()
     }
-}
-
-@Test("Credentials poll at 3000ms without consuming recovery budget") @MainActor
-func sessionCredentialsPoll() async throws {
-    let h = try SessionHarness(); h.returnNil = true
-    h.engine.start(); await settle { h.credentialCalls == 1 }; await drain()
-    #expect(h.engine.status == .connecting)
-    for n in 1...12 {
-        h.clock.advance(to: n * 3000 - 1); #expect(h.credentialCalls == n)
-        h.clock.advance(to: n * 3000); await settle { h.credentialCalls == n + 1 }; await drain()
-        #expect(h.engine.status == .connecting)
-    }
-    h.returnNil = false; h.engine.handleWake()
-    await settle { h.sockets.count == 1 }
-    h.engine.close(); h.clock.advance(to: 100000); await drain()
-    #expect(h.credentialCalls == 14)
-}
-
-@Test("Background stops keepalive; foreground resumes and wake skips backoff") @MainActor
-func sessionLifecycle() async throws {
-    let h = try SessionHarness(); defer { h.engine.close() }
-    try await h.connected(); let ws = h.sockets[0]
-    h.engine.setHidden(true); h.clock.advance(to: 30000)
-    #expect(ws.frames("keepAlive").isEmpty)
-    h.engine.setHidden(false); h.clock.advance(to: 40000)
-    #expect(ws.frames("keepAlive").count == 1)
-    ws.onEvent?(.closed); #expect(h.engine.status == .reconnecting(attempt: 1))
-    h.engine.handleWake(); await settle { h.sockets.count == 2 }
 }

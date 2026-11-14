@@ -46,4 +46,5 @@ jobs:
           -scheme Connection -configuration Debug
           -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4),OS=latest'
           -parallel-testing-enabled NO -only-testing:InputUITests/DefaultUITests/testApprovalAdaptiveWidth
+          -only-testing:InputUITests/DefaultUITests/testApprovalCardWidthBreakpoint
           ONLY_ACTIVE_ARCH=YES -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO

@@ -6,7 +6,7 @@ import SwiftUI
 
 /// React CSS tokens converted once from OKLCH to gamma-encoded sRGB (CSS Color 4, gamut clamped).
 /// Light is the default; follow the system only by explicitly opting in.
-public struct StreamTheme {
+public struct StreamTheme: Equatable, StreamCustomizable {
     public var background: Color
     public var foreground: Color
     public var card: Color
@@ -37,7 +37,7 @@ public struct StreamTheme {
         accent: Color = Color(.sRGB, red: 0.96058699, green: 0.96058699, blue: 0.96058699, opacity: 1),
         accentForeground: Color = Color(.sRGB, red: 0.09052741, green: 0.09052741, blue: 0.09052741, opacity: 1),
         destructive: Color = Color(.sRGB, red: 0.90645756, green: 0.00000000, blue: 0.04221455, opacity: 1),
-        radius: CGFloat = 12, typography: Font = .system(size: 14),
+        radius: CGFloat = 12, typography: Font = .subheadline,
         surfaceStyle: StreamSurfaceStyle = .glass
     ) {
         self.background = background
@@ -71,27 +71,25 @@ public struct StreamTheme {
         accentForeground: Color(.sRGB, red: 0.98025598, green: 0.98025598, blue: 0.98025598, opacity: 1),
         destructive: Color(.sRGB, red: 1.00000000, green: 0.39115272, blue: 0.40385680, opacity: 1)
     ) }
-    public func with(_ update: (inout Self) -> Void) -> Self { var copy = self; update(&copy); return copy }
 }
 private struct StreamThemeKey: EnvironmentKey { static var defaultValue: StreamTheme { .light } }
-private struct StreamLabelsKey: EnvironmentKey { static let defaultValue = StreamLabels() }
 public extension EnvironmentValues {
     var streamTheme: StreamTheme {
         get { self[StreamThemeKey.self] } set { self[StreamThemeKey.self] = newValue }
     }
-    var streamLabels: StreamLabels {
-        get { self[StreamLabelsKey.self] } set { self[StreamLabelsKey.self] = newValue }
-    }
 }
 private struct SystemStreamTheme: ViewModifier {
+    let light: StreamTheme
+    let dark: StreamTheme
     @Environment(\.colorScheme) private var scheme
     func body(content: Content) -> some View {
-        content.environment(\.streamTheme, scheme == .dark ? .dark : .light)
+        content.environment(\.streamTheme, scheme == .dark ? dark : light)
     }
 }
 public extension View {
     func streamTheme(_ theme: StreamTheme) -> some View { environment(\.streamTheme, theme) }
-    func streamLabels(_ labels: StreamLabels) -> some View { environment(\.streamLabels, labels) }
-    func streamThemeFollowsSystem() -> some View { modifier(SystemStreamTheme()) }
+    func streamThemeFollowsSystem(light: StreamTheme = .light, dark: StreamTheme = .dark) -> some View {
+        modifier(SystemStreamTheme(light: light, dark: dark))
+    }
 }
 #endif

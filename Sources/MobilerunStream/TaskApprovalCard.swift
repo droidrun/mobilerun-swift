@@ -14,15 +14,16 @@ import MobilerunProtocol
                 onDecide: @escaping (ApprovalDecision) -> Void = { _ in }) {
         self.isDeciding = isDeciding; self.decision = decision; self.onDecide = onDecide
     }
-    public func with(_ update: (inout Self) -> Void) -> Self { var copy = self; update(&copy); return copy }
 }
 
 /// Backend-owned approval, including unknown kinds. Countdown never disables the actions.
 /// The device stays in one structural position across switch/width changes.
 @MainActor public struct TaskApprovalCard<Device: View>: View {
     @Environment(\.streamTheme) private var theme
-    @Environment(\.streamLabels) private var labels
+    @Environment(\.taskApprovalLabels) private var labels
     @State private var showDevice = false
+    @State private var selectedApprovalId: String?
+    @State private var errorAnnouncement = ApprovalErrorAnnouncement()
     private let state: TaskApprovalState
     private let onDecide: (ApprovalDecision) -> Void
     private let device: Device
@@ -34,74 +35,78 @@ import MobilerunProtocol
         self.state = state; self.onDecide = onDecide; self.actions = actions
         self.device = device(); hasDevice = Device.self != EmptyView.self
     }
+    private enum Layout {
+        static let padding: CGFloat = 16
+        static let breakpoint: CGFloat = 768
+        static let wideHeight: CGFloat = 428
+        static let narrowHeight: CGFloat = 380
+        static let deviceWidth: CGFloat = 256
+        static let deviceHeight: CGFloat = 320
+        static let columnGap: CGFloat = 24
+        static let switchHeight: CGFloat = 48
+    }
     public var body: some View {
         if let approval = state.approval {
             VStack(alignment: .leading, spacing: 16) {
-                Text(cardDetails(approval) == nil ? labels.waiting : labels.paymentCardTitle).fontWeight(.semibold)
-                ApprovalCountdown(expiresAt: approval.expiresAt)
+                Text(approval.paymentCardDetails() == nil ? labels.waiting : labels.paymentCardTitle).fontWeight(.semibold)
+                ApprovalCountdown(approvalId: approval.approvalId, expiresAt: approval.expiresAt)
                 if hasDevice {
                     GeometryReader { geometry in
-                        let wide = geometry.size.width >= 768
+                        let wide = geometry.size.width + 2 * Layout.padding >= Layout.breakpoint
+                        let showingDevice = showDevice && selectedApprovalId == approval.approvalId
                         ZStack(alignment: .topLeading) {
-                            VStack(alignment: .leading, spacing: 16) {
-                                details(approval)
-                                    .opacity(wide || !showDevice ? 1 : 0)
-                                    .allowsHitTesting(wide || !showDevice).accessibilityHidden(!wide && showDevice)
-                                Spacer(minLength: 0)
-                                decisionContent
-                            }
-                            .frame(width: wide ? max(0, geometry.size.width - 280) : geometry.size.width,
-                                   height: wide ? 428 : 380, alignment: .topLeading)
-                            device.frame(width: wide ? 256 : geometry.size.width, height: wide ? 428 : 320)
-                                .clipped().offset(x: wide ? max(0, geometry.size.width - 256) : 0)
-                                .opacity(wide || showDevice ? 1 : 0)
-                                .allowsHitTesting(wide || showDevice).accessibilityHidden(!wide && !showDevice)
+                            ScrollView { details(approval) }
+                                .frame(width: wide ? max(0, geometry.size.width - Layout.deviceWidth - Layout.columnGap) : geometry.size.width,
+                                       height: wide ? Layout.wideHeight : Layout.narrowHeight, alignment: .topLeading)
+                                .opacity(wide || !showingDevice ? 1 : 0)
+                                .allowsHitTesting(wide || !showingDevice).accessibilityHidden(!wide && showingDevice)
+                            device.frame(width: wide ? Layout.deviceWidth : geometry.size.width,
+                                         height: wide ? Layout.wideHeight : Layout.deviceHeight)
+                                .clipped().offset(x: wide ? max(0, geometry.size.width - Layout.deviceWidth) : 0)
+                                .opacity(wide || showingDevice ? 1 : 0)
+                                .allowsHitTesting(wide || showingDevice).accessibilityHidden(!wide && !showingDevice)
                         }
-                        .padding(.top, wide ? 0 : 48)
+                        .padding(.top, wide ? 0 : Layout.switchHeight)
                         .overlay(alignment: .top) {
-                            if !wide { viewSwitch }
+                            if !wide { viewSwitch(approvalId: approval.approvalId, showingDevice: showingDevice) }
                         }
-                    }.frame(height: 428)
+                    }.frame(height: Layout.wideHeight)
                 } else {
                     details(approval)
-                    decisionContent
                 }
+                decisionContent
             }
-            .font(theme.typography).foregroundColor(theme.cardForeground).padding(16)
+            .font(theme.typography).foregroundColor(theme.cardForeground).padding(Layout.padding)
             .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.radius))
             .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
-            .onChange(of: approval.approvalId) { _ in showDevice = false }
+            .onAppear { announceErrorIfChanged() }
+            .onChange(of: state.error) { _ in announceErrorIfChanged() }
         }
     }
     private var decisionContent: some View {
         VStack(alignment: .leading, spacing: 16) {
             if let error = state.error {
-                Text(error.localizedDescription).foregroundColor(theme.destructive)
-                    .onAppear { announce(error.localizedDescription) }
-                    .onChange(of: error.localizedDescription) { announce($0) }
+                Text(error).foregroundColor(theme.destructive).fixedSize(horizontal: false, vertical: true)
             }
             actions(TaskApprovalActionsState(isDeciding: state.isDeciding, decision: state.decision, onDecide: onDecide))
         }
     }
-    private var viewSwitch: some View {
+    private func viewSwitch(approvalId: String, showingDevice: Bool) -> some View {
         StreamGlassGroup {
             HStack(spacing: 8) {
-                switchButton(labels.details, selected: !showDevice) { showDevice = false }
-                switchButton(labels.device, selected: showDevice) { showDevice = true }
+                switchButton(labels.details, selected: !showingDevice) { showDevice = false }
+                switchButton(labels.device, selected: showingDevice) { selectedApprovalId = approvalId; showDevice = true }
             }
         }.accessibilityElement(children: .contain).accessibilityLabel(labels.viewSwitch)
     }
     private func switchButton(_ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) { Text(label).frame(maxWidth: .infinity) }
-            .modifier(StreamChromeButton(primary: selected))
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(selected ? theme.ring : .clear, lineWidth: 1))
+            .modifier(StreamChromeButton(kind: selected ? .primary : .outline))
+            .overlay(RoundedRectangle(cornerRadius: StreamMetrics.buttonRadius).stroke(selected ? theme.ring : .clear, lineWidth: 1))
             .accessibilityAddTraits(selected ? .isSelected : [])
     }
-    private func cardDetails(_ approval: PendingApproval) -> PaymentCardDetails? {
-        approval.kind == "payment_card" ? parsePaymentCardDetails(.object(approval.details)) : nil
-    }
     @ViewBuilder private func details(_ approval: PendingApproval) -> some View {
-        if let card = cardDetails(approval) {
+        if let card = approval.paymentCardDetails() {
             VStack(spacing: 0) {
                 fact(labels.card, value: card.card, symbol: "creditcard")
                 Divider().overlay(theme.border)
@@ -116,15 +121,17 @@ import MobilerunProtocol
     private func fact(_ label: String, value: String, symbol: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol).frame(width: 36, height: 36).foregroundColor(theme.mutedForeground)
-                .background(theme.muted).cornerRadius(6).accessibilityHidden(true)
+                .background(theme.muted).cornerRadius(StreamMetrics.buttonRadius).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(label).foregroundColor(theme.mutedForeground)
                 Text(value).fontWeight(.medium).fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading).layoutPriority(1)
             }
             Spacer(minLength: 0)
         }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
     }
-    private func announce(_ message: String) {
+    private func announceErrorIfChanged() {
+        guard errorAnnouncement.update(state.error), let message = state.error else { return }
         // Native VoiceOver announcement interrupts less urgent speech (ARIA role=alert parity).
         let text = NSAttributedString(string: message, attributes: [.accessibilitySpeechQueueAnnouncement: false])
         UIAccessibility.post(notification: .announcement, argument: text)
@@ -138,7 +145,7 @@ public extension TaskApprovalCard where Device == EmptyView {
 }
 
 @MainActor public struct StreamApprovalActions: View {
-    @Environment(\.streamLabels) private var labels
+    @Environment(\.taskApprovalLabels) private var labels
     public var state: TaskApprovalActionsState
     public init(state: TaskApprovalActionsState = TaskApprovalActionsState()) { self.state = state }
     public var body: some View {
@@ -156,28 +163,29 @@ public extension TaskApprovalCard where Device == EmptyView {
                 else { Image(systemName: symbol) }
                 Text(label)
             }.frame(maxWidth: .infinity)
-        }.modifier(StreamChromeButton(primary: decision == .approve)).disabled(state.isDeciding)
+        }.modifier(StreamChromeButton(kind: decision == .approve ? .primary : .outline)).disabled(state.isDeciding)
     }
 }
 
 /// Only this leaf ticks; expiry cancels its task. The card/device never observes the clock.
 private struct ApprovalCountdown: View {
     @Environment(\.streamTheme) private var theme
-    @Environment(\.streamLabels) private var labels
+    @Environment(\.taskApprovalLabels) private var labels
+    let approvalId: String
     let expiresAt: String
-    @State private var now = Date().timeIntervalSince1970 * 1000
+    @State private var remaining = 0.0
     var body: some View {
-        let remaining = remainingMs(expiresAt: expiresAt, nowMs: now)
         Label(remaining > 0 ? labels.timeLeft.replacingOccurrences(of: "{time}", with: formatRemaining(remaining)) : labels.expired,
               systemImage: "clock")
             .monospacedDigit().padding(.horizontal, 10).padding(.vertical, 4)
             .foregroundColor(theme.mutedForeground).background(theme.muted).clipShape(Capsule())
             .accessibilityAddTraits(.updatesFrequently)
-            .task(id: expiresAt) {
-                now = Date().timeIntervalSince1970 * 1000
-                while remainingMs(expiresAt: expiresAt, nowMs: now) > 0 {
-                    do { try await Task.sleep(nanoseconds: 1_000_000_000) } catch { return }
-                    now = Date().timeIntervalSince1970 * 1000
+            .task(id: [approvalId, expiresAt]) {
+                let deadline = approvalExpiryMs(expiresAt) ?? 0
+                remaining = deadline - Date().timeIntervalSince1970 * 1000
+                while remaining > 0 {
+                    do { try await Task.sleep(nanoseconds: UInt64(min(1000, remaining) * 1_000_000)) } catch { return }
+                    remaining = deadline - Date().timeIntervalSince1970 * 1000
                 }
             }
     }

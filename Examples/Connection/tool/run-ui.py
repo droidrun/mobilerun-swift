@@ -70,7 +70,8 @@ def main():
         sim('boot', tablet); sim('bootstatus', tablet, '-b')
         build(['-project', 'Examples/Connection/Connection.xcodeproj', '-scheme', 'Connection',
                '-configuration', 'Debug', '-destination', 'id=' + tablet, '-parallel-testing-enabled', 'NO',
-               '-only-testing:InputUITests/DefaultUITests/testApprovalAdaptiveWidth', 'ONLY_ACTIVE_ARCH=YES',
+               '-only-testing:InputUITests/DefaultUITests/testApprovalAdaptiveWidth',
+               '-only-testing:InputUITests/DefaultUITests/testApprovalCardWidthBreakpoint', 'ONLY_ACTIVE_ARCH=YES',
                '-resultBundlePath', str(args.evidence / 'width.xcresult'), 'test'], 'width.log')
         assert "testApprovalAdaptiveWidth]' passed" in (args.evidence / 'width.log').read_text(), 'wide layout test did not execute'
         subprocess.run(['xcrun', 'xcresulttool', 'export', 'attachments', '--path', str(args.evidence / 'width.xcresult'),
@@ -108,6 +109,24 @@ def main():
                 time.sleep(0.25)
             else:
                 raise RuntimeError('live stream timed out without 401/404')
+            if 'status connected' in text and 'frame received' in text:
+                events.unlink(missing_ok=True)
+                launch('live-reconnecting')
+                deadline = time.monotonic() + 75
+                while time.monotonic() < deadline:
+                    text = events.read_text() if events.exists() else ''
+                    assert config['streamToken'] not in text, 'sensitive log content'
+                    safe = '\n'.join(line for line in text.splitlines() if any(
+                        marker in line for marker in ['status ', 'device unavailable http=', 'frame received']))
+                    (args.evidence / 'live-reconnecting.log').write_text(safe)
+                    if any('device unavailable http=' + str(code) in text for code in [401, 404]):
+                        print('PENDING: device', flush=True); break
+                    if 'status reconnecting(attempt: 3)' in text and 'frame received' in text:
+                        time.sleep(2); shot('live-reconnecting-opaque')
+                        print('PASS retained video reconnecting with opaque placeholder', flush=True); break
+                    time.sleep(0.25)
+                else:
+                    raise RuntimeError('live reconnecting presentation timed out without 401/404')
         print('PASS local default UI validation', flush=True)
     finally:
         if documents:

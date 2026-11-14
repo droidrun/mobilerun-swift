@@ -4,6 +4,11 @@
 #if os(iOS)
 import SwiftUI
 
+enum StreamMetrics {
+    static let buttonRadius: CGFloat = 6
+    static let navigationHeight: CGFloat = 40
+}
+
 /// Chrome appearance. Glass uses the native effect on iOS 26+; solid works on every supported OS.
 public enum StreamSurfaceStyle: Sendable, Equatable { case glass, solid }
 
@@ -57,27 +62,47 @@ struct StreamGlassGroup<Content: View>: View {
 
 struct StreamChromeButton: ViewModifier {
     private var policy = StreamSurfacePolicy()
-    var primary = false
-    var navigation = false
-    init(primary: Bool = false, navigation: Bool = false) {
-        self.primary = primary; self.navigation = navigation
-    }
+    enum Kind: Equatable { case primary, outline, navigation }
+    let kind: Kind
+    init(kind: Kind) { self.kind = kind }
     @ViewBuilder func body(content: Content) -> some View {
         if #available(iOS 26, *), policy.usesGlass {
-            if primary {
+            if kind == .primary {
                 content.buttonStyle(.glassProminent).tint(policy.theme.primary)
-                    .buttonBorderShape(.roundedRectangle(radius: 6))
+                    .buttonBorderShape(.roundedRectangle(radius: StreamMetrics.buttonRadius))
                     .foregroundColor(policy.theme.primaryForeground)
             } else {
                 content.buttonStyle(.glass).tint(policy.theme.accent)
-                    .buttonBorderShape(.roundedRectangle(radius: 6))
-                    .foregroundColor(navigation ? policy.theme.foreground : policy.theme.accentForeground)
+                    .buttonBorderShape(.roundedRectangle(radius: StreamMetrics.buttonRadius))
+                    .foregroundColor(kind == .navigation ? policy.theme.foreground : policy.theme.accentForeground)
             }
-        } else if navigation {
+        } else if kind == .navigation {
             content.buttonStyle(StreamNavigationButtonStyle())
         } else {
-            content.buttonStyle(StreamButtonStyle(outline: !primary))
+            content.buttonStyle(StreamButtonStyle(outline: kind == .outline))
         }
+    }
+}
+struct StreamNavigationButtonStyle: ButtonStyle {
+    @Environment(\.streamTheme) private var theme
+    @Environment(\.isEnabled) private var enabled
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.foregroundColor(theme.foreground)
+            .background(configuration.isPressed ? theme.muted : theme.background).opacity(enabled ? 1 : 0.5)
+    }
+}
+struct StreamButtonStyle: ButtonStyle {
+    @Environment(\.streamTheme) private var theme
+    @Environment(\.isEnabled) private var enabled
+    var outline = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.padding(.horizontal, 12).padding(.vertical, 10)
+            .font(theme.typography)
+            .foregroundColor(configuration.isPressed ? theme.accentForeground : (outline ? theme.foreground : theme.primaryForeground))
+            .background(configuration.isPressed ? theme.accent : (outline ? theme.background : theme.primary))
+            .clipShape(RoundedRectangle(cornerRadius: StreamMetrics.buttonRadius))
+            .overlay(RoundedRectangle(cornerRadius: StreamMetrics.buttonRadius).stroke(outline ? theme.border : .clear, lineWidth: 1))
+            .opacity(enabled ? 1 : 0.5)
     }
 }
 #endif

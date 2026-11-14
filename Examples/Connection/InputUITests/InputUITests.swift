@@ -152,6 +152,49 @@ import XCTest
         capture("approval-denied-refetch")
         app.terminate()
     }
+    func testApprovalLongDetailsAndNewId() {
+        let app = launch("approval-long")
+        XCTAssertTrue(app.buttons["Device"].waitForExistence(timeout: 10))
+        app.buttons["Device"].tap()
+        XCTAssertTrue(app.staticTexts["connecting"].exists)
+        for _ in 0..<5 {
+            if app.buttons["Next approval"].isHittable { break }
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.8))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.2)))
+        }
+        app.buttons["Next approval"].tap()
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.2))
+            .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.8)))
+        XCTAssertTrue(app.staticTexts["Card"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Device mounts: 1"].exists)
+        for _ in 0..<5 {
+            if app.buttons["Approve"].isHittable { break }
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.8))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.2)))
+        }
+        XCTAssertTrue(app.buttons["Approve"].isHittable)
+        capture("approval-long-dynamic-type-actions")
+        app.buttons["Approve"].tap()
+        XCTAssertTrue(app.staticTexts["Decision sent: approve"].waitForExistence(timeout: 10))
+        app.terminate()
+    }
+    func testApprovalCardWidthBreakpoint() throws {
+        let app = launch("approval-boundary")
+        guard app.frame.width >= 768 else { app.terminate(); throw XCTSkip("Requires a wide container") }
+        XCTAssertTrue(app.staticTexts["Card"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Device"].exists) // 768 includes card padding.
+        XCTAssertTrue(app.staticTexts["connecting"].exists)
+        capture("approval-width-768")
+        app.buttons["Toggle breakpoint"].tap()
+        XCTAssertTrue(app.buttons["Device"].waitForExistence(timeout: 10))
+        capture("approval-width-767")
+        app.buttons["Device"].tap()
+        XCTAssertTrue(app.staticTexts["Device mounts: 1"].exists)
+        app.buttons["Toggle breakpoint"].tap()
+        XCTAssertFalse(app.buttons["Device"].exists)
+        XCTAssertTrue(app.staticTexts["Device mounts: 1"].exists)
+        app.terminate()
+    }
     func testApprovalAdaptiveWidth() throws {
         let app = launch("approval-resize")
         guard app.frame.width >= 768 else { app.terminate(); throw XCTSkip("Requires a wide container") }

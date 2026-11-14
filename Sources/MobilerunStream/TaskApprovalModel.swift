@@ -13,12 +13,15 @@ public struct PendingApproval: Sendable, Equatable, Codable {
     public var details: [String: JSONValue]
     public var expiresAt: String
     public var deviceId: String?
+    /// Validated card fields, or nil for another kind or malformed details.
+    public func paymentCardDetails() -> PaymentCardDetails? {
+        kind == "payment_card" ? parsePaymentCardDetails(.object(details)) : nil
+    }
     public init(approvalId: String = "", kind: String = "", details: [String: JSONValue] = [:],
                 expiresAt: String = "", deviceId: String? = nil) {
         self.approvalId = approvalId; self.kind = kind; self.details = details
         self.expiresAt = expiresAt; self.deviceId = deviceId
     }
-    public func with(_ update: (inout Self) -> Void) -> Self { var copy = self; update(&copy); return copy }
 }
 
 public enum ApprovalDecision: String, Sendable, Codable { case approve, deny }
@@ -30,45 +33,36 @@ public struct PaymentCardDetails: Sendable, Equatable {
     public init(card: String = "", targetPackage: String = "", targetHost: String? = nil) {
         self.card = card; self.targetPackage = targetPackage; self.targetHost = targetHost
     }
-    public func with(_ update: (inout Self) -> Void) -> Self { var copy = self; update(&copy); return copy }
 }
-
-public func parsePaymentCardDetails(_ details: JSONValue) -> PaymentCardDetails? {
-    paymentCardFields(details).map { PaymentCardDetails(card: $0.card, targetPackage: $0.package, targetHost: $0.host) }
-}
-public func remainingMs(expiresAt: String, nowMs: Double = Date().timeIntervalSince1970 * 1000) -> Double {
-    approvalRemainingMs(expiresAt, nowMs: nowMs)
-}
-public func formatRemaining(_ ms: Double) -> String { approvalFormattedRemaining(ms) }
 
 /// Fetch errors clear on a successful reload; decision errors persist until the next decision/task.
-public struct TaskApprovalState {
+public struct TaskApprovalState: Equatable {
     public var approval: PendingApproval?
     public var isLoading: Bool
     public var isDeciding: Bool
     public var decision: ApprovalDecision?
-    public var error: (any Error)?
+    public var error: String?
     public init(approval: PendingApproval? = nil, isLoading: Bool = false,
-                isDeciding: Bool = false, decision: ApprovalDecision? = nil, error: (any Error)? = nil) {
+                isDeciding: Bool = false, decision: ApprovalDecision? = nil, error: String? = nil) {
         self.approval = approval; self.isLoading = isLoading; self.isDeciding = isDeciding
         self.decision = decision; self.error = error
     }
-    public func with(_ update: (inout Self) -> Void) -> Self { var copy = self; update(&copy); return copy }
 }
 
 /// Backend-driven approvals. Start/stop with the host's lifetime; no network API key belongs here.
-/// Throwing integrator callbacks, including cancellation/timeouts, are reported as ordinary errors.
+/// Fetch/decision failures, including cancellation/timeouts, are reported as ordinary errors.
+/// Subscription callbacks return Result; error reporting never throws.
 @MainActor public final class TaskApprovalModel: ObservableObject {
     public typealias Fetch = @MainActor (String) async throws -> PendingApproval?
     public typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void
-    public typealias Unsubscribe = @MainActor @Sendable () throws -> Void
-    public typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) throws -> Unsubscribe
+    public typealias Unsubscribe = @MainActor @Sendable () -> Result<Void, any Error>
+    public typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<Unsubscribe, any Error>
     @Published public private(set) var state = TaskApprovalState()
     public private(set) var taskId: String
     private let fetch: Fetch
     private let sendDecision: Decide
     private let subscribe: Subscribe?
-    private let onError: (@MainActor (any Error) throws -> Void)?
+    private let onError: (@MainActor (any Error) -> Void)?
     private let scheduler: any ReconnectScheduler
     private var poll: (any ScheduledTask)?
     private var unsubscribe: Unsubscribe?
@@ -76,55 +70,72 @@ public struct TaskApprovalState {
     private var deciding: Task<Void, Never>?
     private var generation = 0
     private var latest = 0
+    private var wantsRunning = false
     private var active = false
+    private static let pollIntervalMs = 3000
+    public var error: (any Error)? { decideError ?? fetchError }
     private var fetchError: (any Error)?
     private var decideError: (any Error)?
 
     public convenience init(taskId: String, fetchApproval: @escaping Fetch, decide: @escaping Decide,
-                            subscribe: Subscribe? = nil, onError: (@MainActor (any Error) throws -> Void)? = nil) {
+                            subscribe: Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil) {
         self.init(taskId: taskId, fetchApproval: fetchApproval, decide: decide,
                   subscribe: subscribe, onError: onError, scheduler: MainActorScheduler())
     }
     init(taskId: String, fetchApproval: @escaping Fetch, decide: @escaping Decide,
-         subscribe: Subscribe? = nil, onError: (@MainActor (any Error) throws -> Void)? = nil,
+         subscribe: Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil,
          scheduler: any ReconnectScheduler) {
         self.taskId = taskId; self.fetch = fetchApproval; self.sendDecision = decide
         self.subscribe = subscribe; self.onError = onError; self.scheduler = scheduler
     }
     deinit {
         fetches.values.forEach { $0.cancel() }; deciding?.cancel()
-        let poll = poll, unsubscribe = unsubscribe
-        Task { @MainActor in poll?.cancel(); try? unsubscribe?() }
+        let poll = poll, unsubscribe = unsubscribe, onError = onError
+        Task { @MainActor in
+            poll?.cancel()
+            if case .failure(let error) = unsubscribe?() { onError?(error) }
+        }
     }
     /// Idempotent. Empty task identifiers stay disabled.
     public func start() {
+        wantsRunning = true
+        startIfNeeded()
+    }
+    private func startIfNeeded() {
         guard !active, !taskId.isEmpty else { return }
         active = true; state.isLoading = true
         refetch()
         let epoch = generation
-        do {
-            unsubscribe = try subscribe?(taskId, { [weak self] in
-                guard let self, self.active, self.generation == epoch else { return }
-                self.refetch()
-            })
-        } catch { report(error); fetchError = error; publishError() }
+        if let result = subscribe?(taskId, { [weak self] in
+            guard let self, self.active, self.generation == epoch else { return }
+            self.refetch()
+        }) {
+            switch result {
+            case .success(let cleanup): unsubscribe = cleanup
+            case .failure(let error): fetchError = error; publishError(); report(error)
+            }
+        }
     }
     /// Cancels only work owned by this controller. Late callback results are discarded.
     public func stop() {
+        wantsRunning = false
+        stopWork()
+    }
+    private func stopWork() {
         active = false; generation += 1
         poll?.cancel(); poll = nil
         fetches.values.forEach { $0.cancel() }; fetches.removeAll()
         deciding?.cancel(); deciding = nil
         let cleanup = unsubscribe; unsubscribe = nil
         state.isLoading = false; state.isDeciding = false
-        do { try cleanup?() } catch { fetchError = error; publishError(); report(error) }
+        // Cleanup failures are diagnostic only and cannot overwrite task errors.
+        if case .failure(let error) = cleanup?() { report(error) }
     }
     public func setTaskId(_ taskId: String) {
         guard self.taskId != taskId else { return }
-        let restart = active
-        stop(); self.taskId = taskId
+        stopWork(); self.taskId = taskId
         fetchError = nil; decideError = nil; state = TaskApprovalState()
-        if restart { start() }
+        if wantsRunning { startIfNeeded() }
     }
     public func refetch() {
         guard active else { return }
@@ -143,7 +154,7 @@ public struct TaskApprovalState {
             }
             self.state.isLoading = false; self.publishError()
             if self.subscribe == nil {
-                self.poll = self.scheduler.schedule(delayMs: 3000) { [weak self] in self?.refetch() }
+                self.poll = self.scheduler.schedule(delayMs: Self.pollIntervalMs) { [weak self] in self?.refetch() }
             }
         }
     }
@@ -161,6 +172,6 @@ public struct TaskApprovalState {
             self.publishError(); self.refetch()
         }
     }
-    private func publishError() { state.error = decideError ?? fetchError }
-    private func report(_ error: any Error) { try? onError?(error) }
+    private func publishError() { state.error = error?.localizedDescription }
+    private func report(_ error: any Error) { onError?(error) }
 }

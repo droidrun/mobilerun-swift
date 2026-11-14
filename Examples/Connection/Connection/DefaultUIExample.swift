@@ -19,24 +19,33 @@ private enum ExampleFailure: LocalizedError {
     @Published var receivedDecision = ""
     @Published var deviceMounts = 0
     @Published var narrow = false
+    @Published var belowBreakpoint = false
+    var forcedReconnect = false
+    var advanceApproval: () -> Void = {}
     init() {
         let arguments = ProcessInfo.processInfo.arguments
         let index = arguments.firstIndex(of: "--ui-state")
         mode = index.flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "connecting"
         let expiresAt = ISO8601DateFormatter().string(from: Date().addingTimeInterval(mode == "approval-expired" ? -1 : 65))
         let pending = PendingApproval(approvalId: "example", kind: "payment_card", details: [
-            "label": .string("Visa 4242"), "targetPackage": .string("com.example.shop"), "targetHost": .string("example.com")
+            "label": .string("Visa 4242"), "targetPackage": .string(mode == "approval-long" ? String(repeating: "com.example.long.package.", count: 12) : "com.example.shop"),
+            "targetHost": .string(mode == "approval-long" ? String(repeating: "long-domain.", count: 16) + "example.com" : "example.com")
         ], expiresAt: expiresAt)
         var finished = false
+        var revision = 0
+        advanceApproval = { revision += 1 }
         let fail = mode == "approval-error"
-        approval = TaskApprovalModel(taskId: "example", fetchApproval: { _ in finished ? nil : pending }, decide: { _, _, _ in
+        approval = TaskApprovalModel(taskId: "example", fetchApproval: { id in
+            var current = pending; current.approvalId = "\(id)-\(revision)"
+            return finished ? nil : current
+        }, decide: { _, _, _ in
             try await Task.sleep(nanoseconds: 300_000_000)
             if fail { throw ExampleFailure.decision }
             finished = true
         })
     }
     func start() {
-        if mode == "live" { connection.session.start() }
+        if mode.hasPrefix("live") { connection.session.start() }
         else if mode.contains("unavailable") { connection.session.presentForTesting(.unavailable) }
         else if mode == "reconnecting" { connection.session.presentForTesting(.reconnecting(attempt: 3)) }
         approval.start()
@@ -71,6 +80,7 @@ private enum ExampleFailure: LocalizedError {
             }
             content
         }
+            .environment(\.sizeCategory, probe.mode == "approval-long" ? .accessibilityExtraExtraExtraLarge : .large)
             .streamTheme(theme)
             .streamLabels(probe.mode == "custom" ? StreamLabels().with {
                 $0.connecting = "Connecting your phone"; $0.back = "Go back"; $0.retry = "Try again"
@@ -85,7 +95,13 @@ private enum ExampleFailure: LocalizedError {
             DeviceStream(session: probe.connection.session, hasControl: probe.mode != "display-only")
                 .onReceive(probe.connection.session.$status) { probe.connection.mark("status \($0)") }
                 .onReceive(probe.connection.session.$videoSize) { size in
-                    if size != nil { probe.connection.mark("frame received") }
+                    if size != nil {
+                        probe.connection.mark("frame received")
+                        if probe.mode == "live-reconnecting", !probe.forcedReconnect {
+                            probe.forcedReconnect = true
+                            probe.connection.session.presentForTesting(.reconnecting(attempt: 3))
+                        }
+                    }
                 }
         }
     }
@@ -104,8 +120,15 @@ private enum ExampleFailure: LocalizedError {
                     DeviceStream(session: probe.connection.session)
                         .background(MountProbe { probe.deviceMounts += 1 })
                 }.frame(maxWidth: probe.narrow ? 375 : .infinity)
+                    .frame(width: probe.mode == "approval-boundary" ? (probe.belowBreakpoint ? 767 : 768) : nil)
                 if probe.mode == "approval-resize" {
                     Button("Resize layout") { probe.narrow.toggle() }
+                }
+                if probe.mode == "approval-boundary" {
+                    Button("Toggle breakpoint") { probe.belowBreakpoint.toggle() }
+                }
+                if probe.mode == "approval-long" {
+                    Button("Next approval") { probe.advanceApproval(); model.refetch() }
                 }
                 Text("Device mounts: \(probe.deviceMounts)").accessibilityIdentifier("device-mounts")
             }.padding(16)

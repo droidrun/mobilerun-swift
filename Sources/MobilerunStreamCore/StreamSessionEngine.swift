@@ -25,8 +25,12 @@ import MobilerunProtocol
     private var started = false
     private var closed = false
     private var attempt: Attempt?
-    private var mountTask: Task<Void, Never>?
-    private var credentialTask: Task<StreamCredentials?, Error>?
+    private var credentialTask: Task<Void, Never>?
+    private var credentialDeadline: (any ScheduledTask)?
+    private var credentialGeneration = 0
+    private var latestTarget: StreamCredentials?
+    private var activeTarget: StreamCredentials?
+    private static let credentialPollIntervalMs = 3000
     private var pendingURL: String?
     private var controller: StreamReconnectController?
 
@@ -45,14 +49,15 @@ import MobilerunProtocol
     }
 
     deinit {
-        mountTask?.cancel()
         credentialTask?.cancel()
         let attempt = attempt
         let controller = controller
         let credentialPoll = credentialPoll
+        let credentialDeadline = credentialDeadline
         Task { @MainActor in
             controller?.dispose()
             credentialPoll?.cancel()
+            credentialDeadline?.cancel()
             attempt?.release()
         }
     }
@@ -67,12 +72,11 @@ import MobilerunProtocol
             onSnapshot: { [weak self] in self?.apply($0) },
             onHeal: { [weak self] in self?.prefetchCredentials() }
         )
-        mount()
+        prefetchCredentials()
     }
 
     package func retry() {
         guard started, !closed, status == .unavailable else { return }
-        cancelCredentials()
         controller?.retry()
     }
 
@@ -86,7 +90,10 @@ import MobilerunProtocol
 
     package func handleWake() {
         guard started, !closed else { return }
-        if credentialPoll != nil { mount() } else { controller?.handleWake() }
+        if credentialPoll != nil {
+            credentialPoll?.cancel(); credentialPoll = nil
+            prefetchCredentials()
+        } else { controller?.handleWake() }
     }
 
     package func close() {
@@ -136,83 +143,92 @@ import MobilerunProtocol
         case .connecting:
             status = .connecting
         case .connected:
-            cancelCredentials()
             status = .connected
         case .reconnecting:
             // Preserve a previously connected peer that could recover before the remount.
             // Other transitions are startup/watchdog failures and must cancel pending setup.
             if status != .connected || attempt == nil {
                 releaseAttempt()
-                cancelCredentials()
             }
             status = .reconnecting(attempt: snapshot.attempt)
         case .unavailable:
             status = .unavailable
             releaseAttempt()
-            cancelCredentials()
+        }
+        // Defer credential application until the controller has finished emitting its transition.
+        Task { @MainActor [weak self] in self?.applyPendingTarget() }
+    }
+
+    /// Refreshes survive remounts; only disposal or this call's deadline cancels the provider.
+    private func prefetchCredentials() {
+        guard !closed, credentialTask == nil else { return }
+        credentialGeneration += 1
+        let generation = credentialGeneration
+        let provider = credentials
+        credentialDeadline = scheduler.schedule(delayMs: ReconnectPolicy.connectTimeoutMs) { [weak self] in
+            guard let self, self.credentialGeneration == generation else { return }
+            self.credentialTask?.cancel()
+            self.finishCredentials(nil, generation: generation)
+        }
+        credentialTask = Task { [weak self] in
+            let value: StreamCredentials?
+            do { value = try await provider() } catch { value = nil }
+            guard !Task.isCancelled else { return }
+            self?.finishCredentials(value, generation: generation)
         }
     }
 
-    @discardableResult private func prefetchCredentials() -> Task<StreamCredentials?, Error> {
-        if let credentialTask { return credentialTask }
-        let provider = credentials
-        let task = Task {
-            try Task.checkCancellation()
-            return try await provider()
+    private func finishCredentials(_ value: StreamCredentials?, generation: Int) {
+        guard !closed, credentialGeneration == generation else { return }
+        credentialGeneration += 1
+        credentialTask = nil
+        credentialDeadline?.cancel(); credentialDeadline = nil
+        if let value {
+            let firstTarget = latestTarget == nil
+            latestTarget = value
+            if firstTarget { mount() } else { applyPendingTarget() }
+        } else if latestTarget == nil {
+            // Only the initial target discovery polls. A failed refresh keeps the cached target.
+            credentialPoll = scheduler.schedule(delayMs: Self.credentialPollIntervalMs) { [weak self] in
+                self?.credentialPoll = nil
+                self?.prefetchCredentials()
+            }
         }
-        credentialTask = task
-        return task
+    }
+
+    private func applyPendingTarget() {
+        guard !closed, let latestTarget, let activeTarget,
+              latestTarget.url != activeTarget.url || latestTarget.token != activeTarget.token,
+              controller?.shouldDeferTargetChange == false else { return }
+        mount()
     }
 
     private func cancelCredentials() {
-        credentialPoll?.cancel()
-        credentialPoll = nil
-        credentialTask?.cancel()
-        credentialTask = nil
+        credentialGeneration += 1
+        credentialPoll?.cancel(); credentialPoll = nil
+        credentialDeadline?.cancel(); credentialDeadline = nil
+        credentialTask?.cancel(); credentialTask = nil
     }
 
     private func releaseAttempt() {
-        mountTask?.cancel()
-        mountTask = nil
         let previous = attempt
         attempt = nil
         previous?.release()
     }
 
     private func mount() {
-        guard !closed else { return }
+        guard !closed, let target = latestTarget else { return }
         releaseAttempt()
-        cancelCredentials()
+        activeTarget = target
+        let next = Attempt(owner: self, scheduler: scheduler)
+        attempt = next
         controller?.attemptMounted()
-        let request = prefetchCredentials()
-        mountTask = Task { [weak self] in
-            do {
-                let value = try await request.value
-                guard !Task.isCancelled, let self, !self.closed else { return }
-                self.credentialTask = nil
-                guard let value else {
-                    self.controller?.disable()
-                    self.credentialPoll = self.scheduler.schedule(delayMs: 3000) { [weak self] in
-                        self?.mount()
-                    }
-                    return
-                }
-                self.controller?.attemptMounted()
-                let attempt = Attempt(owner: self, scheduler: self.scheduler)
-                self.attempt = attempt
-                attempt.open(value)
-            } catch {
-                guard !Task.isCancelled, let self, !self.closed else { return }
-                self.credentialTask = nil
-                self.controller?.handleFailure()
-            }
-        }
+        next.open(target)
     }
 
     private func fail(_ source: Attempt, rejectedToken: Bool = false) {
         guard attempt === source, !closed else { return }
         releaseAttempt()
-        cancelCredentials()
         controller?.handleFailure()
         if rejectedToken { prefetchCredentials() }
     }

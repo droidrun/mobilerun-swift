@@ -6,6 +6,7 @@ import SwiftUI
 import UIKit
 @testable import MobilerunStream
 import Testing
+import MobilerunStreamCore
 
 @Suite @MainActor struct ThemeTests {
     @Test func surfaceStyleAndAccessibility() {
@@ -24,6 +25,34 @@ import Testing
                 }
             }
         }
+    }
+    @Test func themeEqualityAndSeparateLabels() {
+        #expect(StreamTheme.light == StreamTheme())
+        #expect(StreamTheme.light != .dark)
+        #expect(StreamTheme.light != StreamTheme.light.with { $0.surfaceStyle = .solid })
+        #expect(StreamTheme.light.typography == .subheadline)
+        var environment = EnvironmentValues()
+        environment.streamLabels = StreamLabels(connecting: "Loading")
+        environment.taskApprovalLabels = TaskApprovalLabels(approve: "Allow")
+        #expect(environment.streamLabels.connecting == "Loading")
+        #expect(environment.taskApprovalLabels.approve == "Allow")
+    }
+    @Test func lifecycleRebindUsesCurrentSession() async {
+        let first = LifecycleRequests(), second = LifecycleRequests()
+        let a = DeviceStreamSession(credentials: { await first.fetch() })
+        let b = DeviceStreamSession(credentials: { await second.fetch() })
+        defer { a.close(); b.close() }
+        a.start(); b.start()
+        await settle { first.count == 1 && second.count == 1 }
+        let lifecycle = StreamLifecycleAdapter(session: a)
+        lifecycle.start()
+        lifecycle.rebind(session: b)
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        await drain()
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+        await settle { second.count == 2 }
+        #expect(first.count == 1)
+        lifecycle.stop()
     }
     @Test func reactDefaults() {
         // CSS Color 4 conversions, rounded to 8-bit sRGB. Alpha is checked separately.
@@ -54,5 +83,9 @@ import Testing
         #expect(StreamTheme.light.with { $0.radius = 20 }.radius == 20)
         #expect(light.radius == 12)
     }
+}
+@MainActor private final class LifecycleRequests {
+    var count = 0
+    func fetch() -> StreamCredentials? { count += 1; return nil }
 }
 #endif
