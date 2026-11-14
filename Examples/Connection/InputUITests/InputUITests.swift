@@ -79,11 +79,18 @@ import XCTest
                 settings.swipeUp()
             }
             XCTAssertTrue(toggle.exists)
-            if (toggle.value as? String == "1") != enabled {
-                // The Settings accessibility element spans the row; hit the trailing switch.
-                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            let expected = enabled ? "1" : "0"
+            for _ in 0..<2 {
+                if toggle.value as? String == expected { return }
+                // Current Settings exposes a row-sized switch containing the actual toggle.
+                // Activation can return during its zoom transition; verify the change before leaving.
+                let control = toggle.switches.firstMatch
+                if control.exists { control.tap() }
+                else { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap() }
+                let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", expected), object: toggle)
+                if XCTWaiter.wait(for: [changed], timeout: 3) == .completed { return }
             }
-            XCTAssertEqual(toggle.value as? String, enabled ? "1" : "0", toggle.debugDescription)
+            XCTAssertEqual(toggle.value as? String, expected, toggle.debugDescription)
         }
         defer {
             settings.activate()
