@@ -95,6 +95,8 @@ enum FakeFailure: Error { case negotiation }
     var credentialCancellations = 0
     var returnNil = false
     var hangCredentials = false
+    var throwCredentials = false
+    var credentialGate: CheckedContinuation<StreamCredentials?, any Error>?
     var offerGate: OfferGate?
     var rejectOffer = false
     var statuses: [StreamStatus] = []
@@ -130,11 +132,16 @@ enum FakeFailure: Error { case negotiation }
     }
     func credentials() async throws -> StreamCredentials? {
         credentialCalls += 1
+        if throwCredentials { throw FakeFailure.negotiation }
         if hangCredentials {
-            // A day-long wait stays pending throughout a test without overflowing older runtimes.
-            do { try await Task.sleep(nanoseconds: 86_400_000_000_000) } catch {
-                credentialCancellations += 1
-                throw error
+            return try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { credentialGate = $0 }
+            } onCancel: {
+                Task { @MainActor in
+                    self.credentialCancellations += 1
+                    self.credentialGate?.resume(throwing: CancellationError())
+                    self.credentialGate = nil
+                }
             }
         }
         return returnNil
