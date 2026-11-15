@@ -10,7 +10,6 @@ let package = Package(
     products: [
         .library(name: "MobilerunStream", targets: ["MobilerunStream"]),
         .library(name: "MobilerunProtocol", targets: ["MobilerunProtocol"]),
-        .library(name: "MobilerunStreamCore", targets: ["MobilerunStreamCore"]),
     ],
     dependencies: [
         .package(url: "https://github.com/livekit/webrtc-xcframework", exact: "150.7871.05"),

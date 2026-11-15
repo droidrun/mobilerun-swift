@@ -1,0 +1,1131 @@
+# macOS
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO7OpenURLV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO7OpenURLV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO10ScreenshotV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO10ScreenshotV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO15ScreenshotErrorV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO15ScreenshotErrorV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO16RTCConfigurationV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO16RTCConfigurationV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO6AnswerV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO6AnswerV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9CandidateV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9CandidateV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9ICEServerV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9ICEServerV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15DataChannelSpecV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15DataChannelSpecV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15SignallingPhaseO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15SignallingPhaseO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15SignallingPhaseO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:SE", "targetFallback": "Swift.Encodable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:Se", "targetFallback": "Swift.Decodable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol {"access": "public", "declaration": "case answer(Answer)", "path": "ServerMessage.answer(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case array([JSONValue])", "path": "JSONValue.array(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case awaitingRTCConfiguration", "path": "SignallingPhase.awaitingRTCConfiguration"}
+MobilerunProtocol {"access": "public", "declaration": "case bool(Bool)", "path": "JSONValue.bool(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case candidate(Candidate)", "path": "ServerMessage.candidate(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case candidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int?, sessionID: String)", "path": "ClientMessage.candidate(candidate:sdpMid:sdpMLineIndex:sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case established", "path": "SignallingPhase.established"}
+MobilerunProtocol {"access": "public", "declaration": "case ignored", "path": "ServerFrame.ignored"}
+MobilerunProtocol {"access": "public", "declaration": "case keepAlive(sessionID: String)", "path": "ClientMessage.keepAlive(sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case message(ServerMessage)", "path": "ServerFrame.message(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case null", "path": "JSONValue.null"}
+MobilerunProtocol {"access": "public", "declaration": "case number(Double)", "path": "JSONValue.number(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case object([String : JSONValue])", "path": "JSONValue.object(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case offer(sdp: String, sessionID: String)", "path": "ClientMessage.offer(sdp:sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case openURL(OpenURL)", "path": "ClientMessage.openURL(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case requestFrame(sessionID: String)", "path": "ClientMessage.requestFrame(sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case requestRTCConfiguration(sessionID: String)", "path": "ClientMessage.requestRTCConfiguration(sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case rtcConfiguration(RTCConfiguration)", "path": "ServerMessage.rtcConfiguration(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshot(Screenshot)", "path": "ServerMessage.screenshot(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshot(id: String)", "path": "ClientMessage.screenshot(id:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshotError(ScreenshotError)", "path": "ServerMessage.screenshotError(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case startupFailure", "path": "ServerFrame.startupFailure"}
+MobilerunProtocol {"access": "public", "declaration": "case string(String)", "path": "JSONValue.string(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "enum AndroidKey", "path": "AndroidKey"}
+MobilerunProtocol {"access": "public", "declaration": "enum ClientMessage", "path": "ClientMessage"}
+MobilerunProtocol {"access": "public", "declaration": "enum ControlMessageType", "path": "ControlMessageType"}
+MobilerunProtocol {"access": "public", "declaration": "enum ControlMessages", "path": "ControlMessages"}
+MobilerunProtocol {"access": "public", "declaration": "enum DataChannels", "path": "DataChannels"}
+MobilerunProtocol {"access": "public", "declaration": "enum JSONValue", "path": "JSONValue"}
+MobilerunProtocol {"access": "public", "declaration": "enum KeyboardCode", "path": "KeyboardCode"}
+MobilerunProtocol {"access": "public", "declaration": "enum MotionEvent", "path": "MotionEvent"}
+MobilerunProtocol {"access": "public", "declaration": "enum ServerFrame", "path": "ServerFrame"}
+MobilerunProtocol {"access": "public", "declaration": "enum ServerMessage", "path": "ServerMessage"}
+MobilerunProtocol {"access": "public", "declaration": "enum SignallingPhase", "path": "SignallingPhase"}
+MobilerunProtocol {"access": "public", "declaration": "enum SignallingTiming", "path": "SignallingTiming"}
+MobilerunProtocol {"access": "public", "declaration": "func encode(to encoder: any Encoder) throws", "path": "JSONValue.encode(to:)"}
+MobilerunProtocol {"access": "public", "declaration": "func toJSON() throws -> String", "path": "ClientMessage.toJSON()"}
+MobilerunProtocol {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "JSONValue.init(from:)"}
+MobilerunProtocol {"access": "public", "declaration": "let candidate: String", "path": "ServerMessage.Candidate.candidate"}
+MobilerunProtocol {"access": "public", "declaration": "let configuration: [String : JSONValue]?", "path": "ServerMessage.RTCConfiguration.configuration"}
+MobilerunProtocol {"access": "public", "declaration": "let credential: String?", "path": "ServerMessage.ICEServer.credential"}
+MobilerunProtocol {"access": "public", "declaration": "let dataURI: String", "path": "ServerMessage.Screenshot.dataURI"}
+MobilerunProtocol {"access": "public", "declaration": "let id: Int", "path": "DataChannelSpec.id"}
+MobilerunProtocol {"access": "public", "declaration": "let id: String", "path": "ServerMessage.Screenshot.id"}
+MobilerunProtocol {"access": "public", "declaration": "let id: String", "path": "ServerMessage.ScreenshotError.id"}
+MobilerunProtocol {"access": "public", "declaration": "let label: String", "path": "DataChannelSpec.label"}
+MobilerunProtocol {"access": "public", "declaration": "let maxRetransmits: Int?", "path": "DataChannelSpec.maxRetransmits"}
+MobilerunProtocol {"access": "public", "declaration": "let message: String", "path": "ServerMessage.ScreenshotError.message"}
+MobilerunProtocol {"access": "public", "declaration": "let negotiated: Bool", "path": "DataChannelSpec.negotiated"}
+MobilerunProtocol {"access": "public", "declaration": "let ordered: Bool", "path": "DataChannelSpec.ordered"}
+MobilerunProtocol {"access": "public", "declaration": "let sdp: String", "path": "ServerMessage.Answer.sdp"}
+MobilerunProtocol {"access": "public", "declaration": "let sdpMLineIndex: Int?", "path": "ServerMessage.Candidate.sdpMLineIndex"}
+MobilerunProtocol {"access": "public", "declaration": "let sdpMid: String?", "path": "ServerMessage.Candidate.sdpMid"}
+MobilerunProtocol {"access": "public", "declaration": "let sessionID: String", "path": "ClientMessage.OpenURL.sessionID"}
+MobilerunProtocol {"access": "public", "declaration": "let url: String", "path": "ClientMessage.OpenURL.url"}
+MobilerunProtocol {"access": "public", "declaration": "let urls: [String]", "path": "ServerMessage.ICEServer.urls"}
+MobilerunProtocol {"access": "public", "declaration": "let username: String?", "path": "ServerMessage.ICEServer.username"}
+MobilerunProtocol {"access": "public", "declaration": "static func create(suppliedURL: String, sessionID: String) -> ClientMessage.OpenURL", "path": "ClientMessage.OpenURL.create(suppliedURL:sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func hover(videoWidth: Int, videoHeight: Int, x: Double, y: Double, buttons: Int = 0) -> Data", "path": "ControlMessages.hover(videoWidth:videoHeight:x:y:buttons:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func keycode(action: Int, keycode: Int, repeat: Int = 0, metaState: Int = 0) -> Data", "path": "ControlMessages.keycode(action:keycode:repeat:metaState:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func parse(_ text: String, phase: SignallingPhase) -> ServerFrame", "path": "ServerMessage.parse(_:phase:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func scroll(videoWidth: Int, videoHeight: Int, x: Double, y: Double, hscrollTicks: Double, vscrollTicks: Double, buttons: Int = 0) -> Data", "path": "ControlMessages.scroll(videoWidth:videoHeight:x:y:hscrollTicks:vscrollTicks:buttons:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func setClipboard(text: String, paste: Bool = true) -> Data", "path": "ControlMessages.setClipboard(text:paste:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func text(_ text: String) -> Data", "path": "ControlMessages.text(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func touch(action: Int, pointerID: Int64, videoWidth: Int, videoHeight: Int, x: Double, y: Double, pressure: Double = 1, actionButton: Int = 0, buttons: Int = 0) -> Data", "path": "ControlMessages.touch(action:pointerID:videoWidth:videoHeight:x:y:pressure:actionButton:buttons:)"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionCancel: Int", "path": "MotionEvent.actionCancel"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionDown: Int", "path": "AndroidKey.actionDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionDown: Int", "path": "MotionEvent.actionDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionMove: Int", "path": "MotionEvent.actionMove"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionPointerDown: Int", "path": "MotionEvent.actionPointerDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionPointerUp: Int", "path": "MotionEvent.actionPointerUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionUp: Int", "path": "AndroidKey.actionUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionUp: Int", "path": "MotionEvent.actionUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let backOrScreenOn: Int", "path": "ControlMessageType.backOrScreenOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let buttonPrimary: Int", "path": "MotionEvent.buttonPrimary"}
+MobilerunProtocol {"access": "public", "declaration": "static let buttonSecondary: Int", "path": "MotionEvent.buttonSecondary"}
+MobilerunProtocol {"access": "public", "declaration": "static let buttonTertiary: Int", "path": "MotionEvent.buttonTertiary"}
+MobilerunProtocol {"access": "public", "declaration": "static let collapsePanels: Int", "path": "ControlMessageType.collapsePanels"}
+MobilerunProtocol {"access": "public", "declaration": "static let control: DataChannelSpec", "path": "DataChannels.control"}
+MobilerunProtocol {"access": "public", "declaration": "static let del: Int", "path": "AndroidKey.del"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadDown: Int", "path": "AndroidKey.dpadDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadLeft: Int", "path": "AndroidKey.dpadLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadRight: Int", "path": "AndroidKey.dpadRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadUp: Int", "path": "AndroidKey.dpadUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let enter: Int", "path": "AndroidKey.enter"}
+MobilerunProtocol {"access": "public", "declaration": "static let expandNotificationPanel: Int", "path": "ControlMessageType.expandNotificationPanel"}
+MobilerunProtocol {"access": "public", "declaration": "static let expandSettingsPanel: Int", "path": "ControlMessageType.expandSettingsPanel"}
+MobilerunProtocol {"access": "public", "declaration": "static let forwardDel: Int", "path": "AndroidKey.forwardDel"}
+MobilerunProtocol {"access": "public", "declaration": "static let getClipboard: Int", "path": "ControlMessageType.getClipboard"}
+MobilerunProtocol {"access": "public", "declaration": "static let hover: DataChannelSpec", "path": "DataChannels.hover"}
+MobilerunProtocol {"access": "public", "declaration": "static let iceRestartGraceMs: Int", "path": "SignallingTiming.iceRestartGraceMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectKeycode: Int", "path": "ControlMessageType.injectKeycode"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectMouseHoverEvent: Int", "path": "ControlMessageType.injectMouseHoverEvent"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectScrollEvent: Int", "path": "ControlMessageType.injectScrollEvent"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectText: Int", "path": "ControlMessageType.injectText"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectTouchEvent: Int", "path": "ControlMessageType.injectTouchEvent"}
+MobilerunProtocol {"access": "public", "declaration": "static let keepAliveIntervalMs: Int", "path": "SignallingTiming.keepAliveIntervalMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode0: Int", "path": "AndroidKey.keycode0"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode1: Int", "path": "AndroidKey.keycode1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode2: Int", "path": "AndroidKey.keycode2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode3: Int", "path": "AndroidKey.keycode3"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode4: Int", "path": "AndroidKey.keycode4"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode5: Int", "path": "AndroidKey.keycode5"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode6: Int", "path": "AndroidKey.keycode6"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode7: Int", "path": "AndroidKey.keycode7"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode8: Int", "path": "AndroidKey.keycode8"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode9: Int", "path": "AndroidKey.keycode9"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeA: Int", "path": "AndroidKey.keycodeA"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAltLeft: Int", "path": "AndroidKey.keycodeAltLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAltRight: Int", "path": "AndroidKey.keycodeAltRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeApostrophe: Int", "path": "AndroidKey.keycodeApostrophe"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAppSwitch: Int", "path": "AndroidKey.keycodeAppSwitch"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAssist: Int", "path": "AndroidKey.keycodeAssist"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAt: Int", "path": "AndroidKey.keycodeAt"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAvrInput: Int", "path": "AndroidKey.keycodeAvrInput"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAvrPower: Int", "path": "AndroidKey.keycodeAvrPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeB: Int", "path": "AndroidKey.keycodeB"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBack: Int", "path": "AndroidKey.keycodeBack"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBackslash: Int", "path": "AndroidKey.keycodeBackslash"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBookmark: Int", "path": "AndroidKey.keycodeBookmark"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBreak: Int", "path": "AndroidKey.keycodeBreak"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBrightnessDown: Int", "path": "AndroidKey.keycodeBrightnessDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBrightnessUp: Int", "path": "AndroidKey.keycodeBrightnessUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonA: Int", "path": "AndroidKey.keycodeButtonA"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonB: Int", "path": "AndroidKey.keycodeButtonB"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonC: Int", "path": "AndroidKey.keycodeButtonC"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonL1: Int", "path": "AndroidKey.keycodeButtonL1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonL2: Int", "path": "AndroidKey.keycodeButtonL2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonMode: Int", "path": "AndroidKey.keycodeButtonMode"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonR1: Int", "path": "AndroidKey.keycodeButtonR1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonR2: Int", "path": "AndroidKey.keycodeButtonR2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonSelect: Int", "path": "AndroidKey.keycodeButtonSelect"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonStart: Int", "path": "AndroidKey.keycodeButtonStart"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonThumbl: Int", "path": "AndroidKey.keycodeButtonThumbl"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonThumbr: Int", "path": "AndroidKey.keycodeButtonThumbr"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonX: Int", "path": "AndroidKey.keycodeButtonX"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonY: Int", "path": "AndroidKey.keycodeButtonY"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonZ: Int", "path": "AndroidKey.keycodeButtonZ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeC: Int", "path": "AndroidKey.keycodeC"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCall: Int", "path": "AndroidKey.keycodeCall"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCamera: Int", "path": "AndroidKey.keycodeCamera"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCapsLock: Int", "path": "AndroidKey.keycodeCapsLock"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCaptions: Int", "path": "AndroidKey.keycodeCaptions"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeChannelDown: Int", "path": "AndroidKey.keycodeChannelDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeChannelUp: Int", "path": "AndroidKey.keycodeChannelUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeClear: Int", "path": "AndroidKey.keycodeClear"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeComma: Int", "path": "AndroidKey.keycodeComma"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCtrlLeft: Int", "path": "AndroidKey.keycodeCtrlLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCtrlRight: Int", "path": "AndroidKey.keycodeCtrlRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeD: Int", "path": "AndroidKey.keycodeD"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeDpadCenter: Int", "path": "AndroidKey.keycodeDpadCenter"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeDvr: Int", "path": "AndroidKey.keycodeDvr"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeE: Int", "path": "AndroidKey.keycodeE"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEndcall: Int", "path": "AndroidKey.keycodeEndcall"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEnvelope: Int", "path": "AndroidKey.keycodeEnvelope"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEquals: Int", "path": "AndroidKey.keycodeEquals"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEscape: Int", "path": "AndroidKey.keycodeEscape"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeExplorer: Int", "path": "AndroidKey.keycodeExplorer"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF10: Int", "path": "AndroidKey.keycodeF10"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF11: Int", "path": "AndroidKey.keycodeF11"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF12: Int", "path": "AndroidKey.keycodeF12"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF1: Int", "path": "AndroidKey.keycodeF1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF2: Int", "path": "AndroidKey.keycodeF2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF3: Int", "path": "AndroidKey.keycodeF3"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF4: Int", "path": "AndroidKey.keycodeF4"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF5: Int", "path": "AndroidKey.keycodeF5"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF6: Int", "path": "AndroidKey.keycodeF6"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF7: Int", "path": "AndroidKey.keycodeF7"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF8: Int", "path": "AndroidKey.keycodeF8"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF9: Int", "path": "AndroidKey.keycodeF9"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF: Int", "path": "AndroidKey.keycodeF"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeFocus: Int", "path": "AndroidKey.keycodeFocus"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeForward: Int", "path": "AndroidKey.keycodeForward"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeFunction: Int", "path": "AndroidKey.keycodeFunction"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeG: Int", "path": "AndroidKey.keycodeG"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeGrave: Int", "path": "AndroidKey.keycodeGrave"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeGuide: Int", "path": "AndroidKey.keycodeGuide"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeH: Int", "path": "AndroidKey.keycodeH"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeHeadsethook: Int", "path": "AndroidKey.keycodeHeadsethook"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeHome: Int", "path": "AndroidKey.keycodeHome"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeI: Int", "path": "AndroidKey.keycodeI"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeInfo: Int", "path": "AndroidKey.keycodeInfo"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeInsert: Int", "path": "AndroidKey.keycodeInsert"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeJ: Int", "path": "AndroidKey.keycodeJ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeK: Int", "path": "AndroidKey.keycodeK"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeL: Int", "path": "AndroidKey.keycodeL"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeLanguageSwitch: Int", "path": "AndroidKey.keycodeLanguageSwitch"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeLeftBracket: Int", "path": "AndroidKey.keycodeLeftBracket"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeM: Int", "path": "AndroidKey.keycodeM"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaClose: Int", "path": "AndroidKey.keycodeMediaClose"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaEject: Int", "path": "AndroidKey.keycodeMediaEject"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaFastForward: Int", "path": "AndroidKey.keycodeMediaFastForward"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaNext: Int", "path": "AndroidKey.keycodeMediaNext"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPause: Int", "path": "AndroidKey.keycodeMediaPause"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPlay: Int", "path": "AndroidKey.keycodeMediaPlay"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPlayPause: Int", "path": "AndroidKey.keycodeMediaPlayPause"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPrevious: Int", "path": "AndroidKey.keycodeMediaPrevious"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaRecord: Int", "path": "AndroidKey.keycodeMediaRecord"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaRewind: Int", "path": "AndroidKey.keycodeMediaRewind"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaStop: Int", "path": "AndroidKey.keycodeMediaStop"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMetaLeft: Int", "path": "AndroidKey.keycodeMetaLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMetaRight: Int", "path": "AndroidKey.keycodeMetaRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMinus: Int", "path": "AndroidKey.keycodeMinus"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMoveEnd: Int", "path": "AndroidKey.keycodeMoveEnd"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMoveHome: Int", "path": "AndroidKey.keycodeMoveHome"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMute: Int", "path": "AndroidKey.keycodeMute"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeN: Int", "path": "AndroidKey.keycodeN"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNotification: Int", "path": "AndroidKey.keycodeNotification"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNum: Int", "path": "AndroidKey.keycodeNum"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumLock: Int", "path": "AndroidKey.keycodeNumLock"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad0: Int", "path": "AndroidKey.keycodeNumpad0"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad1: Int", "path": "AndroidKey.keycodeNumpad1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad2: Int", "path": "AndroidKey.keycodeNumpad2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad3: Int", "path": "AndroidKey.keycodeNumpad3"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad4: Int", "path": "AndroidKey.keycodeNumpad4"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad5: Int", "path": "AndroidKey.keycodeNumpad5"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad6: Int", "path": "AndroidKey.keycodeNumpad6"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad7: Int", "path": "AndroidKey.keycodeNumpad7"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad8: Int", "path": "AndroidKey.keycodeNumpad8"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad9: Int", "path": "AndroidKey.keycodeNumpad9"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadAdd: Int", "path": "AndroidKey.keycodeNumpadAdd"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadComma: Int", "path": "AndroidKey.keycodeNumpadComma"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadDivide: Int", "path": "AndroidKey.keycodeNumpadDivide"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadDot: Int", "path": "AndroidKey.keycodeNumpadDot"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadEnter: Int", "path": "AndroidKey.keycodeNumpadEnter"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadEquals: Int", "path": "AndroidKey.keycodeNumpadEquals"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadLeftParen: Int", "path": "AndroidKey.keycodeNumpadLeftParen"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadMultiply: Int", "path": "AndroidKey.keycodeNumpadMultiply"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadRightParen: Int", "path": "AndroidKey.keycodeNumpadRightParen"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadSubtract: Int", "path": "AndroidKey.keycodeNumpadSubtract"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeO: Int", "path": "AndroidKey.keycodeO"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeP: Int", "path": "AndroidKey.keycodeP"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePageDown: Int", "path": "AndroidKey.keycodePageDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePageUp: Int", "path": "AndroidKey.keycodePageUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePeriod: Int", "path": "AndroidKey.keycodePeriod"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePictsymbols: Int", "path": "AndroidKey.keycodePictsymbols"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePlus: Int", "path": "AndroidKey.keycodePlus"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePound: Int", "path": "AndroidKey.keycodePound"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePower: Int", "path": "AndroidKey.keycodePower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgBlue: Int", "path": "AndroidKey.keycodeProgBlue"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgGreen: Int", "path": "AndroidKey.keycodeProgGreen"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgRed: Int", "path": "AndroidKey.keycodeProgRed"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgYellow: Int", "path": "AndroidKey.keycodeProgYellow"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeQ: Int", "path": "AndroidKey.keycodeQ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeR: Int", "path": "AndroidKey.keycodeR"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeRightBracket: Int", "path": "AndroidKey.keycodeRightBracket"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeS: Int", "path": "AndroidKey.keycodeS"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeScrollLock: Int", "path": "AndroidKey.keycodeScrollLock"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSearch: Int", "path": "AndroidKey.keycodeSearch"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSemicolon: Int", "path": "AndroidKey.keycodeSemicolon"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSettings: Int", "path": "AndroidKey.keycodeSettings"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeShiftLeft: Int", "path": "AndroidKey.keycodeShiftLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeShiftRight: Int", "path": "AndroidKey.keycodeShiftRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSlash: Int", "path": "AndroidKey.keycodeSlash"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSleep: Int", "path": "AndroidKey.keycodeSleep"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSoftLeft: Int", "path": "AndroidKey.keycodeSoftLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSoftRight: Int", "path": "AndroidKey.keycodeSoftRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSoftSleep: Int", "path": "AndroidKey.keycodeSoftSleep"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSpace: Int", "path": "AndroidKey.keycodeSpace"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeStar: Int", "path": "AndroidKey.keycodeStar"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeStbInput: Int", "path": "AndroidKey.keycodeStbInput"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeStbPower: Int", "path": "AndroidKey.keycodeStbPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSwitchCharset: Int", "path": "AndroidKey.keycodeSwitchCharset"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSym: Int", "path": "AndroidKey.keycodeSym"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSysrq: Int", "path": "AndroidKey.keycodeSysrq"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeT: Int", "path": "AndroidKey.keycodeT"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTab: Int", "path": "AndroidKey.keycodeTab"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTv: Int", "path": "AndroidKey.keycodeTv"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTvInput: Int", "path": "AndroidKey.keycodeTvInput"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTvPower: Int", "path": "AndroidKey.keycodeTvPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeU: Int", "path": "AndroidKey.keycodeU"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeUnknown: Int", "path": "AndroidKey.keycodeUnknown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeV: Int", "path": "AndroidKey.keycodeV"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeVolumeDown: Int", "path": "AndroidKey.keycodeVolumeDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeVolumeMute: Int", "path": "AndroidKey.keycodeVolumeMute"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeVolumeUp: Int", "path": "AndroidKey.keycodeVolumeUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeW: Int", "path": "AndroidKey.keycodeW"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeWakeup: Int", "path": "AndroidKey.keycodeWakeup"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeWindow: Int", "path": "AndroidKey.keycodeWindow"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeX: Int", "path": "AndroidKey.keycodeX"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeY: Int", "path": "AndroidKey.keycodeY"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeZ: Int", "path": "AndroidKey.keycodeZ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeZoomIn: Int", "path": "AndroidKey.keycodeZoomIn"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeZoomOut: Int", "path": "AndroidKey.keycodeZoomOut"}
+MobilerunProtocol {"access": "public", "declaration": "static let menu: Int", "path": "AndroidKey.menu"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaAltOn: Int", "path": "AndroidKey.metaAltOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaCtrlOn: Int", "path": "AndroidKey.metaCtrlOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaMetaOn: Int", "path": "AndroidKey.metaMetaOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaNone: Int", "path": "AndroidKey.metaNone"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaShiftOn: Int", "path": "AndroidKey.metaShiftOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let requestFrameCount: Int", "path": "SignallingTiming.requestFrameCount"}
+MobilerunProtocol {"access": "public", "declaration": "static let requestFrameIntervalMs: Int", "path": "SignallingTiming.requestFrameIntervalMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let rotateDevice: Int", "path": "ControlMessageType.rotateDevice"}
+MobilerunProtocol {"access": "public", "declaration": "static let rtcConfigTimeoutMs: Int", "path": "SignallingTiming.rtcConfigTimeoutMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let screenshotTimeoutMs: Int", "path": "SignallingTiming.screenshotTimeoutMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let setClipboard: Int", "path": "ControlMessageType.setClipboard"}
+MobilerunProtocol {"access": "public", "declaration": "static let setDisplayPower: Int", "path": "ControlMessageType.setDisplayPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let values: [String : Int]", "path": "KeyboardCode.values"}
+MobilerunProtocol {"access": "public", "declaration": "static let wsOpenTimeoutMs: Int", "path": "SignallingTiming.wsOpenTimeoutMs"}
+MobilerunProtocol {"access": "public", "declaration": "struct Answer", "path": "ServerMessage.Answer"}
+MobilerunProtocol {"access": "public", "declaration": "struct Candidate", "path": "ServerMessage.Candidate"}
+MobilerunProtocol {"access": "public", "declaration": "struct DataChannelSpec", "path": "DataChannelSpec"}
+MobilerunProtocol {"access": "public", "declaration": "struct ICEServer", "path": "ServerMessage.ICEServer"}
+MobilerunProtocol {"access": "public", "declaration": "struct OpenURL", "path": "ClientMessage.OpenURL"}
+MobilerunProtocol {"access": "public", "declaration": "struct RTCConfiguration", "path": "ServerMessage.RTCConfiguration"}
+MobilerunProtocol {"access": "public", "declaration": "struct Screenshot", "path": "ServerMessage.Screenshot"}
+MobilerunProtocol {"access": "public", "declaration": "struct ScreenshotError", "path": "ServerMessage.ScreenshotError"}
+MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6LabelsV", "target": "s:15MobilerunStream0B12CustomizableP"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6LabelsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6LabelsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:SE", "targetFallback": "Swift.Encodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:Se", "targetFallback": "Swift.Decodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SE", "targetFallback": "Swift.Encodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SY", "targetFallback": "Swift.RawRepresentable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:Se", "targetFallback": "Swift.Decodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream17TaskApprovalModelC", "target": "s:7Combine16ObservableObjectP", "targetFallback": "Combine.ObservableObject"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream17TaskApprovalModelC", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream17TaskApprovalStateV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18PaymentCardDetailsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18PaymentCardDetailsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:15MobilerunStream0B12CustomizableP"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping Fetch, decide: @escaping Decide, subscribe: Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor final class TaskApprovalModel", "path": "TaskApprovalModel"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func decide(_ decision: ApprovalDecision)", "path": "TaskApprovalModel.decide(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func refetch()", "path": "TaskApprovalModel.refetch()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func setTaskId(_ taskId: String)", "path": "TaskApprovalModel.setTaskId(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func start()", "path": "TaskApprovalModel.start()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func stop()", "path": "TaskApprovalModel.stop()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var error: (any Error)? { get }", "path": "TaskApprovalModel.error"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var taskId: String { get }", "path": "TaskApprovalModel.taskId"}
+MobilerunStream {"access": "public", "declaration": "@Published @MainActor var state: TaskApprovalState { get set }", "path": "TaskApprovalModel.state"}
+MobilerunStream {"access": "public", "declaration": "case approve", "path": "ApprovalDecision.approve"}
+MobilerunStream {"access": "public", "declaration": "case automatic", "path": "StreamConfig.VideoCodec.automatic"}
+MobilerunStream {"access": "public", "declaration": "case deny", "path": "ApprovalDecision.deny"}
+MobilerunStream {"access": "public", "declaration": "case h264Only", "path": "StreamConfig.VideoCodec.h264Only"}
+MobilerunStream {"access": "public", "declaration": "enum ApprovalDecision", "path": "ApprovalDecision"}
+MobilerunStream {"access": "public", "declaration": "enum VideoCodec", "path": "StreamConfig.VideoCodec"}
+MobilerunStream {"access": "public", "declaration": "func paymentCardDetails() -> PaymentCardDetails?", "path": "PendingApproval.paymentCardDetails()"}
+MobilerunStream {"access": "public", "declaration": "func statusLabel(_ status: StreamStatus) -> String", "path": "StreamLabels.statusLabel(_:)"}
+MobilerunStream {"access": "public", "declaration": "func with(_ update: (inout Self) -> Void) -> Self", "path": "StreamCustomizable.with(_:)"}
+MobilerunStream {"access": "public", "declaration": "init(approval: PendingApproval? = nil, isLoading: Bool = false, isDeciding: Bool = false, decision: ApprovalDecision? = nil, error: String? = nil)", "path": "TaskApprovalState.init(approval:isLoading:isDeciding:decision:error:)"}
+MobilerunStream {"access": "public", "declaration": "init(approvalId: String = \"\", kind: String = \"\", details: [String : JSONValue] = [:], expiresAt: String = \"\", deviceId: String? = nil)", "path": "PendingApproval.init(approvalId:kind:details:expiresAt:deviceId:)"}
+MobilerunStream {"access": "public", "declaration": "init(card: String = \"\", targetPackage: String = \"\", targetHost: String? = nil)", "path": "PaymentCardDetails.init(card:targetPackage:targetHost:)"}
+MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:unavailable:retry:back:home:recent:)"}
+MobilerunStream {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "PendingApproval.init(from:)"}
+MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
+MobilerunStream {"access": "public", "declaration": "init(paymentCardTitle: String = \"Approve payment\", waiting: String = \"Waiting for approval\", card: String = \"Card\", app: String = \"App\", domain: String = \"Domain\", timeLeft: String = \"{time} left\", expired: String = \"Approval expired\", approve: String = \"Approve\", deny: String = \"Deny\", viewSwitch: String = \"Approval view\", details: String = \"Details\", device: String = \"Device\")", "path": "TaskApprovalLabels.init(paymentCardTitle:waiting:card:app:domain:timeLeft:expired:approve:deny:viewSwitch:details:device:)"}
+MobilerunStream {"access": "public", "declaration": "init?(rawValue: String)", "path": "ApprovalDecision.init(rawValue:)"}
+MobilerunStream {"access": "public", "declaration": "protocol StreamCustomizable", "path": "StreamCustomizable"}
+MobilerunStream {"access": "public", "declaration": "struct PaymentCardDetails", "path": "PaymentCardDetails"}
+MobilerunStream {"access": "public", "declaration": "struct PendingApproval", "path": "PendingApproval"}
+MobilerunStream {"access": "public", "declaration": "struct StreamConfig", "path": "StreamConfig"}
+MobilerunStream {"access": "public", "declaration": "struct StreamLabels", "path": "StreamLabels"}
+MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels", "path": "TaskApprovalLabels"}
+MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
+MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
+MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = MobilerunStreamCore.StreamCredentials", "path": "StreamCredentials"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = MobilerunStreamCore.StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamError = MobilerunStreamCore.StreamError", "path": "StreamError"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = MobilerunStreamCore.StreamStatus", "path": "StreamStatus"}
+MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor @Sendable () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias VideoSize = MobilerunStreamCore.VideoSize", "path": "VideoSize"}
+MobilerunStream {"access": "public", "declaration": "var app: String", "path": "TaskApprovalLabels.app"}
+MobilerunStream {"access": "public", "declaration": "var approval: PendingApproval?", "path": "TaskApprovalState.approval"}
+MobilerunStream {"access": "public", "declaration": "var approvalId: String", "path": "PendingApproval.approvalId"}
+MobilerunStream {"access": "public", "declaration": "var approve: String", "path": "TaskApprovalLabels.approve"}
+MobilerunStream {"access": "public", "declaration": "var back: String", "path": "StreamLabels.back"}
+MobilerunStream {"access": "public", "declaration": "var card: String", "path": "PaymentCardDetails.card"}
+MobilerunStream {"access": "public", "declaration": "var card: String", "path": "TaskApprovalLabels.card"}
+MobilerunStream {"access": "public", "declaration": "var connecting: String", "path": "StreamLabels.connecting"}
+MobilerunStream {"access": "public", "declaration": "var decision: ApprovalDecision?", "path": "TaskApprovalState.decision"}
+MobilerunStream {"access": "public", "declaration": "var deny: String", "path": "TaskApprovalLabels.deny"}
+MobilerunStream {"access": "public", "declaration": "var details: String", "path": "TaskApprovalLabels.details"}
+MobilerunStream {"access": "public", "declaration": "var details: [String : JSONValue]", "path": "PendingApproval.details"}
+MobilerunStream {"access": "public", "declaration": "var device: String", "path": "TaskApprovalLabels.device"}
+MobilerunStream {"access": "public", "declaration": "var deviceId: String?", "path": "PendingApproval.deviceId"}
+MobilerunStream {"access": "public", "declaration": "var domain: String", "path": "TaskApprovalLabels.domain"}
+MobilerunStream {"access": "public", "declaration": "var error: String?", "path": "TaskApprovalState.error"}
+MobilerunStream {"access": "public", "declaration": "var expired: String", "path": "TaskApprovalLabels.expired"}
+MobilerunStream {"access": "public", "declaration": "var expiresAt: String", "path": "PendingApproval.expiresAt"}
+MobilerunStream {"access": "public", "declaration": "var home: String", "path": "StreamLabels.home"}
+MobilerunStream {"access": "public", "declaration": "var isDeciding: Bool", "path": "TaskApprovalState.isDeciding"}
+MobilerunStream {"access": "public", "declaration": "var isLoading: Bool", "path": "TaskApprovalState.isLoading"}
+MobilerunStream {"access": "public", "declaration": "var kind: String", "path": "PendingApproval.kind"}
+MobilerunStream {"access": "public", "declaration": "var muted: Bool", "path": "StreamConfig.muted"}
+MobilerunStream {"access": "public", "declaration": "var paymentCardTitle: String", "path": "TaskApprovalLabels.paymentCardTitle"}
+MobilerunStream {"access": "public", "declaration": "var recent: String", "path": "StreamLabels.recent"}
+MobilerunStream {"access": "public", "declaration": "var reconnecting: String", "path": "StreamLabels.reconnecting"}
+MobilerunStream {"access": "public", "declaration": "var reconnectingAttempt: String", "path": "StreamLabels.reconnectingAttempt"}
+MobilerunStream {"access": "public", "declaration": "var retry: String", "path": "StreamLabels.retry"}
+MobilerunStream {"access": "public", "declaration": "var targetHost: String?", "path": "PaymentCardDetails.targetHost"}
+MobilerunStream {"access": "public", "declaration": "var targetPackage: String", "path": "PaymentCardDetails.targetPackage"}
+MobilerunStream {"access": "public", "declaration": "var timeLeft: String", "path": "TaskApprovalLabels.timeLeft"}
+MobilerunStream {"access": "public", "declaration": "var unavailable: String", "path": "StreamLabels.unavailable"}
+MobilerunStream {"access": "public", "declaration": "var videoCodec: VideoCodec", "path": "StreamConfig.videoCodec"}
+MobilerunStream {"access": "public", "declaration": "var viewSwitch: String", "path": "TaskApprovalLabels.viewSwitch"}
+MobilerunStream {"access": "public", "declaration": "var waiting: String", "path": "TaskApprovalLabels.waiting"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore {"access": "public", "declaration": "case closed", "path": "StreamStatus.closed"}
+MobilerunStreamCore {"access": "public", "declaration": "case connected", "path": "StreamStatus.connected"}
+MobilerunStreamCore {"access": "public", "declaration": "case connecting", "path": "StreamStatus.connecting"}
+MobilerunStreamCore {"access": "public", "declaration": "case disconnected", "path": "StreamError.disconnected"}
+MobilerunStreamCore {"access": "public", "declaration": "case notConnected", "path": "StreamError.notConnected"}
+MobilerunStreamCore {"access": "public", "declaration": "case reconnecting(attempt: Int)", "path": "StreamStatus.reconnecting(attempt:)"}
+MobilerunStreamCore {"access": "public", "declaration": "case screenshotFailed", "path": "StreamError.screenshotFailed"}
+MobilerunStreamCore {"access": "public", "declaration": "case screenshotTimeout", "path": "StreamError.screenshotTimeout"}
+MobilerunStreamCore {"access": "public", "declaration": "case unavailable", "path": "StreamStatus.unavailable"}
+MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "path": "StreamError"}
+MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
+MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
+MobilerunStreamCore {"access": "public", "declaration": "init(width: Int, height: Int, rotation: Int = 0)", "path": "VideoSize.init(width:height:rotation:)"}
+MobilerunStreamCore {"access": "public", "declaration": "let height: Int", "path": "VideoSize.height"}
+MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "path": "VideoSize.rotation"}
+MobilerunStreamCore {"access": "public", "declaration": "let token: String?", "path": "StreamCredentials.token"}
+MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": "StreamCredentials.url"}
+MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
+MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
+MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
+MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = @Sendable () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
+# iOS
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO7OpenURLV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ClientMessageO7OpenURLV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO10ScreenshotV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO10ScreenshotV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO15ScreenshotErrorV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO15ScreenshotErrorV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO16RTCConfigurationV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO16RTCConfigurationV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO6AnswerV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO6AnswerV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9CandidateV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9CandidateV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9ICEServerV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol13ServerMessageO9ICEServerV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15DataChannelSpecV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15DataChannelSpecV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15SignallingPhaseO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15SignallingPhaseO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol15SignallingPhaseO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:SE", "targetFallback": "Swift.Encodable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:Se", "targetFallback": "Swift.Decodable"}
+MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunProtocol {"access": "public", "declaration": "case answer(Answer)", "path": "ServerMessage.answer(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case array([JSONValue])", "path": "JSONValue.array(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case awaitingRTCConfiguration", "path": "SignallingPhase.awaitingRTCConfiguration"}
+MobilerunProtocol {"access": "public", "declaration": "case bool(Bool)", "path": "JSONValue.bool(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case candidate(Candidate)", "path": "ServerMessage.candidate(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case candidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int?, sessionID: String)", "path": "ClientMessage.candidate(candidate:sdpMid:sdpMLineIndex:sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case established", "path": "SignallingPhase.established"}
+MobilerunProtocol {"access": "public", "declaration": "case ignored", "path": "ServerFrame.ignored"}
+MobilerunProtocol {"access": "public", "declaration": "case keepAlive(sessionID: String)", "path": "ClientMessage.keepAlive(sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case message(ServerMessage)", "path": "ServerFrame.message(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case null", "path": "JSONValue.null"}
+MobilerunProtocol {"access": "public", "declaration": "case number(Double)", "path": "JSONValue.number(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case object([String : JSONValue])", "path": "JSONValue.object(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case offer(sdp: String, sessionID: String)", "path": "ClientMessage.offer(sdp:sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case openURL(OpenURL)", "path": "ClientMessage.openURL(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case requestFrame(sessionID: String)", "path": "ClientMessage.requestFrame(sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case requestRTCConfiguration(sessionID: String)", "path": "ClientMessage.requestRTCConfiguration(sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "case rtcConfiguration(RTCConfiguration)", "path": "ServerMessage.rtcConfiguration(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshot(Screenshot)", "path": "ServerMessage.screenshot(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshot(id: String)", "path": "ClientMessage.screenshot(id:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshotError(ScreenshotError)", "path": "ServerMessage.screenshotError(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case startupFailure", "path": "ServerFrame.startupFailure"}
+MobilerunProtocol {"access": "public", "declaration": "case string(String)", "path": "JSONValue.string(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "enum AndroidKey", "path": "AndroidKey"}
+MobilerunProtocol {"access": "public", "declaration": "enum ClientMessage", "path": "ClientMessage"}
+MobilerunProtocol {"access": "public", "declaration": "enum ControlMessageType", "path": "ControlMessageType"}
+MobilerunProtocol {"access": "public", "declaration": "enum ControlMessages", "path": "ControlMessages"}
+MobilerunProtocol {"access": "public", "declaration": "enum DataChannels", "path": "DataChannels"}
+MobilerunProtocol {"access": "public", "declaration": "enum JSONValue", "path": "JSONValue"}
+MobilerunProtocol {"access": "public", "declaration": "enum KeyboardCode", "path": "KeyboardCode"}
+MobilerunProtocol {"access": "public", "declaration": "enum MotionEvent", "path": "MotionEvent"}
+MobilerunProtocol {"access": "public", "declaration": "enum ServerFrame", "path": "ServerFrame"}
+MobilerunProtocol {"access": "public", "declaration": "enum ServerMessage", "path": "ServerMessage"}
+MobilerunProtocol {"access": "public", "declaration": "enum SignallingPhase", "path": "SignallingPhase"}
+MobilerunProtocol {"access": "public", "declaration": "enum SignallingTiming", "path": "SignallingTiming"}
+MobilerunProtocol {"access": "public", "declaration": "func encode(to encoder: any Encoder) throws", "path": "JSONValue.encode(to:)"}
+MobilerunProtocol {"access": "public", "declaration": "func toJSON() throws -> String", "path": "ClientMessage.toJSON()"}
+MobilerunProtocol {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "JSONValue.init(from:)"}
+MobilerunProtocol {"access": "public", "declaration": "let candidate: String", "path": "ServerMessage.Candidate.candidate"}
+MobilerunProtocol {"access": "public", "declaration": "let configuration: [String : JSONValue]?", "path": "ServerMessage.RTCConfiguration.configuration"}
+MobilerunProtocol {"access": "public", "declaration": "let credential: String?", "path": "ServerMessage.ICEServer.credential"}
+MobilerunProtocol {"access": "public", "declaration": "let dataURI: String", "path": "ServerMessage.Screenshot.dataURI"}
+MobilerunProtocol {"access": "public", "declaration": "let id: Int", "path": "DataChannelSpec.id"}
+MobilerunProtocol {"access": "public", "declaration": "let id: String", "path": "ServerMessage.Screenshot.id"}
+MobilerunProtocol {"access": "public", "declaration": "let id: String", "path": "ServerMessage.ScreenshotError.id"}
+MobilerunProtocol {"access": "public", "declaration": "let label: String", "path": "DataChannelSpec.label"}
+MobilerunProtocol {"access": "public", "declaration": "let maxRetransmits: Int?", "path": "DataChannelSpec.maxRetransmits"}
+MobilerunProtocol {"access": "public", "declaration": "let message: String", "path": "ServerMessage.ScreenshotError.message"}
+MobilerunProtocol {"access": "public", "declaration": "let negotiated: Bool", "path": "DataChannelSpec.negotiated"}
+MobilerunProtocol {"access": "public", "declaration": "let ordered: Bool", "path": "DataChannelSpec.ordered"}
+MobilerunProtocol {"access": "public", "declaration": "let sdp: String", "path": "ServerMessage.Answer.sdp"}
+MobilerunProtocol {"access": "public", "declaration": "let sdpMLineIndex: Int?", "path": "ServerMessage.Candidate.sdpMLineIndex"}
+MobilerunProtocol {"access": "public", "declaration": "let sdpMid: String?", "path": "ServerMessage.Candidate.sdpMid"}
+MobilerunProtocol {"access": "public", "declaration": "let sessionID: String", "path": "ClientMessage.OpenURL.sessionID"}
+MobilerunProtocol {"access": "public", "declaration": "let url: String", "path": "ClientMessage.OpenURL.url"}
+MobilerunProtocol {"access": "public", "declaration": "let urls: [String]", "path": "ServerMessage.ICEServer.urls"}
+MobilerunProtocol {"access": "public", "declaration": "let username: String?", "path": "ServerMessage.ICEServer.username"}
+MobilerunProtocol {"access": "public", "declaration": "static func create(suppliedURL: String, sessionID: String) -> ClientMessage.OpenURL", "path": "ClientMessage.OpenURL.create(suppliedURL:sessionID:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func hover(videoWidth: Int, videoHeight: Int, x: Double, y: Double, buttons: Int = 0) -> Data", "path": "ControlMessages.hover(videoWidth:videoHeight:x:y:buttons:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func keycode(action: Int, keycode: Int, repeat: Int = 0, metaState: Int = 0) -> Data", "path": "ControlMessages.keycode(action:keycode:repeat:metaState:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func parse(_ text: String, phase: SignallingPhase) -> ServerFrame", "path": "ServerMessage.parse(_:phase:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func scroll(videoWidth: Int, videoHeight: Int, x: Double, y: Double, hscrollTicks: Double, vscrollTicks: Double, buttons: Int = 0) -> Data", "path": "ControlMessages.scroll(videoWidth:videoHeight:x:y:hscrollTicks:vscrollTicks:buttons:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func setClipboard(text: String, paste: Bool = true) -> Data", "path": "ControlMessages.setClipboard(text:paste:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func text(_ text: String) -> Data", "path": "ControlMessages.text(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "static func touch(action: Int, pointerID: Int64, videoWidth: Int, videoHeight: Int, x: Double, y: Double, pressure: Double = 1, actionButton: Int = 0, buttons: Int = 0) -> Data", "path": "ControlMessages.touch(action:pointerID:videoWidth:videoHeight:x:y:pressure:actionButton:buttons:)"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionCancel: Int", "path": "MotionEvent.actionCancel"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionDown: Int", "path": "AndroidKey.actionDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionDown: Int", "path": "MotionEvent.actionDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionMove: Int", "path": "MotionEvent.actionMove"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionPointerDown: Int", "path": "MotionEvent.actionPointerDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionPointerUp: Int", "path": "MotionEvent.actionPointerUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionUp: Int", "path": "AndroidKey.actionUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let actionUp: Int", "path": "MotionEvent.actionUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let backOrScreenOn: Int", "path": "ControlMessageType.backOrScreenOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let buttonPrimary: Int", "path": "MotionEvent.buttonPrimary"}
+MobilerunProtocol {"access": "public", "declaration": "static let buttonSecondary: Int", "path": "MotionEvent.buttonSecondary"}
+MobilerunProtocol {"access": "public", "declaration": "static let buttonTertiary: Int", "path": "MotionEvent.buttonTertiary"}
+MobilerunProtocol {"access": "public", "declaration": "static let collapsePanels: Int", "path": "ControlMessageType.collapsePanels"}
+MobilerunProtocol {"access": "public", "declaration": "static let control: DataChannelSpec", "path": "DataChannels.control"}
+MobilerunProtocol {"access": "public", "declaration": "static let del: Int", "path": "AndroidKey.del"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadDown: Int", "path": "AndroidKey.dpadDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadLeft: Int", "path": "AndroidKey.dpadLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadRight: Int", "path": "AndroidKey.dpadRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let dpadUp: Int", "path": "AndroidKey.dpadUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let enter: Int", "path": "AndroidKey.enter"}
+MobilerunProtocol {"access": "public", "declaration": "static let expandNotificationPanel: Int", "path": "ControlMessageType.expandNotificationPanel"}
+MobilerunProtocol {"access": "public", "declaration": "static let expandSettingsPanel: Int", "path": "ControlMessageType.expandSettingsPanel"}
+MobilerunProtocol {"access": "public", "declaration": "static let forwardDel: Int", "path": "AndroidKey.forwardDel"}
+MobilerunProtocol {"access": "public", "declaration": "static let getClipboard: Int", "path": "ControlMessageType.getClipboard"}
+MobilerunProtocol {"access": "public", "declaration": "static let hover: DataChannelSpec", "path": "DataChannels.hover"}
+MobilerunProtocol {"access": "public", "declaration": "static let iceRestartGraceMs: Int", "path": "SignallingTiming.iceRestartGraceMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectKeycode: Int", "path": "ControlMessageType.injectKeycode"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectMouseHoverEvent: Int", "path": "ControlMessageType.injectMouseHoverEvent"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectScrollEvent: Int", "path": "ControlMessageType.injectScrollEvent"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectText: Int", "path": "ControlMessageType.injectText"}
+MobilerunProtocol {"access": "public", "declaration": "static let injectTouchEvent: Int", "path": "ControlMessageType.injectTouchEvent"}
+MobilerunProtocol {"access": "public", "declaration": "static let keepAliveIntervalMs: Int", "path": "SignallingTiming.keepAliveIntervalMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode0: Int", "path": "AndroidKey.keycode0"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode1: Int", "path": "AndroidKey.keycode1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode2: Int", "path": "AndroidKey.keycode2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode3: Int", "path": "AndroidKey.keycode3"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode4: Int", "path": "AndroidKey.keycode4"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode5: Int", "path": "AndroidKey.keycode5"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode6: Int", "path": "AndroidKey.keycode6"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode7: Int", "path": "AndroidKey.keycode7"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode8: Int", "path": "AndroidKey.keycode8"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycode9: Int", "path": "AndroidKey.keycode9"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeA: Int", "path": "AndroidKey.keycodeA"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAltLeft: Int", "path": "AndroidKey.keycodeAltLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAltRight: Int", "path": "AndroidKey.keycodeAltRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeApostrophe: Int", "path": "AndroidKey.keycodeApostrophe"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAppSwitch: Int", "path": "AndroidKey.keycodeAppSwitch"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAssist: Int", "path": "AndroidKey.keycodeAssist"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAt: Int", "path": "AndroidKey.keycodeAt"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAvrInput: Int", "path": "AndroidKey.keycodeAvrInput"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeAvrPower: Int", "path": "AndroidKey.keycodeAvrPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeB: Int", "path": "AndroidKey.keycodeB"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBack: Int", "path": "AndroidKey.keycodeBack"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBackslash: Int", "path": "AndroidKey.keycodeBackslash"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBookmark: Int", "path": "AndroidKey.keycodeBookmark"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBreak: Int", "path": "AndroidKey.keycodeBreak"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBrightnessDown: Int", "path": "AndroidKey.keycodeBrightnessDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeBrightnessUp: Int", "path": "AndroidKey.keycodeBrightnessUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonA: Int", "path": "AndroidKey.keycodeButtonA"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonB: Int", "path": "AndroidKey.keycodeButtonB"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonC: Int", "path": "AndroidKey.keycodeButtonC"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonL1: Int", "path": "AndroidKey.keycodeButtonL1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonL2: Int", "path": "AndroidKey.keycodeButtonL2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonMode: Int", "path": "AndroidKey.keycodeButtonMode"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonR1: Int", "path": "AndroidKey.keycodeButtonR1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonR2: Int", "path": "AndroidKey.keycodeButtonR2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonSelect: Int", "path": "AndroidKey.keycodeButtonSelect"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonStart: Int", "path": "AndroidKey.keycodeButtonStart"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonThumbl: Int", "path": "AndroidKey.keycodeButtonThumbl"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonThumbr: Int", "path": "AndroidKey.keycodeButtonThumbr"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonX: Int", "path": "AndroidKey.keycodeButtonX"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonY: Int", "path": "AndroidKey.keycodeButtonY"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeButtonZ: Int", "path": "AndroidKey.keycodeButtonZ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeC: Int", "path": "AndroidKey.keycodeC"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCall: Int", "path": "AndroidKey.keycodeCall"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCamera: Int", "path": "AndroidKey.keycodeCamera"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCapsLock: Int", "path": "AndroidKey.keycodeCapsLock"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCaptions: Int", "path": "AndroidKey.keycodeCaptions"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeChannelDown: Int", "path": "AndroidKey.keycodeChannelDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeChannelUp: Int", "path": "AndroidKey.keycodeChannelUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeClear: Int", "path": "AndroidKey.keycodeClear"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeComma: Int", "path": "AndroidKey.keycodeComma"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCtrlLeft: Int", "path": "AndroidKey.keycodeCtrlLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeCtrlRight: Int", "path": "AndroidKey.keycodeCtrlRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeD: Int", "path": "AndroidKey.keycodeD"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeDpadCenter: Int", "path": "AndroidKey.keycodeDpadCenter"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeDvr: Int", "path": "AndroidKey.keycodeDvr"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeE: Int", "path": "AndroidKey.keycodeE"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEndcall: Int", "path": "AndroidKey.keycodeEndcall"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEnvelope: Int", "path": "AndroidKey.keycodeEnvelope"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEquals: Int", "path": "AndroidKey.keycodeEquals"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeEscape: Int", "path": "AndroidKey.keycodeEscape"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeExplorer: Int", "path": "AndroidKey.keycodeExplorer"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF10: Int", "path": "AndroidKey.keycodeF10"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF11: Int", "path": "AndroidKey.keycodeF11"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF12: Int", "path": "AndroidKey.keycodeF12"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF1: Int", "path": "AndroidKey.keycodeF1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF2: Int", "path": "AndroidKey.keycodeF2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF3: Int", "path": "AndroidKey.keycodeF3"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF4: Int", "path": "AndroidKey.keycodeF4"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF5: Int", "path": "AndroidKey.keycodeF5"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF6: Int", "path": "AndroidKey.keycodeF6"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF7: Int", "path": "AndroidKey.keycodeF7"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF8: Int", "path": "AndroidKey.keycodeF8"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF9: Int", "path": "AndroidKey.keycodeF9"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeF: Int", "path": "AndroidKey.keycodeF"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeFocus: Int", "path": "AndroidKey.keycodeFocus"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeForward: Int", "path": "AndroidKey.keycodeForward"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeFunction: Int", "path": "AndroidKey.keycodeFunction"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeG: Int", "path": "AndroidKey.keycodeG"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeGrave: Int", "path": "AndroidKey.keycodeGrave"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeGuide: Int", "path": "AndroidKey.keycodeGuide"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeH: Int", "path": "AndroidKey.keycodeH"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeHeadsethook: Int", "path": "AndroidKey.keycodeHeadsethook"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeHome: Int", "path": "AndroidKey.keycodeHome"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeI: Int", "path": "AndroidKey.keycodeI"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeInfo: Int", "path": "AndroidKey.keycodeInfo"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeInsert: Int", "path": "AndroidKey.keycodeInsert"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeJ: Int", "path": "AndroidKey.keycodeJ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeK: Int", "path": "AndroidKey.keycodeK"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeL: Int", "path": "AndroidKey.keycodeL"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeLanguageSwitch: Int", "path": "AndroidKey.keycodeLanguageSwitch"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeLeftBracket: Int", "path": "AndroidKey.keycodeLeftBracket"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeM: Int", "path": "AndroidKey.keycodeM"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaClose: Int", "path": "AndroidKey.keycodeMediaClose"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaEject: Int", "path": "AndroidKey.keycodeMediaEject"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaFastForward: Int", "path": "AndroidKey.keycodeMediaFastForward"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaNext: Int", "path": "AndroidKey.keycodeMediaNext"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPause: Int", "path": "AndroidKey.keycodeMediaPause"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPlay: Int", "path": "AndroidKey.keycodeMediaPlay"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPlayPause: Int", "path": "AndroidKey.keycodeMediaPlayPause"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaPrevious: Int", "path": "AndroidKey.keycodeMediaPrevious"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaRecord: Int", "path": "AndroidKey.keycodeMediaRecord"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaRewind: Int", "path": "AndroidKey.keycodeMediaRewind"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMediaStop: Int", "path": "AndroidKey.keycodeMediaStop"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMetaLeft: Int", "path": "AndroidKey.keycodeMetaLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMetaRight: Int", "path": "AndroidKey.keycodeMetaRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMinus: Int", "path": "AndroidKey.keycodeMinus"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMoveEnd: Int", "path": "AndroidKey.keycodeMoveEnd"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMoveHome: Int", "path": "AndroidKey.keycodeMoveHome"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeMute: Int", "path": "AndroidKey.keycodeMute"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeN: Int", "path": "AndroidKey.keycodeN"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNotification: Int", "path": "AndroidKey.keycodeNotification"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNum: Int", "path": "AndroidKey.keycodeNum"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumLock: Int", "path": "AndroidKey.keycodeNumLock"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad0: Int", "path": "AndroidKey.keycodeNumpad0"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad1: Int", "path": "AndroidKey.keycodeNumpad1"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad2: Int", "path": "AndroidKey.keycodeNumpad2"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad3: Int", "path": "AndroidKey.keycodeNumpad3"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad4: Int", "path": "AndroidKey.keycodeNumpad4"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad5: Int", "path": "AndroidKey.keycodeNumpad5"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad6: Int", "path": "AndroidKey.keycodeNumpad6"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad7: Int", "path": "AndroidKey.keycodeNumpad7"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad8: Int", "path": "AndroidKey.keycodeNumpad8"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpad9: Int", "path": "AndroidKey.keycodeNumpad9"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadAdd: Int", "path": "AndroidKey.keycodeNumpadAdd"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadComma: Int", "path": "AndroidKey.keycodeNumpadComma"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadDivide: Int", "path": "AndroidKey.keycodeNumpadDivide"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadDot: Int", "path": "AndroidKey.keycodeNumpadDot"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadEnter: Int", "path": "AndroidKey.keycodeNumpadEnter"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadEquals: Int", "path": "AndroidKey.keycodeNumpadEquals"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadLeftParen: Int", "path": "AndroidKey.keycodeNumpadLeftParen"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadMultiply: Int", "path": "AndroidKey.keycodeNumpadMultiply"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadRightParen: Int", "path": "AndroidKey.keycodeNumpadRightParen"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeNumpadSubtract: Int", "path": "AndroidKey.keycodeNumpadSubtract"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeO: Int", "path": "AndroidKey.keycodeO"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeP: Int", "path": "AndroidKey.keycodeP"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePageDown: Int", "path": "AndroidKey.keycodePageDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePageUp: Int", "path": "AndroidKey.keycodePageUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePeriod: Int", "path": "AndroidKey.keycodePeriod"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePictsymbols: Int", "path": "AndroidKey.keycodePictsymbols"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePlus: Int", "path": "AndroidKey.keycodePlus"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePound: Int", "path": "AndroidKey.keycodePound"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodePower: Int", "path": "AndroidKey.keycodePower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgBlue: Int", "path": "AndroidKey.keycodeProgBlue"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgGreen: Int", "path": "AndroidKey.keycodeProgGreen"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgRed: Int", "path": "AndroidKey.keycodeProgRed"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeProgYellow: Int", "path": "AndroidKey.keycodeProgYellow"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeQ: Int", "path": "AndroidKey.keycodeQ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeR: Int", "path": "AndroidKey.keycodeR"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeRightBracket: Int", "path": "AndroidKey.keycodeRightBracket"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeS: Int", "path": "AndroidKey.keycodeS"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeScrollLock: Int", "path": "AndroidKey.keycodeScrollLock"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSearch: Int", "path": "AndroidKey.keycodeSearch"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSemicolon: Int", "path": "AndroidKey.keycodeSemicolon"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSettings: Int", "path": "AndroidKey.keycodeSettings"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeShiftLeft: Int", "path": "AndroidKey.keycodeShiftLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeShiftRight: Int", "path": "AndroidKey.keycodeShiftRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSlash: Int", "path": "AndroidKey.keycodeSlash"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSleep: Int", "path": "AndroidKey.keycodeSleep"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSoftLeft: Int", "path": "AndroidKey.keycodeSoftLeft"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSoftRight: Int", "path": "AndroidKey.keycodeSoftRight"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSoftSleep: Int", "path": "AndroidKey.keycodeSoftSleep"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSpace: Int", "path": "AndroidKey.keycodeSpace"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeStar: Int", "path": "AndroidKey.keycodeStar"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeStbInput: Int", "path": "AndroidKey.keycodeStbInput"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeStbPower: Int", "path": "AndroidKey.keycodeStbPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSwitchCharset: Int", "path": "AndroidKey.keycodeSwitchCharset"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSym: Int", "path": "AndroidKey.keycodeSym"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeSysrq: Int", "path": "AndroidKey.keycodeSysrq"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeT: Int", "path": "AndroidKey.keycodeT"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTab: Int", "path": "AndroidKey.keycodeTab"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTv: Int", "path": "AndroidKey.keycodeTv"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTvInput: Int", "path": "AndroidKey.keycodeTvInput"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeTvPower: Int", "path": "AndroidKey.keycodeTvPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeU: Int", "path": "AndroidKey.keycodeU"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeUnknown: Int", "path": "AndroidKey.keycodeUnknown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeV: Int", "path": "AndroidKey.keycodeV"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeVolumeDown: Int", "path": "AndroidKey.keycodeVolumeDown"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeVolumeMute: Int", "path": "AndroidKey.keycodeVolumeMute"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeVolumeUp: Int", "path": "AndroidKey.keycodeVolumeUp"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeW: Int", "path": "AndroidKey.keycodeW"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeWakeup: Int", "path": "AndroidKey.keycodeWakeup"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeWindow: Int", "path": "AndroidKey.keycodeWindow"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeX: Int", "path": "AndroidKey.keycodeX"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeY: Int", "path": "AndroidKey.keycodeY"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeZ: Int", "path": "AndroidKey.keycodeZ"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeZoomIn: Int", "path": "AndroidKey.keycodeZoomIn"}
+MobilerunProtocol {"access": "public", "declaration": "static let keycodeZoomOut: Int", "path": "AndroidKey.keycodeZoomOut"}
+MobilerunProtocol {"access": "public", "declaration": "static let menu: Int", "path": "AndroidKey.menu"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaAltOn: Int", "path": "AndroidKey.metaAltOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaCtrlOn: Int", "path": "AndroidKey.metaCtrlOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaMetaOn: Int", "path": "AndroidKey.metaMetaOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaNone: Int", "path": "AndroidKey.metaNone"}
+MobilerunProtocol {"access": "public", "declaration": "static let metaShiftOn: Int", "path": "AndroidKey.metaShiftOn"}
+MobilerunProtocol {"access": "public", "declaration": "static let requestFrameCount: Int", "path": "SignallingTiming.requestFrameCount"}
+MobilerunProtocol {"access": "public", "declaration": "static let requestFrameIntervalMs: Int", "path": "SignallingTiming.requestFrameIntervalMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let rotateDevice: Int", "path": "ControlMessageType.rotateDevice"}
+MobilerunProtocol {"access": "public", "declaration": "static let rtcConfigTimeoutMs: Int", "path": "SignallingTiming.rtcConfigTimeoutMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let screenshotTimeoutMs: Int", "path": "SignallingTiming.screenshotTimeoutMs"}
+MobilerunProtocol {"access": "public", "declaration": "static let setClipboard: Int", "path": "ControlMessageType.setClipboard"}
+MobilerunProtocol {"access": "public", "declaration": "static let setDisplayPower: Int", "path": "ControlMessageType.setDisplayPower"}
+MobilerunProtocol {"access": "public", "declaration": "static let values: [String : Int]", "path": "KeyboardCode.values"}
+MobilerunProtocol {"access": "public", "declaration": "static let wsOpenTimeoutMs: Int", "path": "SignallingTiming.wsOpenTimeoutMs"}
+MobilerunProtocol {"access": "public", "declaration": "struct Answer", "path": "ServerMessage.Answer"}
+MobilerunProtocol {"access": "public", "declaration": "struct Candidate", "path": "ServerMessage.Candidate"}
+MobilerunProtocol {"access": "public", "declaration": "struct DataChannelSpec", "path": "DataChannelSpec"}
+MobilerunProtocol {"access": "public", "declaration": "struct ICEServer", "path": "ServerMessage.ICEServer"}
+MobilerunProtocol {"access": "public", "declaration": "struct OpenURL", "path": "ClientMessage.OpenURL"}
+MobilerunProtocol {"access": "public", "declaration": "struct RTCConfiguration", "path": "ServerMessage.RTCConfiguration"}
+MobilerunProtocol {"access": "public", "declaration": "struct Screenshot", "path": "ServerMessage.Screenshot"}
+MobilerunProtocol {"access": "public", "declaration": "struct ScreenshotError", "path": "ServerMessage.ScreenshotError"}
+MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CALayerDelegate", "targetFallback": "QuartzCore.CALayerDelegate"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CLBodyIdentifiable", "targetFallback": "CoreLocation.CLBodyIdentifiable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CMBodyIdentifiable", "targetFallback": "CoreMotion.CMBodyIdentifiable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)NSCoding", "targetFallback": "Foundation.NSCoding"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)NSObject", "targetFallback": "ObjectiveC.NSObjectProtocol"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIAccessibilityIdentification", "targetFallback": "UIKit.UIAccessibilityIdentification"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIActivityItemsConfigurationProviding", "targetFallback": "UIKit.UIActivityItemsConfigurationProviding"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIAppearance", "targetFallback": "UIKit.UIAppearance"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIAppearanceContainer", "targetFallback": "UIKit.UIAppearanceContainer"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UICoordinateSpace", "targetFallback": "UIUtilities.UICoordinateSpace"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIDynamicItem", "targetFallback": "UIKit.UIDynamicItem"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIFocusEnvironment", "targetFallback": "UIKit.UIFocusEnvironment"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIFocusItem", "targetFallback": "UIKit.UIFocusItem"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIFocusItemContainer", "targetFallback": "UIKit.UIFocusItemContainer"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UILargeContentViewerItem", "targetFallback": "UIKit.UILargeContentViewerItem"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIPasteConfigurationSupporting", "targetFallback": "UIKit.UIPasteConfigurationSupporting"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIPopoverPresentationControllerSourceItem", "targetFallback": "UIKit.UIPopoverPresentationControllerSourceItem"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIResponderStandardEditActions", "targetFallback": "UIKit.UIResponderStandardEditActions"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UITraitEnvironment", "targetFallback": "UIKit.UITraitEnvironment"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIUserActivityRestoring", "targetFallback": "UIKit.UIUserActivityRestoring"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:5UIKit23UITraitChangeObservableP", "targetFallback": "UIKit.UITraitChangeObservable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:s23CustomStringConvertibleP", "targetFallback": "Swift.CustomStringConvertible"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:s28CustomDebugStringConvertibleP", "targetFallback": "Swift.CustomDebugStringConvertible"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:s7CVarArgP", "targetFallback": "Swift.CVarArg"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB0V", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB0V", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB4ViewV", "target": "s:7SwiftUI19UIViewRepresentableP", "targetFallback": "SwiftUI.UIViewRepresentable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB4ViewV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB4ViewV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB6HandleC", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB7SessionC", "target": "s:7Combine16ObservableObjectP", "targetFallback": "Combine.ObservableObject"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream06DeviceB7SessionC", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B10StatusPillV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B10StatusPillV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B11PlaceholderV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B11PlaceholderV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B12OverlayStateV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B12SurfaceStyleO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B12SurfaceStyleO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B12SurfaceStyleO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B13NavigationBarV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B13NavigationBarV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15ApprovalActionsV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15ApprovalActionsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15NavigationStateV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15UnavailableViewV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15UnavailableViewV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B16LifecycleAdapterC", "target": "s:7Combine16ObservableObjectP", "targetFallback": "Combine.ObservableObject"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B16LifecycleAdapterC", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B5SlotsV", "target": "s:15MobilerunStream0B12CustomizableP"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B5SlotsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B5ThemeV", "target": "s:15MobilerunStream0B12CustomizableP"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B5ThemeV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6LabelsV", "target": "s:15MobilerunStream0B12CustomizableP"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6LabelsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6LabelsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:SE", "targetFallback": "Swift.Encodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:Se", "targetFallback": "Swift.Decodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream15PendingApprovalV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SE", "targetFallback": "Swift.Encodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:SY", "targetFallback": "Swift.RawRepresentable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:Se", "targetFallback": "Swift.Decodable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16ApprovalDecisionO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16TaskApprovalCardV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream16TaskApprovalCardV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream17TaskApprovalModelC", "target": "s:7Combine16ObservableObjectP", "targetFallback": "Combine.ObservableObject"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream17TaskApprovalModelC", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream17TaskApprovalStateV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18PaymentCardDetailsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18PaymentCardDetailsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:15MobilerunStream0B12CustomizableP"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream24TaskApprovalActionsStateV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream9SystemKeyO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream9SystemKeyO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream9SystemKeyO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStream relationship {"kind": "inheritsFrom", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(cs)UIView", "targetFallback": "UIKit.UIView"}
+MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(session: DeviceStreamSession, hasControl: Bool)", "path": "DeviceStreamUIView.init(session:hasControl:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping Fetch, decide: @escaping Decide, subscribe: Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamHandle", "path": "DeviceStreamHandle"}
+MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamSession", "path": "DeviceStreamSession"}
+MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamUIView", "path": "DeviceStreamUIView"}
+MobilerunStream {"access": "public", "declaration": "@MainActor final class StreamLifecycleAdapter", "path": "StreamLifecycleAdapter"}
+MobilerunStream {"access": "public", "declaration": "@MainActor final class TaskApprovalModel", "path": "TaskApprovalModel"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func close()", "path": "DeviceStreamSession.close()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func decide(_ decision: ApprovalDecision)", "path": "TaskApprovalModel.decide(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func handleWake()", "path": "DeviceStreamSession.handleWake()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func hideKeyboard()", "path": "DeviceStreamHandle.hideKeyboard()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func hideKeyboard()", "path": "DeviceStreamUIView.hideKeyboard()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func makeUIView(context: Context) -> DeviceStreamUIView", "path": "DeviceStreamView.makeUIView(context:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func openURL(_ url: String)", "path": "DeviceStreamSession.openURL(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func rebind(session: DeviceStreamSession)", "path": "StreamLifecycleAdapter.rebind(session:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func refetch()", "path": "TaskApprovalModel.refetch()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func retry()", "path": "DeviceStreamSession.retry()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func screenshot(timeout: TimeInterval = TimeInterval(SignallingTiming.screenshotTimeoutMs) / 1000) async throws -> Data", "path": "DeviceStreamSession.screenshot(timeout:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func sendSystemKey(_ key: SystemKey)", "path": "DeviceStreamHandle.sendSystemKey(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func sendSystemKey(_ key: SystemKey)", "path": "DeviceStreamUIView.sendSystemKey(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func setHidden(_ hidden: Bool)", "path": "DeviceStreamSession.setHidden(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func setMuted(_ muted: Bool)", "path": "DeviceStreamSession.setMuted(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func setTaskId(_ taskId: String)", "path": "TaskApprovalModel.setTaskId(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func showKeyboard()", "path": "DeviceStreamHandle.showKeyboard()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func showKeyboard()", "path": "DeviceStreamUIView.showKeyboard()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func start()", "path": "DeviceStreamSession.start()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func start()", "path": "StreamLifecycleAdapter.start()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func start()", "path": "TaskApprovalModel.start()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func stop()", "path": "StreamLifecycleAdapter.stop()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func stop()", "path": "TaskApprovalModel.stop()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func streamLabels(_ labels: StreamLabels) -> some View", "path": "View.streamLabels(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func streamTheme(_ theme: StreamTheme) -> some View", "path": "View.streamTheme(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func streamThemeFollowsSystem(light: StreamTheme = .light, dark: StreamTheme = .dark) -> some View", "path": "View.streamThemeFollowsSystem(light:dark:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func taskApprovalLabels(_ labels: TaskApprovalLabels) -> some View", "path": "View.taskApprovalLabels(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func updateUIView(_ view: DeviceStreamUIView, context: Context)", "path": "DeviceStreamView.updateUIView(_:context:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init()", "path": "DeviceStreamHandle.init()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(canControl: Bool = true, onAction: @escaping (SystemKey) -> Void = { _ in })", "path": "StreamNavigationState.init(canControl:onAction:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(credentials: @escaping StreamCredentialsProvider, config: StreamConfig = StreamConfig())", "path": "DeviceStreamSession.init(credentials:config:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(isDeciding: Bool = false, decision: ApprovalDecision? = nil, onDecide: @escaping (ApprovalDecision) -> Void = { _ in })", "path": "TaskApprovalActionsState.init(isDeciding:decision:onDecide:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(label: String)", "path": "StreamStatusPill.init(label:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(placeholder: @escaping (StreamOverlayState) -> AnyView = { AnyView(StreamPlaceholder(state: $0)) }, unavailable: @escaping (StreamOverlayState) -> AnyView = { AnyView(StreamUnavailableView(state: $0)) }, navigation: @escaping (StreamNavigationState) -> AnyView = { AnyView(StreamNavigationBar(state: $0)) })", "path": "StreamSlots.init(placeholder:unavailable:navigation:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(session: DeviceStreamSession)", "path": "StreamLifecycleAdapter.init(session:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(session: DeviceStreamSession, hasControl: Bool = true, showsNavigation: Bool = true, slots: StreamSlots = StreamSlots())", "path": "DeviceStream.init(session:hasControl:showsNavigation:slots:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(session: DeviceStreamSession, hasControl: Bool, handle: DeviceStreamHandle? = nil)", "path": "DeviceStreamView.init(session:hasControl:handle:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(state: StreamNavigationState = StreamNavigationState())", "path": "StreamNavigationBar.init(state:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(state: StreamOverlayState = StreamOverlayState())", "path": "StreamPlaceholder.init(state:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(state: StreamOverlayState = StreamOverlayState())", "path": "StreamUnavailableView.init(state:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(state: TaskApprovalActionsState = TaskApprovalActionsState())", "path": "StreamApprovalActions.init(state:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(state: TaskApprovalState = TaskApprovalState(), onDecide: @escaping (ApprovalDecision) -> Void, actions: @escaping (TaskApprovalActionsState) -> AnyView = { AnyView(StreamApprovalActions(state: $0)) })", "path": "TaskApprovalCard.init(state:onDecide:actions:)", "swiftGenerics": {"constraints": [{"kind": "sameType", "lhs": "Device", "rhs": "EmptyView", "rhsPrecise": "s:7SwiftUI9EmptyViewV"}], "parameters": [{"depth": 0, "index": 0, "name": "Device"}]}}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(state: TaskApprovalState = TaskApprovalState(), onDecide: @escaping (ApprovalDecision) -> Void, actions: @escaping (TaskApprovalActionsState) -> AnyView = { AnyView(StreamApprovalActions(state: $0)) }, @ViewBuilder device: () -> Device)", "path": "TaskApprovalCard.init(state:onDecide:actions:device:)", "swiftGenerics": {"constraints": [{"kind": "conformance", "lhs": "Device", "rhs": "View", "rhsPrecise": "s:7SwiftUI4ViewP"}], "parameters": [{"depth": 0, "index": 0, "name": "Device"}]}}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(status: StreamStatus = .connecting, hasVideo: Bool = false, retry: @escaping () -> Void = {})", "path": "StreamOverlayState.init(status:hasVideo:retry:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func didMoveToWindow()", "path": "DeviceStreamUIView.didMoveToWindow()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool", "path": "DeviceStreamUIView.gestureRecognizerShouldBegin(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func layoutSubviews()", "path": "DeviceStreamUIView.layoutSubviews()"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func paste(_ sender: Any?)", "path": "DeviceStreamUIView.paste(_:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?)", "path": "DeviceStreamUIView.pressesBegan(_:with:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?)", "path": "DeviceStreamUIView.pressesCancelled(_:with:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?)", "path": "DeviceStreamUIView.pressesEnded(_:with:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)", "path": "DeviceStreamUIView.touchesBegan(_:with:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)", "path": "DeviceStreamUIView.touchesCancelled(_:with:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)", "path": "DeviceStreamUIView.touchesEnded(_:with:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)", "path": "DeviceStreamUIView.touchesMoved(_:with:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor override var canBecomeFirstResponder: Bool { get }", "path": "DeviceStreamUIView.canBecomeFirstResponder"}
+MobilerunStream {"access": "public", "declaration": "@MainActor static func dismantleUIView(_ view: DeviceStreamUIView, coordinator: ())", "path": "DeviceStreamView.dismantleUIView(_:coordinator:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct DeviceStream", "path": "DeviceStream"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct DeviceStreamView", "path": "DeviceStreamView"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamApprovalActions", "path": "StreamApprovalActions"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamNavigationBar", "path": "StreamNavigationBar"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamNavigationState", "path": "StreamNavigationState"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamOverlayState", "path": "StreamOverlayState"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamPlaceholder", "path": "StreamPlaceholder"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamSlots", "path": "StreamSlots"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamStatusPill", "path": "StreamStatusPill"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct StreamUnavailableView", "path": "StreamUnavailableView"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct TaskApprovalActionsState", "path": "TaskApprovalActionsState"}
+MobilerunStream {"access": "public", "declaration": "@MainActor struct TaskApprovalCard<Device> where Device : View", "path": "TaskApprovalCard", "swiftGenerics": {"constraints": [{"kind": "conformance", "lhs": "Device", "rhs": "View", "rhsPrecise": "s:7SwiftUI4ViewP"}], "parameters": [{"depth": 0, "index": 0, "name": "Device"}]}}
+MobilerunStream {"access": "public", "declaration": "@MainActor var body: some View { get }", "path": "DeviceStream.body"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var body: some View { get }", "path": "StreamApprovalActions.body"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var body: some View { get }", "path": "StreamNavigationBar.body"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var body: some View { get }", "path": "StreamPlaceholder.body"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var body: some View { get }", "path": "StreamStatusPill.body"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var body: some View { get }", "path": "StreamUnavailableView.body"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var body: some View { get }", "path": "TaskApprovalCard.body"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var canControl: Bool", "path": "StreamNavigationState.canControl"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var decision: ApprovalDecision?", "path": "TaskApprovalActionsState.decision"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var error: (any Error)? { get }", "path": "TaskApprovalModel.error"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var hasControl: Bool { get set }", "path": "DeviceStreamUIView.hasControl"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var hasVideo: Bool", "path": "StreamOverlayState.hasVideo"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var isDeciding: Bool", "path": "TaskApprovalActionsState.isDeciding"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var label: String", "path": "StreamStatusPill.label"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var navigation: (StreamNavigationState) -> AnyView", "path": "StreamSlots.navigation"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var onAction: (SystemKey) -> Void", "path": "StreamNavigationState.onAction"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var onDecide: (ApprovalDecision) -> Void", "path": "TaskApprovalActionsState.onDecide"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var placeholder: (StreamOverlayState) -> AnyView", "path": "StreamSlots.placeholder"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var retry: () -> Void", "path": "StreamOverlayState.retry"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamNavigationState", "path": "StreamNavigationBar.state"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamOverlayState", "path": "StreamPlaceholder.state"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamOverlayState", "path": "StreamUnavailableView.state"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var state: TaskApprovalActionsState", "path": "StreamApprovalActions.state"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var status: StreamStatus", "path": "StreamOverlayState.status"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var taskId: String { get }", "path": "TaskApprovalModel.taskId"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var unavailable: (StreamOverlayState) -> AnyView", "path": "StreamSlots.unavailable"}
+MobilerunStream {"access": "public", "declaration": "@Published @MainActor var state: TaskApprovalState { get set }", "path": "TaskApprovalModel.state"}
+MobilerunStream {"access": "public", "declaration": "@Published @MainActor var status: StreamStatus { get set }", "path": "DeviceStreamSession.status"}
+MobilerunStream {"access": "public", "declaration": "@Published @MainActor var videoSize: VideoSize? { get set }", "path": "DeviceStreamSession.videoSize"}
+MobilerunStream {"access": "public", "declaration": "case approve", "path": "ApprovalDecision.approve"}
+MobilerunStream {"access": "public", "declaration": "case automatic", "path": "StreamConfig.VideoCodec.automatic"}
+MobilerunStream {"access": "public", "declaration": "case back", "path": "SystemKey.back"}
+MobilerunStream {"access": "public", "declaration": "case deny", "path": "ApprovalDecision.deny"}
+MobilerunStream {"access": "public", "declaration": "case glass", "path": "StreamSurfaceStyle.glass"}
+MobilerunStream {"access": "public", "declaration": "case h264Only", "path": "StreamConfig.VideoCodec.h264Only"}
+MobilerunStream {"access": "public", "declaration": "case home", "path": "SystemKey.home"}
+MobilerunStream {"access": "public", "declaration": "case recent", "path": "SystemKey.recent"}
+MobilerunStream {"access": "public", "declaration": "case solid", "path": "StreamSurfaceStyle.solid"}
+MobilerunStream {"access": "public", "declaration": "enum ApprovalDecision", "path": "ApprovalDecision"}
+MobilerunStream {"access": "public", "declaration": "enum StreamSurfaceStyle", "path": "StreamSurfaceStyle"}
+MobilerunStream {"access": "public", "declaration": "enum SystemKey", "path": "SystemKey"}
+MobilerunStream {"access": "public", "declaration": "enum VideoCodec", "path": "StreamConfig.VideoCodec"}
+MobilerunStream {"access": "public", "declaration": "extension EnvironmentValues", "path": "EnvironmentValues"}
+MobilerunStream {"access": "public", "declaration": "extension View", "path": "View", "swiftGenerics": {"constraints": [{"kind": "conformance", "lhs": "Self", "rhs": "View", "rhsPrecise": "s:7SwiftUI4ViewP"}]}}
+MobilerunStream {"access": "public", "declaration": "func paymentCardDetails() -> PaymentCardDetails?", "path": "PendingApproval.paymentCardDetails()"}
+MobilerunStream {"access": "public", "declaration": "func statusLabel(_ status: StreamStatus) -> String", "path": "StreamLabels.statusLabel(_:)"}
+MobilerunStream {"access": "public", "declaration": "func with(_ update: (inout Self) -> Void) -> Self", "path": "StreamCustomizable.with(_:)"}
+MobilerunStream {"access": "public", "declaration": "init(approval: PendingApproval? = nil, isLoading: Bool = false, isDeciding: Bool = false, decision: ApprovalDecision? = nil, error: String? = nil)", "path": "TaskApprovalState.init(approval:isLoading:isDeciding:decision:error:)"}
+MobilerunStream {"access": "public", "declaration": "init(approvalId: String = \"\", kind: String = \"\", details: [String : JSONValue] = [:], expiresAt: String = \"\", deviceId: String? = nil)", "path": "PendingApproval.init(approvalId:kind:details:expiresAt:deviceId:)"}
+MobilerunStream {"access": "public", "declaration": "init(background: Color = Color(.sRGB, red: 1.00000000, green: 1.00000000, blue: 1.00000000, opacity: 1), foreground: Color = Color(.sRGB, red: 0.03938824, green: 0.03938823, blue: 0.03938823, opacity: 1), card: Color = Color(.sRGB, red: 1.00000000, green: 1.00000000, blue: 1.00000000, opacity: 1), cardForeground: Color = Color(.sRGB, red: 0.03938824, green: 0.03938823, blue: 0.03938823, opacity: 1), muted: Color = Color(.sRGB, red: 0.96058699, green: 0.96058699, blue: 0.96058699, opacity: 1), mutedForeground: Color = Color(.sRGB, red: 0.45151924, green: 0.45151924, blue: 0.45151924, opacity: 1), border: Color = Color(.sRGB, red: 0.89816066, green: 0.89816066, blue: 0.89816066, opacity: 1), ring: Color = Color(.sRGB, red: 0.63016320, green: 0.63016320, blue: 0.63016320, opacity: 1), primary: Color = Color(.sRGB, red: 0.09052741, green: 0.09052741, blue: 0.09052741, opacity: 1), primaryForeground: Color = Color(.sRGB, red: 0.98025598, green: 0.98025598, blue: 0.98025598, opacity: 1), accent: Color = Color(.sRGB, red: 0.96058699, green: 0.96058699, blue: 0.96058699, opacity: 1), accentForeground: Color = Color(.sRGB, red: 0.09052741, green: 0.09052741, blue: 0.09052741, opacity: 1), destructive: Color = Color(.sRGB, red: 0.90645756, green: 0.00000000, blue: 0.04221455, opacity: 1), radius: CGFloat = 12, typography: Font = .subheadline, surfaceStyle: StreamSurfaceStyle = .glass)", "path": "StreamTheme.init(background:foreground:card:cardForeground:muted:mutedForeground:border:ring:primary:primaryForeground:accent:accentForeground:destructive:radius:typography:surfaceStyle:)"}
+MobilerunStream {"access": "public", "declaration": "init(card: String = \"\", targetPackage: String = \"\", targetHost: String? = nil)", "path": "PaymentCardDetails.init(card:targetPackage:targetHost:)"}
+MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:unavailable:retry:back:home:recent:)"}
+MobilerunStream {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "PendingApproval.init(from:)"}
+MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
+MobilerunStream {"access": "public", "declaration": "init(paymentCardTitle: String = \"Approve payment\", waiting: String = \"Waiting for approval\", card: String = \"Card\", app: String = \"App\", domain: String = \"Domain\", timeLeft: String = \"{time} left\", expired: String = \"Approval expired\", approve: String = \"Approve\", deny: String = \"Deny\", viewSwitch: String = \"Approval view\", details: String = \"Details\", device: String = \"Device\")", "path": "TaskApprovalLabels.init(paymentCardTitle:waiting:card:app:domain:timeLeft:expired:approve:deny:viewSwitch:details:device:)"}
+MobilerunStream {"access": "public", "declaration": "init?(rawValue: String)", "path": "ApprovalDecision.init(rawValue:)"}
+MobilerunStream {"access": "public", "declaration": "protocol StreamCustomizable", "path": "StreamCustomizable"}
+MobilerunStream {"access": "public", "declaration": "static var dark: `Self` { get }", "path": "StreamTheme.dark"}
+MobilerunStream {"access": "public", "declaration": "static var light: `Self` { get }", "path": "StreamTheme.light"}
+MobilerunStream {"access": "public", "declaration": "struct PaymentCardDetails", "path": "PaymentCardDetails"}
+MobilerunStream {"access": "public", "declaration": "struct PendingApproval", "path": "PendingApproval"}
+MobilerunStream {"access": "public", "declaration": "struct StreamConfig", "path": "StreamConfig"}
+MobilerunStream {"access": "public", "declaration": "struct StreamLabels", "path": "StreamLabels"}
+MobilerunStream {"access": "public", "declaration": "struct StreamTheme", "path": "StreamTheme"}
+MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels", "path": "TaskApprovalLabels"}
+MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
+MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
+MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = MobilerunStreamCore.StreamCredentials", "path": "StreamCredentials"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = MobilerunStreamCore.StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamError = MobilerunStreamCore.StreamError", "path": "StreamError"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = MobilerunStreamCore.StreamStatus", "path": "StreamStatus"}
+MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor @Sendable () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias VideoSize = MobilerunStreamCore.VideoSize", "path": "VideoSize"}
+MobilerunStream {"access": "public", "declaration": "var accent: Color", "path": "StreamTheme.accent"}
+MobilerunStream {"access": "public", "declaration": "var accentForeground: Color", "path": "StreamTheme.accentForeground"}
+MobilerunStream {"access": "public", "declaration": "var app: String", "path": "TaskApprovalLabels.app"}
+MobilerunStream {"access": "public", "declaration": "var approval: PendingApproval?", "path": "TaskApprovalState.approval"}
+MobilerunStream {"access": "public", "declaration": "var approvalId: String", "path": "PendingApproval.approvalId"}
+MobilerunStream {"access": "public", "declaration": "var approve: String", "path": "TaskApprovalLabels.approve"}
+MobilerunStream {"access": "public", "declaration": "var back: String", "path": "StreamLabels.back"}
+MobilerunStream {"access": "public", "declaration": "var background: Color", "path": "StreamTheme.background"}
+MobilerunStream {"access": "public", "declaration": "var border: Color", "path": "StreamTheme.border"}
+MobilerunStream {"access": "public", "declaration": "var card: Color", "path": "StreamTheme.card"}
+MobilerunStream {"access": "public", "declaration": "var card: String", "path": "PaymentCardDetails.card"}
+MobilerunStream {"access": "public", "declaration": "var card: String", "path": "TaskApprovalLabels.card"}
+MobilerunStream {"access": "public", "declaration": "var cardForeground: Color", "path": "StreamTheme.cardForeground"}
+MobilerunStream {"access": "public", "declaration": "var connecting: String", "path": "StreamLabels.connecting"}
+MobilerunStream {"access": "public", "declaration": "var decision: ApprovalDecision?", "path": "TaskApprovalState.decision"}
+MobilerunStream {"access": "public", "declaration": "var deny: String", "path": "TaskApprovalLabels.deny"}
+MobilerunStream {"access": "public", "declaration": "var destructive: Color", "path": "StreamTheme.destructive"}
+MobilerunStream {"access": "public", "declaration": "var details: String", "path": "TaskApprovalLabels.details"}
+MobilerunStream {"access": "public", "declaration": "var details: [String : JSONValue]", "path": "PendingApproval.details"}
+MobilerunStream {"access": "public", "declaration": "var device: String", "path": "TaskApprovalLabels.device"}
+MobilerunStream {"access": "public", "declaration": "var deviceId: String?", "path": "PendingApproval.deviceId"}
+MobilerunStream {"access": "public", "declaration": "var domain: String", "path": "TaskApprovalLabels.domain"}
+MobilerunStream {"access": "public", "declaration": "var error: String?", "path": "TaskApprovalState.error"}
+MobilerunStream {"access": "public", "declaration": "var expired: String", "path": "TaskApprovalLabels.expired"}
+MobilerunStream {"access": "public", "declaration": "var expiresAt: String", "path": "PendingApproval.expiresAt"}
+MobilerunStream {"access": "public", "declaration": "var foreground: Color", "path": "StreamTheme.foreground"}
+MobilerunStream {"access": "public", "declaration": "var home: String", "path": "StreamLabels.home"}
+MobilerunStream {"access": "public", "declaration": "var isDeciding: Bool", "path": "TaskApprovalState.isDeciding"}
+MobilerunStream {"access": "public", "declaration": "var isLoading: Bool", "path": "TaskApprovalState.isLoading"}
+MobilerunStream {"access": "public", "declaration": "var kind: String", "path": "PendingApproval.kind"}
+MobilerunStream {"access": "public", "declaration": "var muted: Bool", "path": "StreamConfig.muted"}
+MobilerunStream {"access": "public", "declaration": "var muted: Color", "path": "StreamTheme.muted"}
+MobilerunStream {"access": "public", "declaration": "var mutedForeground: Color", "path": "StreamTheme.mutedForeground"}
+MobilerunStream {"access": "public", "declaration": "var paymentCardTitle: String", "path": "TaskApprovalLabels.paymentCardTitle"}
+MobilerunStream {"access": "public", "declaration": "var primary: Color", "path": "StreamTheme.primary"}
+MobilerunStream {"access": "public", "declaration": "var primaryForeground: Color", "path": "StreamTheme.primaryForeground"}
+MobilerunStream {"access": "public", "declaration": "var radius: CGFloat", "path": "StreamTheme.radius"}
+MobilerunStream {"access": "public", "declaration": "var recent: String", "path": "StreamLabels.recent"}
+MobilerunStream {"access": "public", "declaration": "var reconnecting: String", "path": "StreamLabels.reconnecting"}
+MobilerunStream {"access": "public", "declaration": "var reconnectingAttempt: String", "path": "StreamLabels.reconnectingAttempt"}
+MobilerunStream {"access": "public", "declaration": "var retry: String", "path": "StreamLabels.retry"}
+MobilerunStream {"access": "public", "declaration": "var ring: Color", "path": "StreamTheme.ring"}
+MobilerunStream {"access": "public", "declaration": "var streamLabels: StreamLabels { get set }", "path": "EnvironmentValues.streamLabels"}
+MobilerunStream {"access": "public", "declaration": "var streamTheme: StreamTheme { get set }", "path": "EnvironmentValues.streamTheme"}
+MobilerunStream {"access": "public", "declaration": "var surfaceStyle: StreamSurfaceStyle", "path": "StreamTheme.surfaceStyle"}
+MobilerunStream {"access": "public", "declaration": "var targetHost: String?", "path": "PaymentCardDetails.targetHost"}
+MobilerunStream {"access": "public", "declaration": "var targetPackage: String", "path": "PaymentCardDetails.targetPackage"}
+MobilerunStream {"access": "public", "declaration": "var taskApprovalLabels: TaskApprovalLabels { get set }", "path": "EnvironmentValues.taskApprovalLabels"}
+MobilerunStream {"access": "public", "declaration": "var timeLeft: String", "path": "TaskApprovalLabels.timeLeft"}
+MobilerunStream {"access": "public", "declaration": "var typography: Font", "path": "StreamTheme.typography"}
+MobilerunStream {"access": "public", "declaration": "var unavailable: String", "path": "StreamLabels.unavailable"}
+MobilerunStream {"access": "public", "declaration": "var videoCodec: VideoCodec", "path": "StreamConfig.videoCodec"}
+MobilerunStream {"access": "public", "declaration": "var viewSwitch: String", "path": "TaskApprovalLabels.viewSwitch"}
+MobilerunStream {"access": "public", "declaration": "var waiting: String", "path": "TaskApprovalLabels.waiting"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore {"access": "public", "declaration": "case closed", "path": "StreamStatus.closed"}
+MobilerunStreamCore {"access": "public", "declaration": "case connected", "path": "StreamStatus.connected"}
+MobilerunStreamCore {"access": "public", "declaration": "case connecting", "path": "StreamStatus.connecting"}
+MobilerunStreamCore {"access": "public", "declaration": "case disconnected", "path": "StreamError.disconnected"}
+MobilerunStreamCore {"access": "public", "declaration": "case notConnected", "path": "StreamError.notConnected"}
+MobilerunStreamCore {"access": "public", "declaration": "case reconnecting(attempt: Int)", "path": "StreamStatus.reconnecting(attempt:)"}
+MobilerunStreamCore {"access": "public", "declaration": "case screenshotFailed", "path": "StreamError.screenshotFailed"}
+MobilerunStreamCore {"access": "public", "declaration": "case screenshotTimeout", "path": "StreamError.screenshotTimeout"}
+MobilerunStreamCore {"access": "public", "declaration": "case unavailable", "path": "StreamStatus.unavailable"}
+MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "path": "StreamError"}
+MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
+MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
+MobilerunStreamCore {"access": "public", "declaration": "init(width: Int, height: Int, rotation: Int = 0)", "path": "VideoSize.init(width:height:rotation:)"}
+MobilerunStreamCore {"access": "public", "declaration": "let height: Int", "path": "VideoSize.height"}
+MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "path": "VideoSize.rotation"}
+MobilerunStreamCore {"access": "public", "declaration": "let token: String?", "path": "StreamCredentials.token"}
+MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": "StreamCredentials.url"}
+MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
+MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
+MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
+MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = @Sendable () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}

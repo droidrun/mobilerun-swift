@@ -1,5 +1,6 @@
 name: Swift
 on:
+  workflow_call:
   pull_request:
   push:
     branches: [main]
@@ -19,6 +20,17 @@ jobs:
           git diff --exit-code
       - run: swift build
       - run: swift test
+      - name: Check public API baseline
+        run: tool/api-dump.sh --check
+      - name: Upload API check diagnostic
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-api
+          path: .build/api-current.txt
+          if-no-files-found: ignore
+      - name: Release dry run
+        run: tool/release-notes.py v0.1.0 > release-notes.txt
       - name: Build iOS simulator library
         run: xcodebuild -scheme MobilerunStream -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO
       - name: Build connection example

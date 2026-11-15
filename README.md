@@ -6,7 +6,18 @@ The connection library supports iOS 15+; the pure protocol and session core also
 - `MobilerunStream`: observable session, SwiftUI/UIKit video and input, and native WebRTC on iOS.
 - `MobilerunProtocol`: binary control encoders, typed signalling and protocol constants.
 - `MobilerunStreamCore`: package implementation of session orchestration, transport boundaries and
-  reconnect timers.
+  reconnect timers. It is an implementation target, not a library product.
+
+## Installation (after first release)
+
+No release is available yet. After `v0.1.0` is released, add:
+
+```swift
+.package(url: "https://github.com/droidrun/mobilerun-swift.git", from: "0.1.0")
+```
+
+Choose `MobilerunStream` for the iOS SDK or `MobilerunProtocol` for standalone wire
+helpers. See [RELEASING.md](RELEASING.md) for the API contract and release process.
 
 ## Connect
 
