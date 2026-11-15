@@ -251,6 +251,9 @@ import XCTest
         app.launch()
         let surface = app.otherElements["device-stream-surface"]
         XCTAssertTrue(surface.waitForExistence(timeout: 45))
+        let videoReady = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value MATCHES %@", "[0-9]+x[0-9]+x.*"), object: surface)
+        XCTAssertEqual(XCTWaiter.wait(for: [videoReady], timeout: 45), .completed)
         XCTAssertTrue(app.buttons["Home"].isEnabled)
         app.buttons["Home"].tap()
         surface.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
