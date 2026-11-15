@@ -28,11 +28,11 @@ MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunPr
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:Se", "targetFallback": "Swift.Decodable"}
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
-MobilerunProtocol {"access": "public", "declaration": "case answer(Answer)", "path": "ServerMessage.answer(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case answer(ServerMessage.Answer)", "path": "ServerMessage.answer(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case array([JSONValue])", "path": "JSONValue.array(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case awaitingRTCConfiguration", "path": "SignallingPhase.awaitingRTCConfiguration"}
 MobilerunProtocol {"access": "public", "declaration": "case bool(Bool)", "path": "JSONValue.bool(_:)"}
-MobilerunProtocol {"access": "public", "declaration": "case candidate(Candidate)", "path": "ServerMessage.candidate(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case candidate(ServerMessage.Candidate)", "path": "ServerMessage.candidate(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case candidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int?, sessionID: String)", "path": "ClientMessage.candidate(candidate:sdpMid:sdpMLineIndex:sessionID:)"}
 MobilerunProtocol {"access": "public", "declaration": "case established", "path": "SignallingPhase.established"}
 MobilerunProtocol {"access": "public", "declaration": "case ignored", "path": "ServerFrame.ignored"}
@@ -42,13 +42,13 @@ MobilerunProtocol {"access": "public", "declaration": "case null", "path": "JSON
 MobilerunProtocol {"access": "public", "declaration": "case number(Double)", "path": "JSONValue.number(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case object([String : JSONValue])", "path": "JSONValue.object(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case offer(sdp: String, sessionID: String)", "path": "ClientMessage.offer(sdp:sessionID:)"}
-MobilerunProtocol {"access": "public", "declaration": "case openURL(OpenURL)", "path": "ClientMessage.openURL(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case openURL(ClientMessage.OpenURL)", "path": "ClientMessage.openURL(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case requestFrame(sessionID: String)", "path": "ClientMessage.requestFrame(sessionID:)"}
 MobilerunProtocol {"access": "public", "declaration": "case requestRTCConfiguration(sessionID: String)", "path": "ClientMessage.requestRTCConfiguration(sessionID:)"}
-MobilerunProtocol {"access": "public", "declaration": "case rtcConfiguration(RTCConfiguration)", "path": "ServerMessage.rtcConfiguration(_:)"}
-MobilerunProtocol {"access": "public", "declaration": "case screenshot(Screenshot)", "path": "ServerMessage.screenshot(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case rtcConfiguration(ServerMessage.RTCConfiguration)", "path": "ServerMessage.rtcConfiguration(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshot(ServerMessage.Screenshot)", "path": "ServerMessage.screenshot(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case screenshot(id: String)", "path": "ClientMessage.screenshot(id:)"}
-MobilerunProtocol {"access": "public", "declaration": "case screenshotError(ScreenshotError)", "path": "ServerMessage.screenshotError(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshotError(ServerMessage.ScreenshotError)", "path": "ServerMessage.screenshotError(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case startupFailure", "path": "ServerFrame.startupFailure"}
 MobilerunProtocol {"access": "public", "declaration": "case string(String)", "path": "JSONValue.string(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "enum AndroidKey", "path": "AndroidKey"}
@@ -335,7 +335,7 @@ MobilerunProtocol {"access": "public", "declaration": "struct OpenURL", "path": 
 MobilerunProtocol {"access": "public", "declaration": "struct RTCConfiguration", "path": "ServerMessage.RTCConfiguration"}
 MobilerunProtocol {"access": "public", "declaration": "struct Screenshot", "path": "ServerMessage.Screenshot"}
 MobilerunProtocol {"access": "public", "declaration": "struct ScreenshotError", "path": "ServerMessage.ScreenshotError"}
-MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
+MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ServerMessage.ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B6ConfigV10VideoCodecO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
@@ -361,7 +361,7 @@ MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStre
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:15MobilerunStream0B12CustomizableP"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
-MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping Fetch, decide: @escaping Decide, subscribe: Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping TaskApprovalModel.Fetch, decide: @escaping TaskApprovalModel.Decide, subscribe: TaskApprovalModel.Subscribe? = nil, onError: (@MainActor @Sendable (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class TaskApprovalModel", "path": "TaskApprovalModel"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func decide(_ decision: ApprovalDecision)", "path": "TaskApprovalModel.decide(_:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func refetch()", "path": "TaskApprovalModel.refetch()"}
@@ -385,7 +385,7 @@ MobilerunStream {"access": "public", "declaration": "init(approvalId: String = \
 MobilerunStream {"access": "public", "declaration": "init(card: String = \"\", targetPackage: String = \"\", targetHost: String? = nil)", "path": "PaymentCardDetails.init(card:targetPackage:targetHost:)"}
 MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:unavailable:retry:back:home:recent:)"}
 MobilerunStream {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "PendingApproval.init(from:)"}
-MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
+MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: StreamConfig.VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
 MobilerunStream {"access": "public", "declaration": "init(paymentCardTitle: String = \"Approve payment\", waiting: String = \"Waiting for approval\", card: String = \"Card\", app: String = \"App\", domain: String = \"Domain\", timeLeft: String = \"{time} left\", expired: String = \"Approval expired\", approve: String = \"Approve\", deny: String = \"Deny\", viewSwitch: String = \"Approval view\", details: String = \"Details\", device: String = \"Device\")", "path": "TaskApprovalLabels.init(paymentCardTitle:waiting:card:app:domain:timeLeft:expired:approve:deny:viewSwitch:details:device:)"}
 MobilerunStream {"access": "public", "declaration": "init?(rawValue: String)", "path": "ApprovalDecision.init(rawValue:)"}
 MobilerunStream {"access": "public", "declaration": "protocol StreamCustomizable", "path": "StreamCustomizable"}
@@ -395,15 +395,15 @@ MobilerunStream {"access": "public", "declaration": "struct StreamConfig", "path
 MobilerunStream {"access": "public", "declaration": "struct StreamLabels", "path": "StreamLabels"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels", "path": "TaskApprovalLabels"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
-MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
-MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = MobilerunStreamCore.StreamCredentials", "path": "StreamCredentials"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = MobilerunStreamCore.StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamError = MobilerunStreamCore.StreamError", "path": "StreamError"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = MobilerunStreamCore.StreamStatus", "path": "StreamStatus"}
-MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor @Sendable (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
+MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor @Sendable (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = StreamCredentials", "path": "StreamCredentials"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamError = StreamError", "path": "StreamError"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = StreamStatus", "path": "StreamStatus"}
+MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor @Sendable (String, @escaping @MainActor @Sendable () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
 MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor @Sendable () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
-MobilerunStream {"access": "public", "declaration": "typealias VideoSize = MobilerunStreamCore.VideoSize", "path": "VideoSize"}
+MobilerunStream {"access": "public", "declaration": "typealias VideoSize = VideoSize", "path": "VideoSize"}
 MobilerunStream {"access": "public", "declaration": "var app: String", "path": "TaskApprovalLabels.app"}
 MobilerunStream {"access": "public", "declaration": "var approval: PendingApproval?", "path": "TaskApprovalState.approval"}
 MobilerunStream {"access": "public", "declaration": "var approvalId: String", "path": "PendingApproval.approvalId"}
@@ -436,7 +436,7 @@ MobilerunStream {"access": "public", "declaration": "var targetHost: String?", "
 MobilerunStream {"access": "public", "declaration": "var targetPackage: String", "path": "PaymentCardDetails.targetPackage"}
 MobilerunStream {"access": "public", "declaration": "var timeLeft: String", "path": "TaskApprovalLabels.timeLeft"}
 MobilerunStream {"access": "public", "declaration": "var unavailable: String", "path": "StreamLabels.unavailable"}
-MobilerunStream {"access": "public", "declaration": "var videoCodec: VideoCodec", "path": "StreamConfig.videoCodec"}
+MobilerunStream {"access": "public", "declaration": "var videoCodec: StreamConfig.VideoCodec", "path": "StreamConfig.videoCodec"}
 MobilerunStream {"access": "public", "declaration": "var viewSwitch: String", "path": "TaskApprovalLabels.viewSwitch"}
 MobilerunStream {"access": "public", "declaration": "var waiting: String", "path": "TaskApprovalLabels.waiting"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
@@ -499,11 +499,11 @@ MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunPr
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:Se", "targetFallback": "Swift.Decodable"}
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol9JSONValueO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
-MobilerunProtocol {"access": "public", "declaration": "case answer(Answer)", "path": "ServerMessage.answer(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case answer(ServerMessage.Answer)", "path": "ServerMessage.answer(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case array([JSONValue])", "path": "JSONValue.array(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case awaitingRTCConfiguration", "path": "SignallingPhase.awaitingRTCConfiguration"}
 MobilerunProtocol {"access": "public", "declaration": "case bool(Bool)", "path": "JSONValue.bool(_:)"}
-MobilerunProtocol {"access": "public", "declaration": "case candidate(Candidate)", "path": "ServerMessage.candidate(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case candidate(ServerMessage.Candidate)", "path": "ServerMessage.candidate(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case candidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int?, sessionID: String)", "path": "ClientMessage.candidate(candidate:sdpMid:sdpMLineIndex:sessionID:)"}
 MobilerunProtocol {"access": "public", "declaration": "case established", "path": "SignallingPhase.established"}
 MobilerunProtocol {"access": "public", "declaration": "case ignored", "path": "ServerFrame.ignored"}
@@ -513,13 +513,13 @@ MobilerunProtocol {"access": "public", "declaration": "case null", "path": "JSON
 MobilerunProtocol {"access": "public", "declaration": "case number(Double)", "path": "JSONValue.number(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case object([String : JSONValue])", "path": "JSONValue.object(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case offer(sdp: String, sessionID: String)", "path": "ClientMessage.offer(sdp:sessionID:)"}
-MobilerunProtocol {"access": "public", "declaration": "case openURL(OpenURL)", "path": "ClientMessage.openURL(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case openURL(ClientMessage.OpenURL)", "path": "ClientMessage.openURL(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case requestFrame(sessionID: String)", "path": "ClientMessage.requestFrame(sessionID:)"}
 MobilerunProtocol {"access": "public", "declaration": "case requestRTCConfiguration(sessionID: String)", "path": "ClientMessage.requestRTCConfiguration(sessionID:)"}
-MobilerunProtocol {"access": "public", "declaration": "case rtcConfiguration(RTCConfiguration)", "path": "ServerMessage.rtcConfiguration(_:)"}
-MobilerunProtocol {"access": "public", "declaration": "case screenshot(Screenshot)", "path": "ServerMessage.screenshot(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case rtcConfiguration(ServerMessage.RTCConfiguration)", "path": "ServerMessage.rtcConfiguration(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshot(ServerMessage.Screenshot)", "path": "ServerMessage.screenshot(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case screenshot(id: String)", "path": "ClientMessage.screenshot(id:)"}
-MobilerunProtocol {"access": "public", "declaration": "case screenshotError(ScreenshotError)", "path": "ServerMessage.screenshotError(_:)"}
+MobilerunProtocol {"access": "public", "declaration": "case screenshotError(ServerMessage.ScreenshotError)", "path": "ServerMessage.screenshotError(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "case startupFailure", "path": "ServerFrame.startupFailure"}
 MobilerunProtocol {"access": "public", "declaration": "case string(String)", "path": "JSONValue.string(_:)"}
 MobilerunProtocol {"access": "public", "declaration": "enum AndroidKey", "path": "AndroidKey"}
@@ -806,7 +806,7 @@ MobilerunProtocol {"access": "public", "declaration": "struct OpenURL", "path": 
 MobilerunProtocol {"access": "public", "declaration": "struct RTCConfiguration", "path": "ServerMessage.RTCConfiguration"}
 MobilerunProtocol {"access": "public", "declaration": "struct Screenshot", "path": "ServerMessage.Screenshot"}
 MobilerunProtocol {"access": "public", "declaration": "struct ScreenshotError", "path": "ServerMessage.ScreenshotError"}
-MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
+MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ServerMessage.ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CALayerDelegate", "targetFallback": "QuartzCore.CALayerDelegate"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CLBodyIdentifiable", "targetFallback": "CoreLocation.CLBodyIdentifiable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CMBodyIdentifiable", "targetFallback": "CoreMotion.CMBodyIdentifiable"}
@@ -895,7 +895,7 @@ MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStre
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream9SystemKeyO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStream relationship {"kind": "inheritsFrom", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(cs)UIView", "targetFallback": "UIKit.UIView"}
 MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(session: DeviceStreamSession, hasControl: Bool)", "path": "DeviceStreamUIView.init(session:hasControl:)"}
-MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping Fetch, decide: @escaping Decide, subscribe: Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping TaskApprovalModel.Fetch, decide: @escaping TaskApprovalModel.Decide, subscribe: TaskApprovalModel.Subscribe? = nil, onError: (@MainActor @Sendable (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamHandle", "path": "DeviceStreamHandle"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamSession", "path": "DeviceStreamSession"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamUIView", "path": "DeviceStreamUIView"}
@@ -906,7 +906,7 @@ MobilerunStream {"access": "public", "declaration": "@MainActor func decide(_ de
 MobilerunStream {"access": "public", "declaration": "@MainActor func handleWake()", "path": "DeviceStreamSession.handleWake()"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func hideKeyboard()", "path": "DeviceStreamHandle.hideKeyboard()"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func hideKeyboard()", "path": "DeviceStreamUIView.hideKeyboard()"}
-MobilerunStream {"access": "public", "declaration": "@MainActor func makeUIView(context: Context) -> DeviceStreamUIView", "path": "DeviceStreamView.makeUIView(context:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func makeUIView(context: DeviceStreamView.Context) -> DeviceStreamUIView", "path": "DeviceStreamView.makeUIView(context:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func openURL(_ url: String)", "path": "DeviceStreamSession.openURL(_:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func rebind(session: DeviceStreamSession)", "path": "StreamLifecycleAdapter.rebind(session:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func refetch()", "path": "TaskApprovalModel.refetch()"}
@@ -928,7 +928,7 @@ MobilerunStream {"access": "public", "declaration": "@MainActor func streamLabel
 MobilerunStream {"access": "public", "declaration": "@MainActor func streamTheme(_ theme: StreamTheme) -> some View", "path": "View.streamTheme(_:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func streamThemeFollowsSystem(light: StreamTheme = .light, dark: StreamTheme = .dark) -> some View", "path": "View.streamThemeFollowsSystem(light:dark:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func taskApprovalLabels(_ labels: TaskApprovalLabels) -> some View", "path": "View.taskApprovalLabels(_:)"}
-MobilerunStream {"access": "public", "declaration": "@MainActor func updateUIView(_ view: DeviceStreamUIView, context: Context)", "path": "DeviceStreamView.updateUIView(_:context:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor func updateUIView(_ view: DeviceStreamUIView, context: DeviceStreamView.Context)", "path": "DeviceStreamView.updateUIView(_:context:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor init()", "path": "DeviceStreamHandle.init()"}
 MobilerunStream {"access": "public", "declaration": "@MainActor init(canControl: Bool = true, onAction: @escaping (SystemKey) -> Void = { _ in })", "path": "StreamNavigationState.init(canControl:onAction:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor init(credentials: @escaping StreamCredentialsProvider, config: StreamConfig = StreamConfig())", "path": "DeviceStreamSession.init(credentials:config:)"}
@@ -1012,8 +1012,6 @@ MobilerunStream {"access": "public", "declaration": "enum ApprovalDecision", "pa
 MobilerunStream {"access": "public", "declaration": "enum StreamSurfaceStyle", "path": "StreamSurfaceStyle"}
 MobilerunStream {"access": "public", "declaration": "enum SystemKey", "path": "SystemKey"}
 MobilerunStream {"access": "public", "declaration": "enum VideoCodec", "path": "StreamConfig.VideoCodec"}
-MobilerunStream {"access": "public", "declaration": "extension EnvironmentValues", "path": "EnvironmentValues"}
-MobilerunStream {"access": "public", "declaration": "extension View", "path": "View", "swiftGenerics": {"constraints": [{"kind": "conformance", "lhs": "Self", "rhs": "View", "rhsPrecise": "s:7SwiftUI4ViewP"}]}}
 MobilerunStream {"access": "public", "declaration": "func paymentCardDetails() -> PaymentCardDetails?", "path": "PendingApproval.paymentCardDetails()"}
 MobilerunStream {"access": "public", "declaration": "func statusLabel(_ status: StreamStatus) -> String", "path": "StreamLabels.statusLabel(_:)"}
 MobilerunStream {"access": "public", "declaration": "func with(_ update: (inout Self) -> Void) -> Self", "path": "StreamCustomizable.with(_:)"}
@@ -1023,12 +1021,12 @@ MobilerunStream {"access": "public", "declaration": "init(background: Color = Co
 MobilerunStream {"access": "public", "declaration": "init(card: String = \"\", targetPackage: String = \"\", targetHost: String? = nil)", "path": "PaymentCardDetails.init(card:targetPackage:targetHost:)"}
 MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:unavailable:retry:back:home:recent:)"}
 MobilerunStream {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "PendingApproval.init(from:)"}
-MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
+MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: StreamConfig.VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
 MobilerunStream {"access": "public", "declaration": "init(paymentCardTitle: String = \"Approve payment\", waiting: String = \"Waiting for approval\", card: String = \"Card\", app: String = \"App\", domain: String = \"Domain\", timeLeft: String = \"{time} left\", expired: String = \"Approval expired\", approve: String = \"Approve\", deny: String = \"Deny\", viewSwitch: String = \"Approval view\", details: String = \"Details\", device: String = \"Device\")", "path": "TaskApprovalLabels.init(paymentCardTitle:waiting:card:app:domain:timeLeft:expired:approve:deny:viewSwitch:details:device:)"}
 MobilerunStream {"access": "public", "declaration": "init?(rawValue: String)", "path": "ApprovalDecision.init(rawValue:)"}
 MobilerunStream {"access": "public", "declaration": "protocol StreamCustomizable", "path": "StreamCustomizable"}
-MobilerunStream {"access": "public", "declaration": "static var dark: `Self` { get }", "path": "StreamTheme.dark"}
-MobilerunStream {"access": "public", "declaration": "static var light: `Self` { get }", "path": "StreamTheme.light"}
+MobilerunStream {"access": "public", "declaration": "static var dark: StreamTheme { get }", "path": "StreamTheme.dark"}
+MobilerunStream {"access": "public", "declaration": "static var light: StreamTheme { get }", "path": "StreamTheme.light"}
 MobilerunStream {"access": "public", "declaration": "struct PaymentCardDetails", "path": "PaymentCardDetails"}
 MobilerunStream {"access": "public", "declaration": "struct PendingApproval", "path": "PendingApproval"}
 MobilerunStream {"access": "public", "declaration": "struct StreamConfig", "path": "StreamConfig"}
@@ -1036,15 +1034,15 @@ MobilerunStream {"access": "public", "declaration": "struct StreamLabels", "path
 MobilerunStream {"access": "public", "declaration": "struct StreamTheme", "path": "StreamTheme"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels", "path": "TaskApprovalLabels"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
-MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
-MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = MobilerunStreamCore.StreamCredentials", "path": "StreamCredentials"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = MobilerunStreamCore.StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamError = MobilerunStreamCore.StreamError", "path": "StreamError"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = MobilerunStreamCore.StreamStatus", "path": "StreamStatus"}
-MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor @Sendable (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
+MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor @Sendable (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = StreamCredentials", "path": "StreamCredentials"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamError = StreamError", "path": "StreamError"}
+MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = StreamStatus", "path": "StreamStatus"}
+MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor @Sendable (String, @escaping @MainActor @Sendable () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
 MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor @Sendable () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
-MobilerunStream {"access": "public", "declaration": "typealias VideoSize = MobilerunStreamCore.VideoSize", "path": "VideoSize"}
+MobilerunStream {"access": "public", "declaration": "typealias VideoSize = VideoSize", "path": "VideoSize"}
 MobilerunStream {"access": "public", "declaration": "var accent: Color", "path": "StreamTheme.accent"}
 MobilerunStream {"access": "public", "declaration": "var accentForeground: Color", "path": "StreamTheme.accentForeground"}
 MobilerunStream {"access": "public", "declaration": "var app: String", "path": "TaskApprovalLabels.app"}
@@ -1096,7 +1094,7 @@ MobilerunStream {"access": "public", "declaration": "var taskApprovalLabels: Tas
 MobilerunStream {"access": "public", "declaration": "var timeLeft: String", "path": "TaskApprovalLabels.timeLeft"}
 MobilerunStream {"access": "public", "declaration": "var typography: Font", "path": "StreamTheme.typography"}
 MobilerunStream {"access": "public", "declaration": "var unavailable: String", "path": "StreamLabels.unavailable"}
-MobilerunStream {"access": "public", "declaration": "var videoCodec: VideoCodec", "path": "StreamConfig.videoCodec"}
+MobilerunStream {"access": "public", "declaration": "var videoCodec: StreamConfig.VideoCodec", "path": "StreamConfig.videoCodec"}
 MobilerunStream {"access": "public", "declaration": "var viewSwitch: String", "path": "TaskApprovalLabels.viewSwitch"}
 MobilerunStream {"access": "public", "declaration": "var waiting: String", "path": "TaskApprovalLabels.waiting"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}

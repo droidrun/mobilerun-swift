@@ -55,7 +55,8 @@ and tag rules are required controls.
    library/example builds and simulator tests in `.github/workflows/ci.yml`.
    For intentional public API changes, run `tool/api-dump.sh`, inspect the diff
    and commit it. `tool/api-dump.sh --check` must pass. Both supported destinations
-   are necessary: macOS alone omits UIKit and SwiftUI streaming APIs.
+   are necessary: macOS alone omits UIKit and SwiftUI streaming APIs. The dump
+   uses SwiftPM's native build backend and extracts only the shipping modules.
 3. After the first tag exists, also run the compatibility diagnostic against the
    last released version, for example `swift package diagnose-api-breaking-changes
    v0.1.0`. Run it for the iOS destination as well, using the same `--sdk` and
