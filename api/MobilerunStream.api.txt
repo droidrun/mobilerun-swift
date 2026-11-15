@@ -361,7 +361,7 @@ MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStre
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:15MobilerunStream0B12CustomizableP"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream18TaskApprovalLabelsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
-MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping TaskApprovalModel.Fetch, decide: @escaping TaskApprovalModel.Decide, subscribe: TaskApprovalModel.Subscribe? = nil, onError: (@MainActor @Sendable (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping TaskApprovalModel.Fetch, decide: @escaping TaskApprovalModel.Decide, subscribe: TaskApprovalModel.Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class TaskApprovalModel", "path": "TaskApprovalModel"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func decide(_ decision: ApprovalDecision)", "path": "TaskApprovalModel.decide(_:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor func refetch()", "path": "TaskApprovalModel.refetch()"}
@@ -395,14 +395,14 @@ MobilerunStream {"access": "public", "declaration": "struct StreamConfig", "path
 MobilerunStream {"access": "public", "declaration": "struct StreamLabels", "path": "StreamLabels"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels", "path": "TaskApprovalLabels"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
-MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor @Sendable (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
-MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor @Sendable (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
+MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
+MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = StreamCredentials", "path": "StreamCredentials"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamError = StreamError", "path": "StreamError"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = StreamStatus", "path": "StreamStatus"}
-MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor @Sendable (String, @escaping @MainActor @Sendable () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
-MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor @Sendable () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
 MobilerunStream {"access": "public", "declaration": "typealias VideoSize = VideoSize", "path": "VideoSize"}
 MobilerunStream {"access": "public", "declaration": "var app: String", "path": "TaskApprovalLabels.app"}
 MobilerunStream {"access": "public", "declaration": "var approval: PendingApproval?", "path": "TaskApprovalState.approval"}
@@ -468,7 +468,7 @@ MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": 
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
-MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = @Sendable () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
+MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
 # iOS
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
@@ -808,8 +808,6 @@ MobilerunProtocol {"access": "public", "declaration": "struct Screenshot", "path
 MobilerunProtocol {"access": "public", "declaration": "struct ScreenshotError", "path": "ServerMessage.ScreenshotError"}
 MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ServerMessage.ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CALayerDelegate", "targetFallback": "QuartzCore.CALayerDelegate"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CLBodyIdentifiable", "targetFallback": "CoreLocation.CLBodyIdentifiable"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CMBodyIdentifiable", "targetFallback": "CoreMotion.CMBodyIdentifiable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)NSCoding", "targetFallback": "Foundation.NSCoding"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)NSObject", "targetFallback": "ObjectiveC.NSObjectProtocol"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIAccessibilityIdentification", "targetFallback": "UIKit.UIAccessibilityIdentification"}
@@ -895,7 +893,7 @@ MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStre
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream9SystemKeyO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStream relationship {"kind": "inheritsFrom", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(cs)UIView", "targetFallback": "UIKit.UIView"}
 MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(session: DeviceStreamSession, hasControl: Bool)", "path": "DeviceStreamUIView.init(session:hasControl:)"}
-MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping TaskApprovalModel.Fetch, decide: @escaping TaskApprovalModel.Decide, subscribe: TaskApprovalModel.Subscribe? = nil, onError: (@MainActor @Sendable (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping TaskApprovalModel.Fetch, decide: @escaping TaskApprovalModel.Decide, subscribe: TaskApprovalModel.Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamHandle", "path": "DeviceStreamHandle"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamSession", "path": "DeviceStreamSession"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamUIView", "path": "DeviceStreamUIView"}
@@ -1034,14 +1032,14 @@ MobilerunStream {"access": "public", "declaration": "struct StreamLabels", "path
 MobilerunStream {"access": "public", "declaration": "struct StreamTheme", "path": "StreamTheme"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels", "path": "TaskApprovalLabels"}
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
-MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor @Sendable (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
-MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor @Sendable (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
+MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
+MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = StreamCredentials", "path": "StreamCredentials"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamError = StreamError", "path": "StreamError"}
 MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = StreamStatus", "path": "StreamStatus"}
-MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor @Sendable (String, @escaping @MainActor @Sendable () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
-MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor @Sendable () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
+MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
 MobilerunStream {"access": "public", "declaration": "typealias VideoSize = VideoSize", "path": "VideoSize"}
 MobilerunStream {"access": "public", "declaration": "var accent: Color", "path": "StreamTheme.accent"}
 MobilerunStream {"access": "public", "declaration": "var accentForeground: Color", "path": "StreamTheme.accentForeground"}
@@ -1126,4 +1124,4 @@ MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": 
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
-MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = @Sendable () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
+MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}

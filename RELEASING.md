@@ -43,8 +43,11 @@ and tag rules are required controls.
 - `api/MobilerunStream.api.txt` records sorted symbol-graph declarations,
   availability, generic constraints and conformances for macOS and iOS, including
   SwiftUI extension APIs. Internal, package and SPI symbols are excluded, as are
-  synthesized members, inherited SDK conformances and compiler-only
-  `SendableMetatype` markers. This is a source API baseline, not an ABI guarantee.
+  synthesized members, inherited conformances marked by the extractor and compiler-only
+  `SendableMetatype` markers. Generate and compare with the pinned Xcode 26.2
+  toolchain: newer compilers emit different annotations and SDK conformances.
+  Symbol graphs can omit closure attributes such as `@Sendable`; inspect those
+  source changes explicitly. This is a source API baseline, not an ABI guarantee.
 
 ## Each release
 
