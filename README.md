@@ -1,12 +1,22 @@
 # mobilerun-swift
 
 Pre-release Swift libraries for live Mobilerun device streams. Requires Swift 6.0 or newer.
-The connection library supports iOS 15+; the pure protocol and session core also support macOS 13+.
+The connection library supports iOS 15+; `MobilerunProtocol` also supports macOS 13+.
 
 - `MobilerunStream`: observable session, SwiftUI/UIKit video and input, and native WebRTC on iOS.
 - `MobilerunProtocol`: binary control encoders, typed signalling and protocol constants.
-- `MobilerunStreamCore`: package implementation of session orchestration, transport boundaries and
-  reconnect timers.
+
+## Installation (after first release)
+
+No release is available yet. After `v0.1.0` is released, add:
+
+```swift
+.package(url: "https://github.com/droidrun/mobilerun-swift.git", .upToNextMinor(from: "0.1.0"))
+```
+
+Until 1.0, constrain upgrades to the next minor version as shown above.
+Choose `MobilerunStream` for the iOS SDK or `MobilerunProtocol` for standalone wire
+helpers. See [RELEASING.md](RELEASING.md) for the API contract and release process.
 
 ## Connect
 
