@@ -247,7 +247,8 @@ import XCTest
 @MainActor final class LiveHardeningTests: XCTestCase {
     func testDefaultNavigationInputAndBackground() {
         let app = XCUIApplication(bundleIdentifier: "io.mobilerun.Connection")
-        app.activate()
+        app.launchArguments = ["--default-ui", "--ui-state", "live"]
+        app.launch()
         let surface = app.otherElements["device-stream-surface"]
         XCTAssertTrue(surface.waitForExistence(timeout: 45))
         XCTAssertTrue(app.buttons["Home"].isEnabled)
