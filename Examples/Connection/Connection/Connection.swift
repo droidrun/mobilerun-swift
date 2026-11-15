@@ -5,6 +5,7 @@ import SwiftUI
 
 #if DEBUG
     import AVFoundation
+    import Combine
     import MobilerunProtocol
     @preconcurrency import LiveKitWebRTC
     @testable import MobilerunStream
@@ -18,6 +19,7 @@ import SwiftUI
         private let fingers = [NSObject(), NSObject()]
         private var timer: Timer?
         private var observingInput = false
+        private var statsSubscription: AnyCancellable?
         private var hostPlayer: AVAudioPlayer?
         private let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
 
@@ -43,6 +45,10 @@ import SwiftUI
                 self?.mark(event)
                 if event.hasPrefix("frames decoded=") { self?.auditHostAudio() }
             }
+            statsSubscription = session.$stats.sink { [weak self] stats in
+                if let stats { self?.mark("stats \(stats)") }
+                else { self?.mark("stats nil") }
+            }
             timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
                 Task { @MainActor [weak self] in self?.pollCommand() }
             }
@@ -62,6 +68,15 @@ import SwiftUI
         }
 
         private func pollCommand() {
+            // The composite owns its handle; find its existing native surface for the Debug driver.
+            if handle.view == nil {
+                func find(_ root: UIView) -> DeviceStreamUIView? {
+                    if let surface = root as? DeviceStreamUIView { return surface }
+                    return root.subviews.lazy.compactMap { find($0) }.first
+                }
+                handle.view = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+                    .flatMap(\.windows).lazy.compactMap { find($0) }.first
+            }
             if let view = handle.view, let size = session.videoSize {
                 let targetURL = documents.appendingPathComponent("native-target.json")
                 let target = (try? Data(contentsOf: targetURL)).flatMap {
@@ -98,6 +113,28 @@ import SwiftUI
             try? FileManager.default.removeItem(at: url)
             guard let command = try? JSONDecoder().decode(Command.self, from: data) else { return }
             switch command.action {
+            case "benchmark":
+                guard let view = handle.view else { mark("benchmark failed no view"); return }
+                let benchmark = StreamBenchmark()
+                Task { @MainActor [weak self, session = self.session, documents = self.documents] in
+                    do {
+                        let result = try await benchmark.run(session: session, view: view,
+                            x: command.x ?? 0.5, y: command.y ?? 0.9)
+                        let data = try JSONEncoder().encode(result)
+                        try data.write(to: documents.appendingPathComponent("benchmark.json"), options: .atomic)
+                        self?.mark("benchmark complete")
+                    } catch { self?.mark("benchmark failed") }
+                }
+            case "hidden":
+                session.setHidden(command.enabled ?? true)
+                mark("hidden \(command.enabled ?? true)")
+            case "wake":
+                session.setHidden(false)
+                session.handleWake()
+                mark("wake")
+            case "retry":
+                session.retry()
+                mark("retry")
             case "close":
                 mark("forcing socket close")
                 session.forceSignallingClose()
@@ -149,6 +186,7 @@ import SwiftUI
                 timer?.invalidate()
                 timer = nil
                 session.close()
+                mark("teardown status=\(session.status) videoReleased=\(session.videoTrack == nil && session.videoSize == nil) statsReleased=\(session.stats == nil) transportsReleased=\(session.transportsReleasedForTesting)")
                 auditHostAudio()
                 hostPlayer?.stop()
                 mark("closed")
@@ -279,12 +317,16 @@ import SwiftUI
         }
     }
 
-    @main struct ConnectionApp: App {
+    private struct NativeConnectionExample: View {
         @StateObject private var probe = ConnectionProbe()
+        var body: some View { ConnectionView(session: probe.session, probe: probe) }
+    }
+
+    @main struct ConnectionApp: App {
         var body: some Scene {
             WindowGroup {
                 if ProcessInfo.processInfo.arguments.contains("--default-ui") { DefaultUIExample() }
-                else { ConnectionView(session: probe.session, probe: probe) }
+                else { NativeConnectionExample() }
             }
         }
     }

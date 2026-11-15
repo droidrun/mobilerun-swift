@@ -72,7 +72,8 @@
             let old = socket
             socket = nil
             old?.cancel(with: .normalClosure, reason: nil)
-            session?.invalidateAndCancel()
+            // Let URLSession transmit the normal (1000) close frame before invalidation.
+            session?.finishTasksAndInvalidate()
             session = nil
         }
         private func reportFailure(_ task: URLSessionWebSocketTask) {

@@ -16,6 +16,7 @@
         private var track: LKRTCVideoTrack?
         private var subscriptions = Set<AnyCancellable>()
         private var pointers = PointerInput<ObjectIdentifier>()
+        private var keyState = KeyInputState()
         private var geometry: InputGeometry?
         private var displayLink: DisplayLinkTarget?
         private weak var handle: DeviceStreamHandle?
@@ -201,7 +202,7 @@
             resetInput()
             for (usage, key) in pressedKeys.sorted(by: { $0.key < $1.key }) {
                 key.timer?.cancel()
-                send(KeyInput.route(usage: usage, text: key.text, charactersIgnoringModifiers: key.unmodified,
+                send(keyState.route(code: HIDCode.values[usage] ?? "Unknown\(usage)", text: "",
                                     down: false, modifiers: key.modifiers, clipboard: { nil }))
             }
             pressedKeys.removeAll()
@@ -283,11 +284,9 @@
         }
 
         func routeHover(at location: CGPoint, buttons: UIEvent.ButtonMask) {
-            guard hasControl, let geometry, let point = geometry.map(location) else { return }
-            session.sendHover(ControlMessages.hover(
-                videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight,
-                x: point.x, y: point.y, buttons: Int(buttons.rawValue)
-            ))
+            guard hasControl, let geometry,
+                  let packet = pointers.hover(at: location, geometry: geometry, buttons: Int(buttons.rawValue)) else { return }
+            session.sendHover(packet)
         }
 
         @objc private func scroll(_ recognizer: UIPanGestureRecognizer) {
@@ -298,12 +297,11 @@
         }
 
         func routeScroll(at location: CGPoint, translation: CGPoint, buttons: UIEvent.ButtonMask) {
-            guard hasControl, let geometry, let point = geometry.map(location) else { return }
-            send([ControlMessages.scroll(
-                videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight, x: point.x, y: point.y,
-                hscrollTicks: translation.x * ScrollInput.ticksPerPoint,
-                vscrollTicks: translation.y * ScrollInput.ticksPerPoint, buttons: Int(buttons.rawValue)
-            )])
+            guard hasControl, let geometry,
+                  let packet = ScrollInput.route(at: location, geometry: geometry,
+                    h: translation.x * ScrollInput.ticksPerPoint,
+                    v: translation.y * ScrollInput.ticksPerPoint, buttons: Int(buttons.rawValue)) else { return }
+            send([packet])
         }
 
         public override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -349,11 +347,11 @@
             }
             if down, pressedKeys[usage] != nil { return true }
             let modifiers = Self.modifiers(flags)
-            // Match the original down route even if releasing Shift/composition changes the key's text.
-            let routeText = down ? text : (pressedKeys[usage]?.text ?? text)
+            let code = HIDCode.values[usage] ?? "Unknown\(usage)"
             let unmodified = charactersIgnoringModifiers ?? text
-            let packets = KeyInput.route(usage: usage, text: routeText, charactersIgnoringModifiers: unmodified,
-                                         down: down, modifiers: modifiers,
+            // UIKit emits control characters for these physical keys. Keep them on keycode routing.
+            let key = modifiers.isShortcut ? unmodified : KeyInput.nativeKey(code: code, text: text)
+            let packets = keyState.route(code: code, text: key, down: down, modifiers: modifiers,
                                          clipboard: { UIPasteboard.general.string })
             let isShortcut = modifiers.isShortcut && ["v", "m"].contains(unmodified.lowercased())
             guard HIDCode.values[usage] != nil || !packets.isEmpty || pressedKeys[usage] != nil
@@ -376,9 +374,10 @@
                     self.pressedKeys[usage]?.timer = nil
                     return
                 }
-                self.send(KeyInput.route(usage: usage, text: key.text, charactersIgnoringModifiers: key.unmodified,
-                                         down: true, modifiers: key.modifiers,
-                                         clipboard: { UIPasteboard.general.string }))
+                let code = HIDCode.values[usage] ?? "Unknown\(usage)"
+                let text = key.modifiers.isShortcut ? key.unmodified : KeyInput.nativeKey(code: code, text: key.text)
+                self.send(self.keyState.route(code: code, text: text, down: true, modifiers: key.modifiers,
+                    clipboard: { UIPasteboard.general.string }))
                 self.scheduleRepeat(usage, delayMs: 33)
             }
         }

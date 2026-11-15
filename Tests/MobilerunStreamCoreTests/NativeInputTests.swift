@@ -301,6 +301,34 @@
             ])
         }
 
+        @Test func deletingMarkedCompositionStaysLocal() {
+            let input = StreamTextInput(frame: .zero, textContainer: nil)
+            var commits: [String] = []
+            var deletes = 0
+            input.onCommit = { commits.append($0) }
+            input.onDelete = { deletes += 1 }
+            input.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
+            input.deleteBackward()
+            #expect(commits.isEmpty)
+            #expect(deletes == 0)
+            input.discardComposition()
+            input.deleteBackward()
+            #expect(deletes == 1)
+        }
+
+        @Test func physicalEnterAndTabNeverInjectProducedControlText() async throws {
+            let (h, session, view) = try await recordingView()
+            defer { view.detach(); session.close() }
+            view.routeKey(usage: 40, text: "\r", down: true)
+            view.routeKey(usage: 40, text: "\r", down: false)
+            view.routeKey(usage: 43, text: "\t", down: true)
+            view.routeKey(usage: 43, text: "\t", down: false)
+            #expect(packets(h) == [
+                "1:0000420000000000000000000000", "1:0001420000000000000000000000",
+                "1:00003d0000000000000000000000", "1:00013d0000000000000000000000",
+            ])
+        }
+
         @Test func displayOnlySendsNothingToTheSessionTransport() async throws {
             let (h, session, view) = try await recordingView()
             defer { view.detach(); session.close() }

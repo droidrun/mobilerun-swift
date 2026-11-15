@@ -130,8 +130,9 @@ Mouse/trackpad scrolling uses wheel messages; a finger drag remains a touch gest
 Tap the video to focus hardware input. Printable hardware characters inject text; navigation,
 function and modifier keys inject Android keycodes. Cmd/Ctrl+V pastes the local string using
 SET_CLIPBOARD; Cmd/Ctrl+M sends Menu. Modifier masks and physical HID-to-Android mapping follow
-the protocol's keyboard code table. After shortcuts/control keys, any single UTF-16 character
-injects text on keydown only, including control characters and unmapped physical codes.
+the protocol's keyboard code table. After shortcuts/control keys, one UTF-16 character or one printable extended grapheme cluster
+injects text on keydown only, preserving emoji and combining sequences without normalization.
+Physical Enter/Tab and other control keys always use keycodes, even when UIKit produces control text.
 Mapped fallback keys with no printable text send paired DOWN/UP keycodes; releases follow the
 original keydown route even if the produced text changes. Textless unmapped keys pass through
 to the host. Numpad Enter is a control key. Held hardware keys repeat after 500 ms at approximately
@@ -152,6 +153,39 @@ wire its own Back action to `sendSystemKey(.back)` if desired; host OS navigatio
 forwarded implicitly. While an accepted touch is active in the video, ancestor pan/swipe
 gestures (including edge-back) cannot take that touch. `.home` and `.recent` send Android system
 navigation key pairs.
+
+## Stream statistics and benchmark
+
+`session.$stats` publishes a read-only `StreamStats?` once per second while connected and
+foreground. It becomes nil when hidden, disconnected or closed. Each connection attempt resets
+first-frame timing and rate baselines. The session's lifecycle owner calls `setHidden(_:)`;
+the default UI already does this. Sampling does not require a subscriber.
+
+Samples include FPS, decoded width/height, codec MIME type, inbound video `bitrateKbps`, selected
+ICE pair `rttMs`, jitter-buffer delay and decode time per frame, cumulative packets lost,
+frames dropped and freezes, separate local/remote candidate types, and `timeToFirstFrameMs`.
+Durations are milliseconds; missing fields are nil. Bitrate, fallback FPS and per-frame durations
+use consecutive counter deltas, so the first sample and reset counters have no rates. Values
+contain no endpoints or credentials. The SDK creates `StreamStats`; new fields can be added
+without requiring callers to change an initializer.
+
+The Debug connection example supports a repeatable simulator benchmark. Under an exclusive
+simulator lock, run:
+
+```sh
+tool/benchmark.sh --credentials /path/to/runtime-credentials.json \
+  --evidence /path/to/results --tap-x 0.5 --tap-y 0.9
+```
+
+The runtime JSON has `streamUrl` and `streamToken`. Choose the normalized upright-video position
+of a known launcher icon that changes when tapped; coordinates above are only an example.
+The script creates five connections with ten fresh stats samples and ten tap samples each,
+then writes `benchmark-results.md` and raw samples outside the repository. It removes credentials,
+the simulator and DerivedData on exit. Tap detection uses the maximum tile mean absolute luma
+difference in a 64×64-pixel region around the input, with a separate central region for app launch.
+It timestamps the native video-renderer callback, before compositor/display presentation, so
+reported input-to-pixel timing excludes display scanout. Do not compare it directly with
+camera-measured glass-to-glass latency.
 
 ## Validation
 

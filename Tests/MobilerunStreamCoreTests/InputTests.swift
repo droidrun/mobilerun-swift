@@ -126,7 +126,7 @@ struct InputTests {
         (88, "\r", false, [], [ControlMessages.keycode(action: 1, keycode: 160)]),
         (89, "\u{1}", true, [], [ControlMessages.text("\u{1}")]),
         (89, "\u{1}", false, [], []),
-        (9, "F", true, .shift, [ControlMessages.text("F")]),
+        (9, "F", true, .shift, [ControlMessages.keycode(action: 0, keycode: 34, metaState: 1)]),
         (79, "", true, [], [ControlMessages.keycode(action: 0, keycode: 22)]),
         (58, "", false, [], [ControlMessages.keycode(action: 1, keycode: 131)]),
         (225, "", true, .shift, [ControlMessages.keycode(action: 0, keycode: 59, metaState: 1)]),

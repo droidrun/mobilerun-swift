@@ -28,11 +28,14 @@
         private var video: LKRTCVideoTrack?
         private var frameObserver: FrameObserver?
         private var closed = false
+        private let startedAt: TimeInterval
+        private var firstFrameMs: Double?
 
         init(
-            config: StreamConfig, onTrack: @escaping @MainActor (LKRTCVideoTrack?) -> Void,
+            config: StreamConfig, startedAt: TimeInterval, onTrack: @escaping @MainActor (LKRTCVideoTrack?) -> Void,
             onSize: @escaping @MainActor (VideoSize) -> Void
         ) {
+            self.startedAt = startedAt
             self.muted = config.muted
             self.config = config
             self.onTrack = onTrack
@@ -179,6 +182,27 @@
             }
             return channel.sendData(LKRTCDataBuffer(data: data, isBinary: true))
         }
+        func statistics(_ completion: @escaping StreamStatsSampler.Completion) {
+            guard let peer, !closed else { completion([], nil); return }
+            peer.statistics { [weak self] report in
+                let records = report.statistics.values.map { record in
+                    var values: [String: JSONValue] = [:]
+                    for (key, value) in record.values {
+                        if let text = value as? String { values[key] = .string(text) }
+                        else if let number = value as? NSNumber {
+                            if CFGetTypeID(number) == CFBooleanGetTypeID() { values[key] = .bool(number.boolValue) }
+                            else { values[key] = .number(number.doubleValue) }
+                        }
+                    }
+                    return StatsRecord(id: record.id, type: record.type, timestampUs: record.timestamp_us, values: values)
+                }
+                Task { @MainActor [weak self] in
+                    guard let self, !self.closed else { return }
+                    completion(records, self.firstFrameMs)
+                }
+            }
+        }
+
         func setMuted(_ muted: Bool) {
             guard !closed else { return }
             self.muted = muted
@@ -227,6 +251,9 @@
             let observer = FrameObserver(onSize: { [weak self] size in
                 Task { @MainActor [weak self] in
                     guard let self, !self.closed else { return }
+                    if self.firstFrameMs == nil {
+                        self.firstFrameMs = (ProcessInfo.processInfo.systemUptime - self.startedAt) * 1000
+                    }
                     self.onSize(size)
                 }
             })
