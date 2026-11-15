@@ -397,13 +397,8 @@ MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels",
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
 MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
 MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = StreamCredentials", "path": "StreamCredentials"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamError = StreamError", "path": "StreamError"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = StreamStatus", "path": "StreamStatus"}
 MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
 MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
-MobilerunStream {"access": "public", "declaration": "typealias VideoSize = VideoSize", "path": "VideoSize"}
 MobilerunStream {"access": "public", "declaration": "var app: String", "path": "TaskApprovalLabels.app"}
 MobilerunStream {"access": "public", "declaration": "var approval: PendingApproval?", "path": "TaskApprovalState.approval"}
 MobilerunStream {"access": "public", "declaration": "var approvalId: String", "path": "PendingApproval.approvalId"}
@@ -807,24 +802,6 @@ MobilerunProtocol {"access": "public", "declaration": "struct RTCConfiguration",
 MobilerunProtocol {"access": "public", "declaration": "struct Screenshot", "path": "ServerMessage.Screenshot"}
 MobilerunProtocol {"access": "public", "declaration": "struct ScreenshotError", "path": "ServerMessage.ScreenshotError"}
 MobilerunProtocol {"access": "public", "declaration": "var iceServers: [ServerMessage.ICEServer]? { get }", "path": "ServerMessage.RTCConfiguration.iceServers"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)CALayerDelegate", "targetFallback": "QuartzCore.CALayerDelegate"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)NSCoding", "targetFallback": "Foundation.NSCoding"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)NSObject", "targetFallback": "ObjectiveC.NSObjectProtocol"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIAccessibilityIdentification", "targetFallback": "UIKit.UIAccessibilityIdentification"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIActivityItemsConfigurationProviding", "targetFallback": "UIKit.UIActivityItemsConfigurationProviding"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIAppearance", "targetFallback": "UIKit.UIAppearance"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIAppearanceContainer", "targetFallback": "UIKit.UIAppearanceContainer"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UICoordinateSpace", "targetFallback": "UIUtilities.UICoordinateSpace"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIDynamicItem", "targetFallback": "UIKit.UIDynamicItem"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIFocusEnvironment", "targetFallback": "UIKit.UIFocusEnvironment"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIFocusItem", "targetFallback": "UIKit.UIFocusItem"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIFocusItemContainer", "targetFallback": "UIKit.UIFocusItemContainer"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UILargeContentViewerItem", "targetFallback": "UIKit.UILargeContentViewerItem"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIPasteConfigurationSupporting", "targetFallback": "UIKit.UIPasteConfigurationSupporting"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIPopoverPresentationControllerSourceItem", "targetFallback": "UIKit.UIPopoverPresentationControllerSourceItem"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIResponderStandardEditActions", "targetFallback": "UIKit.UIResponderStandardEditActions"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UITraitEnvironment", "targetFallback": "UIKit.UITraitEnvironment"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(pl)UIUserActivityRestoring", "targetFallback": "UIKit.UIUserActivityRestoring"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:5UIKit23UITraitChangeObservableP", "targetFallback": "UIKit.UITraitChangeObservable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:SH", "targetFallback": "Swift.Hashable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
@@ -1034,13 +1011,8 @@ MobilerunStream {"access": "public", "declaration": "struct TaskApprovalLabels",
 MobilerunStream {"access": "public", "declaration": "struct TaskApprovalState", "path": "TaskApprovalState"}
 MobilerunStream {"access": "public", "declaration": "typealias Decide = @MainActor (String, String, ApprovalDecision) async throws -> Void", "path": "TaskApprovalModel.Decide"}
 MobilerunStream {"access": "public", "declaration": "typealias Fetch = @MainActor (String) async throws -> PendingApproval?", "path": "TaskApprovalModel.Fetch"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentials = StreamCredentials", "path": "StreamCredentials"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamCredentialsProvider = StreamCredentialsProvider", "path": "StreamCredentialsProvider"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamError = StreamError", "path": "StreamError"}
-MobilerunStream {"access": "public", "declaration": "typealias StreamStatus = StreamStatus", "path": "StreamStatus"}
 MobilerunStream {"access": "public", "declaration": "typealias Subscribe = @MainActor (String, @escaping @MainActor () -> Void) -> Result<TaskApprovalModel.Unsubscribe, any Error>", "path": "TaskApprovalModel.Subscribe"}
 MobilerunStream {"access": "public", "declaration": "typealias Unsubscribe = @MainActor () -> Result<Void, any Error>", "path": "TaskApprovalModel.Unsubscribe"}
-MobilerunStream {"access": "public", "declaration": "typealias VideoSize = VideoSize", "path": "VideoSize"}
 MobilerunStream {"access": "public", "declaration": "var accent: Color", "path": "StreamTheme.accent"}
 MobilerunStream {"access": "public", "declaration": "var accentForeground: Color", "path": "StreamTheme.accentForeground"}
 MobilerunStream {"access": "public", "declaration": "var app: String", "path": "TaskApprovalLabels.app"}
