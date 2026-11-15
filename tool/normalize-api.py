@@ -4,8 +4,7 @@ import json
 import sys
 from pathlib import Path
 
-platform, directory = sys.argv[1:]
-modules = ("MobilerunProtocol", "MobilerunStream", "MobilerunStreamCore")
+platform, directory, *modules = sys.argv[1:]
 lines = set()
 for module in modules:
     paths = [Path(directory) / (module + ".symbols.json")]
@@ -38,7 +37,9 @@ for module in modules:
                 continue
             if relation["kind"] not in ("conformsTo", "inheritsFrom"):
                 continue
+            if relation["kind"] == "conformsTo" and relation["target"].startswith("c:objc(pl)"):
+                continue
             record = {k: v for k, v in relation.items() if k != "sourceOrigin"}
-            lines.add(f"{module} relationship " + json.dumps(record, sort_keys=True))
+            lines.add(f"{module} relationship " + json.dumps(record, sort_keys=True, ensure_ascii=False))
 print(f"# {platform}")
 print("\n".join(sorted(lines)))

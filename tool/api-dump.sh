@@ -8,6 +8,7 @@ case "${1:-}" in
 esac
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
+modules=(MobilerunProtocol MobilerunStreamCore MobilerunStream)
 for platform in macOS iOS; do
   if [[ "$platform" == macOS ]]; then
     sdk=$(xcrun --sdk macosx --show-sdk-path)
@@ -26,18 +27,21 @@ for platform in macOS iOS; do
   fi
   # Extract only shipping modules. SwiftPM 6.2 dumps test modules too and omits
   # the binary framework search path for the simulator destination.
-  for module in MobilerunProtocol MobilerunStreamCore MobilerunStream; do
+  for module in "${modules[@]}"; do
     xcrun swift-symbolgraph-extract -module-name "$module" -target "$triple" \
       "${extract_flags[@]}" \
       -minimum-access-level public -skip-synthesized-members \
       -omit-extension-block-symbols -output-dir "$graphs"
   done
-  python3 tool/normalize-api.py "$platform" "$graphs" >> "$work/api.txt"
+  python3 tool/normalize-api.py "$platform" "$graphs" "${modules[@]}" >> "$work/api.txt"
 done
-mkdir -p api
 if [[ "${1:-}" == --check ]]; then
   cp "$work/api.txt" .build/api-current.txt
-  diff -u api/MobilerunStream.api.txt .build/api-current.txt
+  if ! diff -u api/MobilerunStream.api.txt .build/api-current.txt; then
+    echo '::error::Public API baseline differs. Regenerate with Xcode 26.2: tool/api-dump.sh' >&2
+    exit 1
+  fi
 else
+  mkdir -p api
   cp "$work/api.txt" api/MobilerunStream.api.txt
 fi

@@ -14,7 +14,7 @@ and tag rules are required controls.
 
 ## One-time owner setup
 
-1. Lutz decides when to make the repository public. Confirm the license, source,
+1. The repository owner decides when to make the repository public. Confirm the license, source,
    example and documentation are ready. Public SwiftPM consumption requires
    public repository access; private consumers need their own Git authentication.
 2. Create the GitHub environment `release` with a required reviewer, prevent
@@ -36,18 +36,21 @@ and tag rules are required controls.
 - `MobilerunStream` is the iOS session/UI product. `MobilerunProtocol` exposes
   standalone wire helpers. These are the only library products.
 - `MobilerunStreamCore` stays an implementation target, not a separate product.
-  Its public value types aliased by `MobilerunStream` are part of the API contract;
+  Its public value types re-exported by `MobilerunStream` are part of the API contract;
   its package-only orchestration and transport types are excluded.
 - LiveKitWebRTC is pinned exactly to `150.7871.05` (SwiftPM canonical spelling
   `150.7871.5`), never a range. Review the resolved checksum/version on upgrades.
 - `api/MobilerunStream.api.txt` records sorted symbol-graph declarations,
   availability, generic constraints and conformances for macOS and iOS, including
   SwiftUI extension APIs. Internal, package and SPI symbols are excluded, as are
-  synthesized members, inherited conformances marked by the extractor and compiler-only
+  synthesized members, Objective-C protocol conformances, inherited conformances
+  marked by the extractor and compiler-only
   `SendableMetatype` markers. Generate and compare with the pinned Xcode 26.2
   toolchain: newer compilers emit different annotations and SDK conformances.
   Symbol graphs can omit closure attributes such as `@Sendable`; inspect those
-  source changes explicitly. This is a source API baseline, not an ABI guarantee.
+  source changes explicitly. They can also omit setter visibility for
+  `@Published public private(set)` properties; inspect changes to those setters
+  in source. This is a source API baseline, not an ABI guarantee.
 
 ## Each release
 

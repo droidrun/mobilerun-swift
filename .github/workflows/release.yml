@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   preflight:
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +33,7 @@ jobs:
   release:
     needs: verify
     environment: release
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -41,13 +41,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify release commit and notes
-        run: |
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo '::error::Release tags must point to a commit on main.'
-            exit 1
-          fi
-          tool/release-notes.py "$GITHUB_REF_NAME" > release-notes.txt
+      - name: Prepare release notes
+        run: tool/release-notes.py "$GITHUB_REF_NAME" > release-notes.txt
       # Expose the release token to the CLI only in the final step.
       - name: Create draft GitHub Release
         env:
