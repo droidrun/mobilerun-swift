@@ -3,6 +3,7 @@
 
 #if os(iOS)
     import UIKit
+    import Combine
     import Testing
     import MobilerunProtocol
     import MobilerunStreamCore
@@ -323,10 +324,67 @@
             view.routeKey(usage: 40, text: "\r", down: false)
             view.routeKey(usage: 43, text: "\t", down: true)
             view.routeKey(usage: 43, text: "\t", down: false)
+            view.routeKey(usage: 40, text: "\n", down: true)
+            view.routeKey(usage: 40, text: "\n", down: false)
+            view.routeKey(usage: 42, text: "\u{8}", down: true)
+            view.routeKey(usage: 42, text: "\u{8}", down: false)
+            view.routeKey(usage: 41, text: "\u{1b}", down: true)
+            view.routeKey(usage: 41, text: "\u{1b}", down: false)
             #expect(packets(h) == [
                 "1:0000420000000000000000000000", "1:0001420000000000000000000000",
                 "1:00003d0000000000000000000000", "1:00013d0000000000000000000000",
+                "1:0000420000000000000000000000", "1:0001420000000000000000000000",
+                "1:0000430000000000000000000000", "1:0001430000000000000000000000",
+                "1:00006f0000000000000000000000", "1:00016f0000000000000000000000",
             ])
+        }
+
+        @Test func statsRequireObserversForegroundAndRawPeerConnectivity() async throws {
+            let h = try SessionHarness()
+            var requests: [StreamStatsSampler.Completion] = []
+            let session = DeviceStreamSession(engine: h.engine, videoSize: VideoSize(width: 100, height: 200),
+                statsScheduler: h.clock, statistics: { requests.append($0) })
+            defer { session.close() }
+            try await h.connected()
+            #expect(session.status == .connected)
+            #expect(requests.isEmpty)
+            #expect(session.stats == nil)
+            var first: AnyCancellable? = session.$stats.sink { _ in }
+            await drain()
+            #expect(first != nil)
+            #expect(requests.count == 1)
+            requests[0]([], 250)
+            h.clock.advance(to: h.clock.now + 1000)
+            #expect(session.stats?.timeToFirstFrameMs == 250)
+            #expect(requests.count == 2)
+            try h.sockets[0].receive(h.sequenceMessage("refresh", step: 1))
+            await settle { h.peers[0].restarts.count == 2 }
+            h.peers[0].onEvent?(.state(.connecting))
+            #expect(session.status == .connected) // Public ICE-refresh grace suppresses this dip.
+            #expect(session.stats == nil)
+            requests[1]([], 999)
+            h.peers[0].onEvent?(.state(.connected))
+            #expect(requests.count == 3)
+            session.setHidden(true)
+            #expect(session.stats == nil)
+            requests[2]([], 999)
+            session.setHidden(false)
+            #expect(requests.count == 4)
+            requests[3]([], 250)
+            h.clock.advance(to: h.clock.now + 1000)
+            #expect(session.stats?.timeToFirstFrameMs == 250)
+            let second = session.$stats.sink { _ in }
+            first = nil
+            await drain()
+            #expect(session.stats?.timeToFirstFrameMs == 250) // One subscriber still owns sampling.
+            second.cancel()
+            await drain()
+            #expect(session.stats == nil)
+            let count = requests.count
+            h.clock.advance(to: h.clock.now + 1000)
+            #expect(requests.count == count)
+            session.close()
+            #expect(session.stats == nil)
         }
 
         @Test func displayOnlySendsNothingToTheSessionTransport() async throws {

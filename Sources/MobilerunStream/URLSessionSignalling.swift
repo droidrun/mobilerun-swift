@@ -63,7 +63,7 @@
         #endif
 
         deinit { session?.invalidateAndCancel() }
-        func close() {
+        func close(code: Int) {
             onEvent = nil
             receiver?.cancel()
             receiver = nil
@@ -71,7 +71,7 @@
             sender = nil
             let old = socket
             socket = nil
-            old?.cancel(with: .normalClosure, reason: nil)
+            old?.cancel(with: URLSessionWebSocketTask.CloseCode(rawValue: code) ?? .normalClosure, reason: nil)
             // Let URLSession transmit the normal (1000) close frame before invalidation.
             session?.finishTasksAndInvalidate()
             session = nil

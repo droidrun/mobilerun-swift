@@ -156,10 +156,14 @@ navigation key pairs.
 
 ## Stream statistics and benchmark
 
-`session.$stats` publishes a read-only `StreamStats?` once per second while connected and
-foreground. It becomes nil when hidden, disconnected or closed. Each connection attempt resets
+`session.$stats` publishes a read-only `StreamStats?` on fixed one-second ticks while connected,
+foreground and subscribed. Use `sink` or SwiftUI `onReceive(session.$stats)` and retain the subscription
+for the desired measurement lifetime. Cancelling the last subscriber stops native sampling and clears
+`stats`. It also becomes nil when hidden, disconnected or closed, including transient peer dips
+hidden by the public ICE-restart grace period. Each connection attempt resets
 first-frame timing and rate baselines. The session's lifecycle owner calls `setHidden(_:)`;
-the default UI already does this. Sampling does not require a subscriber.
+the default UI already does this. `StreamStatsPublished` preserves the `$stats` Combine publisher and tracks its subscriber lifetime;
+the SDK alone constructs its storage.
 
 Samples include FPS, decoded width/height, codec MIME type, inbound video `bitrateKbps`, selected
 ICE pair `rttMs`, jitter-buffer delay and decode time per frame, cumulative packets lost,

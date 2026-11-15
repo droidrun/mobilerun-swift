@@ -89,38 +89,60 @@ struct StreamStatsTests {
         #expect(stats.localCandidateType == nil)
     }
 
-    @Test @MainActor func samplingPausesIgnoresLateReportsAndResetsOnReconnect() throws {
+    @Test @MainActor func samplingUsesFixedPublishingTicksAndDiscardsLateReports() throws {
         let clock = FakeClock()
         let records = try reports()
         var requests: [StreamStatsSampler.Completion] = []
         var samples: [StreamStats?] = []
         let sampler = StreamStatsSampler(scheduler: clock, request: { requests.append($0) }, publish: { samples.append($0) })
         sampler.setActive(true)
-        clock.advance(to: 999)
-        #expect(requests.isEmpty)
-        clock.advance(to: 1000)
         #expect(requests.count == 1)
-        clock.advance(to: 5000)
-        #expect(requests.count == 1) // No overlapping getStats while its callback is outstanding.
-        sampler.setActive(false)
         requests[0](records[0], 240)
+        clock.advance(to: 999)
+        #expect(samples.isEmpty) // A native callback cannot publish or advance parser baselines.
+        clock.advance(to: 1000)
         #expect(samples.count == 1)
-        #expect(samples[0] == nil)
+        #expect(samples[0]?.bitrateKbps == nil)
+        #expect(requests.count == 2)
+        requests[1](records[1], 240)
+        clock.advance(to: 1999)
+        #expect(samples.count == 1)
+        clock.advance(to: 2000)
+        #expect(samples.count == 2)
+        #expect(samples[1]?.bitrateKbps == 1000)
+        clock.advance(to: 3000) // Request 2 has not completed: clear the rate baseline.
+        #expect(samples[2] == nil)
+        #expect(requests.count == 3) // No overlapping getStats.
+        requests[2](records[1], 240) // Past its publishing window: discarded.
+        clock.advance(to: 4000)
+        #expect(samples[3] == nil)
+        #expect(requests.count == 4)
+        sampler.setActive(false)
+        requests[3](records[1], 240)
         #expect(clock.pendingCount == 0)
         sampler.setActive(true)
-        clock.advance(to: 6000)
-        requests[1](records[0], 500)
-        #expect(samples.last??.timeToFirstFrameMs == 500)
+        requests[4](records[1], 500)
+        clock.advance(to: 5000)
         #expect(samples.last??.bitrateKbps == nil)
-        clock.advance(to: 7000)
-        requests[2](records[1], 500)
-        #expect(samples.last??.bitrateKbps == 1000)
+        #expect(samples.last??.timeToFirstFrameMs == 500)
         sampler.setActive(false)
         clock.advance(to: 10000)
-        #expect(requests.count == 3)
         #expect(clock.pendingCount == 0)
         #expect(samples.last! == nil)
     }
+
+    @Test func firstFrameIsStampedOncePerAttempt() {
+        let first = FirstFrameTiming(startedAt: 10)
+        #expect(first.value == nil)
+        first.stamp(at: 10.25)
+        first.stamp(at: 12)
+        #expect(first.value == 250)
+        let next = FirstFrameTiming(startedAt: 20)
+        next.stamp(at: 20.5)
+        #expect(next.value == 500)
+        #expect(first.value == 250)
+    }
+
     @Test @MainActor func samplerReleasesItsTimerOnDeallocation() async {
         let clock = FakeClock()
         weak var released: StreamStatsSampler?
