@@ -45,6 +45,7 @@ jobs:
           xcodebuild -scheme MobilerunStream-Package
           -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
           -parallel-testing-enabled NO -only-testing:MobilerunConformanceTests/NativeInputTests
+          -only-testing:MobilerunConformanceTests/InputConformanceTests
           -only-testing:MobilerunConformanceTests/ThemeTests
           -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO
       - name: Test default UI on simulator
