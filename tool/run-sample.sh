@@ -22,12 +22,24 @@ def sim(*args):
     return run('xcrun', 'simctl', *args)
 
 
+if sys.argv[1:] == ['--help']:
+    print("""Usage: tool/run-sample.sh CREDENTIALS_JSON
+
+Build and launch the sample on a temporary iOS simulator.
+Credentials are copied into private app storage and consumed once.
+Press Ctrl-C to shut down and delete the simulator and build output.
+
+Automation: SAMPLE_HEADLESS=1 skips Simulator.app detection and opening.
+The iOS simulator runtime and simctl are still required.
+""")
+    sys.exit(0)
+headless = os.environ.get('SAMPLE_HEADLESS') == '1'
 if len(sys.argv) != 2 or not Path(sys.argv[1]).is_file():
     sys.exit('Usage: tool/run-sample.sh CREDENTIALS_JSON (an existing local JSON file)')
 source = Path(sys.argv[1]).resolve()
 developer = Path(run('xcode-select', '-p'))
 simulator = developer / 'Applications/Simulator.app'
-if not simulator.is_dir():
+if not headless and not simulator.is_dir():
     sys.exit('Simulator.app is missing. Install full Xcode, select it with xcode-select, and install an iOS simulator runtime.')
 runtimes = [r for r in json.loads(sim('list', 'runtimes', '-j'))['runtimes']
             if r.get('isAvailable') and r.get('platform') == 'iOS']
@@ -56,7 +68,8 @@ try:
                     'build', 'CODE_SIGNING_ALLOWED=NO', 'ONLY_ACTIVE_ARCH=YES'], check=True)
     sim('boot', device)
     sim('bootstatus', device, '-b')
-    run('open', '-a', str(simulator), '--args', '-CurrentDeviceUDID', device)
+    if not headless:
+        run('open', '-a', str(simulator), '--args', '-CurrentDeviceUDID', device)
     sim('install', device, str(derived / 'Build/Products/Debug-iphonesimulator/Connection.app'))
     container = Path(sim('get_app_container', device, 'io.mobilerun.Connection', 'data'))
     documents = container / 'Documents'
