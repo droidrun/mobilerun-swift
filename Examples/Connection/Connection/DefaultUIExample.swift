@@ -94,9 +94,9 @@ private enum ExampleFailure: LocalizedError {
                 ZStack {
                     // A bright stand-in frame makes any glass sampling/phone glyph regression visible offline.
                     LinearGradient(colors: [.red, .blue], startPoint: .top, endPoint: .bottom)
-                    StreamPlaceholder(state: StreamOverlayState(status: .reconnecting(attempt: 3), hasVideo: true))
+                    StreamPlaceholder(state: StreamOverlayState(status: .reconnecting(attempt: 3), hasVideo: true, retry: {}))
                 }
-                StreamNavigationBar()
+                StreamNavigationBar(state: StreamNavigationState(onAction: { _ in }))
             }
         } else if probe.mode.hasPrefix("approval") {
             ApprovalExample(probe: probe, model: probe.approval)

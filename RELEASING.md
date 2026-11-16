@@ -31,10 +31,10 @@ and tag rules are required controls.
 
 ## Public package contract
 
-- Swift tools version: 6.0; iOS 15 and macOS 13 minimums. iOS UI compilation uses
-  Xcode 26.2 in CI for the iOS 26 SDK while retaining the iOS 15 deployment target.
-- `MobilerunStream` is the iOS session/UI product. `MobilerunProtocol` exposes
-  standalone wire helpers. These are the only library products.
+- Swift tools version: 6.2; Xcode 26 or newer, iOS 15 minimum. CI uses Xcode 26.2.
+  macOS 13 is the test destination only; streaming is supported on iOS.
+- `MobilerunStream` is the only library product. The protocol target stays internal
+  to the package. `JSONValue` is available with `import MobilerunStream` alone.
 - `MobilerunStreamCore` stays an implementation target, not a separate product.
   Its public value types re-exported by `MobilerunStream` are part of the API contract;
   its package-only orchestration and transport types are excluded.
@@ -55,12 +55,17 @@ and tag rules are required controls.
 ## Each release
 
 1. Update the changelog with the intended stable `X.Y.Z` version. Refresh the
-   README installation example and remove its pre-release notes for the first
-   release. There is no version to bump in `Package.swift`.
-2. Select the same Xcode as CI. Run `swift build`, `swift test`, and the simulator
+   README installation example for the first release. At the first tag, update every
+   pre-release sentence: README's "Pre-release Swift SDK", "Until publishing, add this
+   repository's `main` branch" and "After release, use …"; TESTING's "Publishing has
+   not happened; install from source"; and this document's "Nothing has been tagged
+   or published." Replace them with the tagged installation and release state.
+   Change the changelog's "Unreleased" label to the release date.
+   There is no version to bump in `Package.swift`.
+2. Select the same Xcode as CI. Run `swift build`, `swift build -c release`, `swift test`, and the Debug/Release simulator
    library/example builds and simulator tests in `.github/workflows/ci.yml`.
    For intentional public API changes, run `tool/api-dump.sh`, inspect the diff
-   and commit it. `tool/api-dump.sh --check` must pass. Both supported destinations
+   and commit it. `tool/api-dump.sh --check` must pass. Both extraction destinations
    are necessary: macOS alone omits UIKit and SwiftUI streaming APIs. The dump
    uses SwiftPM's native build backend and extracts only the shipping modules.
 3. After the first tag exists, also run the compatibility diagnostic against the

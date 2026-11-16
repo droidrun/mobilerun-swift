@@ -17,18 +17,7 @@
         #endif
 
         func open(_ credentials: StreamCredentials) throws {
-            guard var components = URLComponents(url: credentials.url, resolvingAgainstBaseURL: false),
-                let scheme = components.scheme, ["ws", "wss"].contains(scheme), components.host != nil
-            else {
-                throw SignallingError.invalidEndpoint
-            }
-            if let token = credentials.token {
-                var query = components.queryItems ?? []
-                query.removeAll { $0.name == "token" }
-                query.append(URLQueryItem(name: "token", value: token))
-                components.queryItems = query
-            }
-            guard let url = components.url else { throw SignallingError.invalidEndpoint }
+            let url = try Self.endpoint(credentials)
             let config = URLSessionConfiguration.ephemeral
             config.urlCache = nil
             let session = URLSession(
@@ -50,6 +39,23 @@
                     }
                 } catch { self?.reportFailure(socket) }
             }
+        }
+        static func endpoint(_ credentials: StreamCredentials) throws -> URL {
+            guard var components = URLComponents(url: credentials.url, resolvingAgainstBaseURL: false),
+                let scheme = components.scheme, ["ws", "wss"].contains(scheme), components.host != nil
+            else {
+                throw SignallingError.invalidEndpoint
+            }
+            if let token = credentials.token, !token.isEmpty {
+                var query = components.queryItems ?? []
+                query.removeAll { $0.name == "token" }
+                query.append(URLQueryItem(name: "token", value: token))
+                components.queryItems = query
+                // Form-style query parsers treat a raw plus as a space.
+                components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+            }
+            guard let url = components.url else { throw SignallingError.invalidEndpoint }
+            return url
         }
         @discardableResult func send(_ text: String) -> Bool {
             guard let socket, !failed else { return false }

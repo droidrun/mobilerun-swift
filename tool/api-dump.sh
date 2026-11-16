@@ -1,5 +1,5 @@
 #!/bin/bash
-# Dump public declarations for both supported platforms with the selected Xcode.
+# Dump public declarations for the iOS product and macOS test destination with the selected Xcode.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 case "${1:-}" in
@@ -8,7 +8,7 @@ case "${1:-}" in
 esac
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-modules=(MobilerunProtocol MobilerunStreamCore MobilerunStream)
+modules=(MobilerunStreamCore MobilerunStream)
 for platform in macOS iOS; do
   if [[ "$platform" == macOS ]]; then
     sdk=$(xcrun --sdk macosx --show-sdk-path)

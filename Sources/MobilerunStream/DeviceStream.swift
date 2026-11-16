@@ -9,15 +9,17 @@ import MobilerunStreamCore
 @MainActor public struct StreamOverlayState {
     public var status: StreamStatus
     public var hasVideo: Bool
+    public var labels: StreamLabels
     public var retry: () -> Void
-    public init(status: StreamStatus = .connecting, hasVideo: Bool = false, retry: @escaping () -> Void = {}) {
-        self.status = status; self.hasVideo = hasVideo; self.retry = retry
+    public init(status: StreamStatus = .connecting, labels: StreamLabels = StreamLabels(),
+                hasVideo: Bool = false, retry: @escaping () -> Void) {
+        self.status = status; self.labels = labels; self.hasVideo = hasVideo; self.retry = retry
     }
 }
 @MainActor public struct StreamNavigationState {
     public var canControl: Bool
     public var onAction: (SystemKey) -> Void
-    public init(canControl: Bool = true, onAction: @escaping (SystemKey) -> Void = { _ in }) {
+    public init(canControl: Bool = true, onAction: @escaping (SystemKey) -> Void) {
         self.canControl = canControl; self.onAction = onAction
     }
 }
@@ -42,6 +44,7 @@ import MobilerunStreamCore
     @State private var defaultHandle = DeviceStreamHandle()
     private let suppliedHandle: DeviceStreamHandle?
     @Environment(\.streamTheme) private var theme
+    @Environment(\.streamLabels) private var labels
     private let hasControl: Bool
     private let showsNavigation: Bool
     private let slots: StreamSlots
@@ -54,9 +57,9 @@ import MobilerunStreamCore
     }
     public var body: some View {
         let handle = suppliedHandle ?? defaultHandle
-        let presentation = StreamPresentation(status: session.status, hasControl: hasControl)
+        let presentation = StreamPresentation(status: session.status, hasControl: hasControl, isClosed: session.isClosed)
         VStack(spacing: 0) {
-            let context = StreamOverlayState(status: session.status, hasVideo: session.videoSize != nil, retry: session.retry)
+            let context = StreamOverlayState(status: session.status, labels: labels, hasVideo: session.videoSize != nil, retry: session.retry)
             ZStack {
                 theme.background
                 DeviceStreamView(session: session, hasControl: presentation.canControl, handle: handle)
@@ -93,9 +96,8 @@ import MobilerunStreamCore
 }
 @MainActor public struct StreamPlaceholder: View {
     @Environment(\.streamTheme) private var theme
-    @Environment(\.streamLabels) private var labels
     public var state: StreamOverlayState
-    public init(state: StreamOverlayState = StreamOverlayState()) { self.state = state }
+    public init(state: StreamOverlayState) { self.state = state }
     public var body: some View {
         ZStack(alignment: .bottomLeading) {
             if !state.hasVideo {
@@ -103,7 +105,7 @@ import MobilerunStreamCore
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .accessibilityIdentifier("stream-phone-placeholder")
             }
-            StreamStatusPill(label: labels.statusLabel(state.status)).padding(16)
+            StreamStatusPill(label: state.labels.statusLabel(state.status)).padding(16)
         }
         // An opaque backing prevents native glass from sampling retained reconnecting video.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -112,17 +114,16 @@ import MobilerunStreamCore
 }
 @MainActor public struct StreamUnavailableView: View {
     @Environment(\.streamTheme) private var theme
-    @Environment(\.streamLabels) private var labels
     public var state: StreamOverlayState
-    public init(state: StreamOverlayState = StreamOverlayState()) { self.state = state }
+    public init(state: StreamOverlayState) { self.state = state }
     public var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "wifi.slash").font(.system(size: 40)).opacity(0.5)
-            Text(labels.unavailable)
-            Button(action: state.retry) { Label(labels.retry, systemImage: "arrow.clockwise") }
+            Text(state.labels.unavailable)
+            Button(action: state.retry) { Label(state.labels.retry, systemImage: "arrow.clockwise") }
                 .modifier(StreamChromeButton(kind: .primary))
         }.padding(24)
-            .modifier(StreamSurfaceModifier(shape: RoundedRectangle(cornerRadius: theme.radius), fill: theme.card))
+            .modifier(StreamSurfaceModifier(shape: RoundedRectangle(cornerRadius: theme.radius + 4), fill: theme.card))
             .font(theme.typography).foregroundColor(theme.mutedForeground)
             .frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background)
     }
@@ -131,7 +132,7 @@ import MobilerunStreamCore
     @Environment(\.streamTheme) private var theme
     @Environment(\.streamLabels) private var labels
     public var state: StreamNavigationState
-    public init(state: StreamNavigationState = StreamNavigationState()) { self.state = state }
+    public init(state: StreamNavigationState) { self.state = state }
     public var body: some View {
         StreamGlassGroup {
             HStack(spacing: 8) {

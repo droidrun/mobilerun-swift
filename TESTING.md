@@ -1,7 +1,7 @@
 # Try the Swift SDK
 
 Requires macOS, full Xcode 26 or later, Python 3, and an installed iOS simulator
-runtime (Xcode Settings > Components). Tested with Xcode 26.2 / 27.2. Select Xcode
+runtime (Xcode Settings > Components). Tested with Xcode 26.2 in CI. Select Xcode
 with `xcode-select` and complete its first-launch setup. The SDK supports iOS 15+;
 Liquid Glass requires iOS 26+. SwiftPM downloads the pinned WebRTC dependency.
 
@@ -42,8 +42,8 @@ on that device. Every row includes the expected result.
 |---|---|
 | Connect / first frame | Connecting gives way to live video with preserved aspect ratio. |
 | Tap | The remote control responds, including near the picture's edges. |
-| Swipe | A scrollable remote page scrolls in the drag direction. |
-| Two fingers | A zoomable page zooms. Hold Option in Simulator for pinch; gesture support depends on host configuration. |
+| Swipe | A scrollable remote view scrolls in the drag direction. |
+| Two fingers | A zoomable view zooms. Hold Option in Simulator for pinch; gesture support depends on host configuration. |
 | Soft keyboard | Focus a remote text field and tap Keyboard to show Simulator's software keyboard (disconnect its hardware keyboard if needed). Latin letters arrive per character; Backspace deletes one character and Enter sends a return. Try emoji and CJK composition too; see the known limitation below. |
 | Back / Home / Recent | Each navigation button performs the corresponding remote Android action. |
 | Rotate | Rotate Simulator using Device > Orientation; video stays fitted and taps remain aligned. Rotate the remote app too if it supports it. |
@@ -61,9 +61,10 @@ Reference ranges from the [benchmark runner](tool/benchmark.sh) on a simulator r
 
 ```sh
 swift test
+swift build -c release
 tool/api-dump.sh --check
 xcodebuild -scheme MobilerunStream -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO
+  -configuration Release -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO
 xcodebuild -project Examples/Connection/Connection.xcodeproj -scheme Connection \
   -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
   -only-testing:SampleTests -only-testing:InputUITests/SampleUITests \
@@ -77,10 +78,7 @@ input, countdown ticking, approvals and UI internals.
 
 ## Known limitations
 
-Events subscription awaits the backend token contract. Publishing has not happened;
-install from source. Network-switch recovery requires a physical device. Simulator
-multitouch and IME support depend on host configuration.
+Publishing has not happened; install from source. Network-switch recovery requires a
+physical device. Simulator multitouch and IME support depend on host configuration.
 
-Emoji and some CJK may not arrive on Cloud Android devices via text injection yet;
-the device-side fix is pending and affects every client. This checklist item is a
-known limitation, rather than a passing delivery check.
+Some emoji and CJK characters may not arrive on Cloud Android devices through text injection.

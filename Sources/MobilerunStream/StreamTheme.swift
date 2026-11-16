@@ -37,7 +37,7 @@ public struct StreamTheme: Equatable, StreamCustomizable {
         accent: Color = Color(.sRGB, red: 0.96058699, green: 0.96058699, blue: 0.96058699, opacity: 1),
         accentForeground: Color = Color(.sRGB, red: 0.09052741, green: 0.09052741, blue: 0.09052741, opacity: 1),
         destructive: Color = Color(.sRGB, red: 0.90645756, green: 0.00000000, blue: 0.04221455, opacity: 1),
-        radius: CGFloat = 12, typography: Font = .subheadline,
+        radius: CGFloat = 8, typography: Font = .subheadline,
         surfaceStyle: StreamSurfaceStyle = .glass
     ) {
         self.background = background

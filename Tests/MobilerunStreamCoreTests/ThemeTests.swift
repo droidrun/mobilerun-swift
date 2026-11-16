@@ -9,6 +9,19 @@ import Testing
 import MobilerunStreamCore
 
 @Suite @MainActor struct ThemeTests {
+    @Test(arguments: [
+        (nil, "wss://example.test/stream?token=embedded%2Bvalue&other=one%20two"),
+        ("", "wss://example.test/stream?token=embedded%2Bvalue&other=one%20two"),
+        ("a+b/c=d&e", "wss://example.test/stream?other=one%20two&token=a%2Bb/c%3Dd%26e"),
+    ])
+    func signallingTokenURL(token: String?, expected: String) throws {
+        let credentials = StreamCredentials(url: URL(string: "wss://example.test/stream?token=embedded%2Bvalue&other=one%20two")!, token: token)
+        #expect(try URLSessionSignalling.endpoint(credentials).absoluteString == expected)
+    }
+    @Test func countdownStartsBeforeFirstTick() {
+        let countdown = ApprovalCountdown(approvalId: "a", expiresAt: "2100-01-01T00:00:00Z")
+        #expect(countdown.remaining > 0)
+    }
     @Test func surfaceStyleAndAccessibility() {
         #expect(StreamTheme().surfaceStyle == .glass)
         #expect(StreamTheme.light.surfaceStyle == .glass)
@@ -81,7 +94,7 @@ import MobilerunStreamCore
         #expect(abs(UIColor(dark.border).cgColor.alpha - 0.1) < 0.000001)
         #expect(channels(EnvironmentValues().streamTheme.background) == [255,255,255])
         #expect(StreamTheme.light.with { $0.radius = 20 }.radius == 20)
-        #expect(light.radius == 12)
+        #expect(light.radius == 8)
     }
 }
 @MainActor private final class LifecycleRequests {

@@ -1,10 +1,11 @@
 # Changelog
 
-## [0.1.0]
+## [0.1.0] — Unreleased
 
-Initial release.
-
-- Swift 6 package with an iOS 15+ streaming SDK and standalone protocol helpers.
-- Observable sessions with reconnect recovery, screenshots and audio controls.
-- SwiftUI and UIKit video, touch, pointer and keyboard input.
-- Optional themed stream controls and task approval UI.
+- Live iOS device streaming with automatic reconnect and audio controls.
+- SwiftUI and UIKit video with touch, pointer, keyboard and system-key input.
+- Default stream controls, customizable labels, themes and Liquid Glass chrome.
+- Backend-driven task approvals with polling and custom actions.
+- Read-only stream statistics and connection timing.
+- Visibility and wake lifecycle integration.
+- Screenshots with cancellation and timeout handling.

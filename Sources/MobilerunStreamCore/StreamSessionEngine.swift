@@ -83,7 +83,8 @@ import MobilerunProtocol
         controller?.retry()
     }
 
-    package func setHidden(_ hidden: Bool) {
+    package func setVisible(_ visible: Bool) {
+        let hidden = !visible
         guard !closed, self.hidden != hidden else { return }
         self.hidden = hidden
         attempt?.keepAlive?.cancel()
@@ -106,7 +107,6 @@ import MobilerunProtocol
         releaseAttempt()
         cancelCredentials()
         pendingURL = nil
-        status = .closed
     }
 
     @discardableResult package func sendControl(_ data: Data) -> Bool {
@@ -201,7 +201,7 @@ import MobilerunProtocol
 
     private func applyPendingTarget() {
         guard !closed, let latestTarget, let activeTarget,
-              latestTarget.url != activeTarget.url || latestTarget.token != activeTarget.token,
+              latestTarget.url != activeTarget.url || (status != .connected && latestTarget.token != activeTarget.token),
               controller?.shouldDeferTargetChange == false else { return }
         mount()
     }

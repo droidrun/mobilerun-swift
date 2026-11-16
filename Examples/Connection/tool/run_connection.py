@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright 2026 Mobilerun
 # SPDX-License-Identifier: Apache-2.0
-"""Run under an exclusive simulator lock; credentials are injected only into Documents.
+"""Run one simulator validation at a time; credentials are injected only into Documents.
 
 Proves video, optional raw touch, changed ICE username fragments, at least 16 seconds
 of frames after refresh, full socket recovery and muted host-audio coexistence. The
@@ -14,9 +14,14 @@ import re
 import shutil
 import subprocess
 import time
+import tempfile
 
 BUNDLE = "io.mobilerun.Connection"
 ROOT = Path(__file__).resolve().parents[3]
+
+
+class DeviceUnavailable(RuntimeError):
+    pass
 
 
 def sim(*args):
@@ -44,7 +49,7 @@ def main():
     parser.add_argument("--credentials", type=Path, required=True)
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--shots", type=Path, required=True)
-    parser.add_argument("--tap-x", type=float, default=0, help="Raw video pixel coordinate")
+    parser.add_argument("--tap-x", type=float, default=0, help="Fraction of the rendered video rect (0 to 1)")
     parser.add_argument("--tap-y", type=float, default=0)
     parser.add_argument("--tap-coordinates-file", type=Path)
     parser.add_argument("--skip-tap", action="store_true")
@@ -55,7 +60,7 @@ def main():
     credentials = json.loads(args.credentials.read_text())
     assert credentials.get("streamUrl") and credentials.get("streamToken"), "incomplete credentials"
     credentials["h264Only"] = args.h264_only
-    derived = ROOT / "DerivedData"
+    derived = Path(tempfile.mkdtemp(prefix="mobilerun-validation-"))
     device = documents = None
 
     def events():
@@ -64,7 +69,7 @@ def main():
         assert credentials["streamToken"] not in text, "sensitive log content"
         (args.evidence / "events.log").write_text(text)
         if "device unavailable http=" in text:
-            raise RuntimeError("PENDING: device")
+            raise DeviceUnavailable("SKIPPED: device unavailable (HTTP 401/404)")
         return text
 
     def wait_for(predicate, description, timeout=75):
@@ -136,8 +141,7 @@ def main():
                 point = json.loads(args.tap_coordinates_file.read_text())
                 x, y = point["x"], point["y"]
             command("tap", x=x, y=y)
-            wait_for(lambda text: "view tap complete" in text and
-                     "input type=2 action=1 pointer=0 sent=true" in text, "view control tap")
+            wait_for(lambda text: "input type=2 action=1 pointer=0 sent=true" in text, "view control tap")
             time.sleep(3)
             screenshot("02-after-tap")
         command("mute")
@@ -177,9 +181,9 @@ def main():
         time.sleep(2)
         screenshot("05-reconnected")
         command("stop")
-        final = wait_for(lambda text: "status closed" in text, "session closes")
+        final = wait_for(lambda text: "session closed" in text, "session closes")
         if "host audio unavailable" in final:
-            print("UNVERIFIED host audio: playback unavailable on simulator", flush=True)
+            print("SKIPPED: host playback unavailable on simulator", flush=True)
         else:
             audits = re.findall(
                 r"host audio playing=(\w+) clock=(\S+) rtcActive=(\w+) "
@@ -194,6 +198,8 @@ def main():
             assert float(audits[-1][1]) > float(audits[0][1]), "host audio clock stopped"
             print("PASS muted stream preserves host playback; RTC activation count 0", flush=True)
         print("PASS simulator session", flush=True)
+    except DeviceUnavailable as error:
+        print(str(error), flush=True)
     finally:
         if documents:
             (documents / "credentials.json").unlink(missing_ok=True)

@@ -4,24 +4,28 @@
 import Foundation
 import MobilerunProtocol
 
-/// Endpoint and short-lived stream token. Obtain fresh values from your API when asked.
-public struct StreamCredentials: Sendable {
+/// Endpoint and short-lived stream token. Nil or empty tokens leave the URL unchanged.
+/// Obtain fresh values from your API when asked; descriptions redact both fields.
+public struct StreamCredentials: Sendable, CustomStringConvertible, CustomDebugStringConvertible, CustomReflectable {
     public let url: URL
     public let token: String?
     public init(url: URL, token: String? = nil) {
         self.url = url
         self.token = token
     }
+    public var description: String { "StreamCredentials(<redacted>)" }
+    public var debugDescription: String { description }
+    public var customMirror: Mirror { Mirror(self, children: ["value": "<redacted>"]) }
 }
 
 /// Called at start, on recovery, and after rejected tokens. Nil means the device is not ready yet.
 public typealias StreamCredentialsProvider = @Sendable () async throws -> StreamCredentials?
 
-/// State presented by a stream session. Closed is permanent.
+/// State presented by a stream session. Closing a session stops status updates.
 public enum StreamStatus: Sendable, Equatable {
     case connecting, connected
     case reconnecting(attempt: Int)
-    case unavailable, closed
+    case unavailable
 }
 
 /// Decoded frame dimensions before rotation; rotation is clockwise in degrees.
@@ -29,7 +33,7 @@ public struct VideoSize: Sendable, Equatable {
     public let width: Int
     public let height: Int
     public let rotation: Int
-    public init(width: Int, height: Int, rotation: Int = 0) {
+    package init(width: Int, height: Int, rotation: Int = 0) {
         self.width = width
         self.height = height
         self.rotation = rotation
@@ -37,8 +41,17 @@ public struct VideoSize: Sendable, Equatable {
 }
 
 /// Errors intentionally contain no endpoint, credential, SDP, or server text.
-public enum StreamError: Error, Sendable, Equatable {
+public enum StreamError: LocalizedError, Sendable, Equatable {
     case notConnected, disconnected, screenshotTimeout, screenshotFailed
+
+    public var errorDescription: String? {
+        switch self {
+        case .notConnected: "Stream is not connected."
+        case .disconnected: "Stream disconnected."
+        case .screenshotTimeout: "Screenshot timed out."
+        case .screenshotFailed: "Screenshot failed."
+        }
+    }
 }
 
 package enum SignallingEvent: Sendable {

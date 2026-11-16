@@ -30,9 +30,12 @@
         #endif
 
         /// Disabling local control clears composition, focus and active input.
+        private var controlEnabled: Bool
         public var hasControl: Bool {
-            willSet {
+            get { controlEnabled && !session.isClosed }
+            set {
                 if hasControl && !newValue { stopLocalInput() }
+                controlEnabled = newValue
             }
         }
 
@@ -46,7 +49,7 @@
         init(session: DeviceStreamSession, hasControl: Bool, scheduler: any ReconnectScheduler) {
             self.scheduler = scheduler
             self.session = session
-            self.hasControl = hasControl
+            self.controlEnabled = hasControl
             super.init(frame: .zero)
             isMultipleTouchEnabled = true
             isOpaque = false
@@ -155,6 +158,9 @@
             session.$videoTrack.sink { [weak self] in self?.setTrack($0) }.store(in: &subscriptions)
             session.$videoSize.sink { [weak self] size in
                 self?.updateGeometry(video: size)
+            }.store(in: &subscriptions)
+            session.$isClosed.sink { [weak self] closed in
+                if closed { self?.stopLocalInput() }
             }.store(in: &subscriptions)
             session.$status.sink { [weak self] status in
                 if status != .connected {

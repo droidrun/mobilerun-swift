@@ -4,9 +4,9 @@
 import Foundation
 
 /// Retry budgets and exponential backoff shared by the streaming clients.
-package enum ReconnectPolicy {
+public enum ReconnectPolicy {
     /// Maximum scheduled retries before a failure declares the stream unavailable.
-    package static let maxAttempts = 6
+    public static let maxAttempts = 6
     /// Whole-attempt watchdog; exceeds the combined signalling phase budgets.
     package static let connectTimeoutMs = 45_000
     /// Continuous connection duration that refills the retry budget.
