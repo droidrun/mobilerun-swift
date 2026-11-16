@@ -156,14 +156,14 @@ navigation key pairs.
 
 ## Stream statistics and benchmark
 
-`session.$stats` publishes a read-only `StreamStats?` on fixed one-second ticks while connected,
-foreground and subscribed. Use `sink` or SwiftUI `onReceive(session.$stats)` and retain the subscription
+`session.statsPublisher` publishes read-only `StreamStats?` reports sampled once per second while connected,
+foreground and subscribed. Use `sink` or SwiftUI `onReceive(session.statsPublisher)` and retain the subscription
 for the desired measurement lifetime. Cancelling the last subscriber stops native sampling and clears
 `stats`. It also becomes nil when hidden, disconnected or closed, including transient peer dips
 hidden by the public ICE-restart grace period. Each connection attempt resets
 first-frame timing and rate baselines. The session's lifecycle owner calls `setHidden(_:)`;
-the default UI already does this. `StreamStatsPublished` preserves the `$stats` Combine publisher and tracks its subscriber lifetime;
-the SDK alone constructs its storage.
+the default UI already does this. The publisher completes when the session closes. Statistics
+updates do not emit session-wide `objectWillChange` notifications; observe the publisher for samples.
 
 Samples include FPS, decoded width/height, codec MIME type, inbound video `bitrateKbps`, selected
 ICE pair `rttMs`, jitter-buffer delay and decode time per frame, cumulative packets lost,
@@ -173,8 +173,7 @@ use consecutive counter deltas, so the first sample and reset counters have no r
 contain no endpoints or credentials. The SDK creates `StreamStats`; new fields can be added
 without requiring callers to change an initializer.
 
-The Debug connection example supports a repeatable simulator benchmark. Under an exclusive
-simulator lock, run:
+The Debug connection example supports a repeatable simulator benchmark:
 
 ```sh
 tool/benchmark.sh --credentials /path/to/runtime-credentials.json \

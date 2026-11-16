@@ -5,11 +5,12 @@
 
 Use a known launcher icon as the tap target (normalized upright video coordinates).
 Credentials are read at runtime, copied with mode 0600 into app Documents, then removed.
-Run under an exclusive simulator/build lock. The simulator and DerivedData are removed.
+The simulator and DerivedData are removed on exit.
 """
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 import shutil
 import statistics
@@ -22,6 +23,10 @@ sys.path.insert(0, str(ROOT / 'Examples/Connection/tool'))
 from run_connection import BUNDLE, create_simulator, sim
 
 
+class DeviceUnavailable(RuntimeError):
+    pass
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--credentials', type=Path, required=True)
@@ -32,12 +37,12 @@ def main():
     if not (0 <= args.tap_x <= 1 and 0 <= args.tap_y <= 1):
         parser.error('tap coordinates must be normalized to [0, 1]')
     args.evidence.mkdir(parents=True, exist_ok=True)
-    credentials = json.loads(args.credentials.read_text())
+    credentials = {}
     derived = ROOT / 'DerivedData'
     device = documents = None
     results = []
     report = args.evidence / 'benchmark-results.md'
-    report.write_text('# Stream benchmark\n\nPENDING: benchmark has not completed.\n')
+    report.write_text('# Stream benchmark\n\nBenchmark has not completed.\n')
 
     def wait(predicate, timeout=90):
         deadline = time.monotonic() + timeout
@@ -47,7 +52,7 @@ def main():
             if credentials['streamToken'] in text:
                 raise RuntimeError('sensitive diagnostic content')
             if any('device unavailable http=' + str(code) in text for code in (401, 404)):
-                raise RuntimeError('PENDING: device')
+                raise DeviceUnavailable('device unavailable')
             if predicate(text):
                 return
             time.sleep(.1)
@@ -96,13 +101,22 @@ def main():
         documents = Path(sim('get_app_container', device, BUNDLE, 'data')) / 'Documents'
         documents.mkdir(exist_ok=True)
         injected = documents / 'credentials.json'
-        injected.write_text(json.dumps({key: credentials[key] for key in ('streamUrl', 'streamToken')}))
-        injected.chmod(0o600)
         for run in range(1, 6):
-            (documents / 'events.log').unlink(missing_ok=True)
-            (documents / 'benchmark.json').unlink(missing_ok=True)
-            sim('launch', device, BUNDLE)
-            wait(lambda text: 'status connected' in text and 'frame ' in text)
+            for attempt in range(2):
+                credentials = json.loads(args.credentials.read_text())
+                injected.write_text(json.dumps({key: credentials[key] for key in ('streamUrl', 'streamToken')}))
+                injected.chmod(0o600)
+                (documents / 'events.log').unlink(missing_ok=True)
+                (documents / 'benchmark.json').unlink(missing_ok=True)
+                sim('launch', device, BUNDLE)
+                try:
+                    wait(lambda text: 'status connected' in text and 'frame ' in text)
+                    break
+                except DeviceUnavailable:
+                    sim('terminate', device, BUNDLE)
+                    if attempt == 1:
+                        raise
+                    print('Device changed; retrying with refreshed credentials', flush=True)
             command('benchmark', x=args.tap_x, y=args.tap_y)
             wait(lambda text: 'benchmark complete' in text or 'benchmark failed' in text, timeout=240)
             path = documents / 'benchmark.json'
@@ -116,6 +130,13 @@ def main():
             render()
             command('stop')
             wait(lambda text: 'status closed' in text)
+            try:
+                wait(lambda text: 'websocket closed code=' in text, timeout=5)
+            except RuntimeError:
+                print('Normal closure requested; delegate close code not observed', flush=True)
+            events = (documents / 'events.log').read_text()
+            codes = re.findall(r'websocket closed code=(\d+)', events)
+            (args.evidence / f'websocket-close-{run}.json').write_text(json.dumps({'observedCodes': codes}) + '\n')
             sim('terminate', device, BUNDLE)
             print(f'connection {run}: 10 stats and 10 input samples recorded', flush=True)
         print('PASS benchmark: 5 connections × 10 samples', flush=True)
@@ -123,7 +144,7 @@ def main():
         # Exceptions are deliberately reduced to known messages: subprocess errors can include arguments.
         message = str(error) if isinstance(error, RuntimeError) else type(error).__name__
         with report.open('a') as output:
-            output.write('\nPENDING: ' + message.removeprefix('PENDING: ') + '\n')
+            output.write('\nBenchmark incomplete: ' + message + '\n')
         print(message, file=sys.stderr)
         return 1
     finally:

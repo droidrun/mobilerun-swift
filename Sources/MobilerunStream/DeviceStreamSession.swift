@@ -13,9 +13,11 @@
     @MainActor public final class DeviceStreamSession: ObservableObject {
         @Published public private(set) var status: StreamStatus = .connecting
         @Published public private(set) var videoSize: VideoSize?
-        /// Inbound-video statistics on one-second publishing ticks while connected, visible and subscribed.
-        /// Nil without a `$stats` subscriber, while hidden/closed, or during a raw peer connectivity dip.
-        @StreamStatsPublished(observingSubscriptions: ()) public private(set) var stats: StreamStats?
+        /// Latest inbound-video sample; nil unless connected, visible and subscribed.
+        public var stats: StreamStats? { statistics.value }
+        /// Samples native reports once per second. Completes when the session closes.
+        public var statsPublisher: AnyPublisher<StreamStats?, Never> { statistics.publisher }
+        private let statistics = StreamStatsObservation()
         // Only the package's native renderer consumes tracks; apps use DeviceStreamView.
         @Published package private(set) var videoTrack: LKRTCVideoTrack?
         private weak var signalling: URLSessionSignalling?
@@ -40,8 +42,10 @@
                 credentials: credentials,
                 scheduler: MainActorScheduler(),
                 signalling: { [weak self] in
-                    self?.attemptStartedAt = ProcessInfo.processInfo.systemUptime
                     let socket = URLSessionSignalling()
+                    #if DEBUG
+                        socket.onDiagnostic = { [weak self] in self?.onDiagnostic?($0) }
+                    #endif
                     self?.signalling = socket
                     return socket
                 },
@@ -63,13 +67,13 @@
                     return peer
                 }
             )
-            configureStatistics(scheduler: MainActorScheduler(), request: { [weak self] completion in
+            bindSession(scheduler: MainActorScheduler(), request: { [weak self] completion in
                 guard let peer = self?.peer else { completion([], nil); return }
                 peer.statistics(completion)
             })
         }
 
-        private func configureStatistics(
+        private func bindSession(
             scheduler: any ReconnectScheduler,
             request: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void
         ) {
@@ -77,10 +81,12 @@
                 guard self?.canSampleStats == true else { completion([], nil); return }
                 request(completion)
             }, publish: { [weak self] sample in
-                self?.objectWillChange.send()
-                self?.stats = sample
+                self?.statistics.send(sample)
             })
-            _stats.onObserversChanged = { [weak self] in self?.updateSampling() }
+            statistics.onObserversChanged = { [weak self] in self?.updateSampling() }
+            engine.onAttemptStarted = { [weak self] in
+                self?.attemptStartedAt = ProcessInfo.processInfo.systemUptime
+            }
             engine.onPeerConnectivity = { [weak self] connected in
                 self?.peerConnected = connected
                 self?.updateSampling()
@@ -89,19 +95,22 @@
                 guard let self else { return }
                 self.status = status
                 self.updateSampling()
+                if status == .closed { self.statistics.finish() }
             }
         }
 
         deinit {
             let engine = engine
             let sampler = sampler
+            let statistics = statistics
             Task { @MainActor in
                 sampler?.setActive(false)
+                statistics.finish()
                 engine?.close()
             }
         }
 
-        private var canSampleStats: Bool { status == .connected && peerConnected && !hidden && _stats.isObserved }
+        private var canSampleStats: Bool { status == .connected && peerConnected && !hidden && statistics.isObserved }
 
         private func updateSampling() { sampler?.setActive(canSampleStats) }
 
@@ -142,7 +151,7 @@
                 muted = true
                 self.engine = engine
                 self.videoSize = videoSize
-                configureStatistics(scheduler: statsScheduler, request: statistics)
+                bindSession(scheduler: statsScheduler, request: statistics)
             }
 
             func presentForTesting(_ status: StreamStatus) { self.status = status }

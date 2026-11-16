@@ -53,12 +53,7 @@ package enum SignallingEvent: Sendable {
     var onEvent: (@MainActor (SignallingEvent) -> Void)? { get set }
     func open(_ credentials: StreamCredentials) throws
     @discardableResult func send(_ text: String) -> Bool
-    func close(code: Int)
-}
-
-extension SignallingTransport {
-    /// RFC 6455 normal closure for both final close and replacement of an attempt.
-    package func close() { close(code: 1000) }
+    func close()
 }
 
 package enum PeerConnectionState: Sendable { case new, connecting, connected, disconnected, failed, closed }

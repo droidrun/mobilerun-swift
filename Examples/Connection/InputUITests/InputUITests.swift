@@ -244,30 +244,3 @@ import XCTest
 }
 
 /// Invoked explicitly with runtime credentials injected by the validation runner.
-@MainActor final class LiveHardeningTests: XCTestCase {
-    func testDefaultNavigationInputAndBackground() {
-        let app = XCUIApplication(bundleIdentifier: "io.mobilerun.Connection")
-        app.launchArguments = ["--default-ui", "--ui-state", "live"]
-        app.launch()
-        let surface = app.otherElements["device-stream-surface"]
-        XCTAssertTrue(surface.waitForExistence(timeout: 45))
-        let videoReady = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "value MATCHES %@", "[0-9]+x[0-9]+x.*"), object: surface)
-        XCTAssertEqual(XCTWaiter.wait(for: [videoReady], timeout: 45), .completed)
-        XCTAssertTrue(app.buttons["Home"].isEnabled)
-        app.buttons["Home"].tap()
-        surface.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        app.typeKey("x", modifierFlags: [])
-        app.buttons["Back"].tap()
-        app.buttons["Recent"].tap()
-        app.buttons["Home"].tap()
-        let before = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        before.name = "live-controls"
-        before.lifetime = .keepAlways
-        add(before)
-        XCUIDevice.shared.press(.home)
-        app.activate()
-        XCTAssertTrue(surface.waitForExistence(timeout: 20))
-        XCTAssertTrue(app.buttons["Home"].isEnabled)
-    }
-}

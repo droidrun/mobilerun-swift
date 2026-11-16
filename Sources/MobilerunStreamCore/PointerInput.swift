@@ -61,7 +61,7 @@ package struct PointerInput<Identity: Hashable> {
         return packets
     }
 
-    package func hover(at point: CGPoint, geometry: InputGeometry, buttons: Int) -> Data? {
+    package static func hover(at point: CGPoint, geometry: InputGeometry, buttons: Int) -> Data? {
         guard let position = geometry.map(point) else { return nil }
         return ControlMessages.hover(videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight,
             x: position.x, y: position.y, buttons: buttons)

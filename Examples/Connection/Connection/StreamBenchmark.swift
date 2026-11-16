@@ -14,7 +14,6 @@ import UIKit
     private var latest: StreamStats?
     private var subscription: AnyCancellable?
     private let frames = BenchmarkFrames()
-    private weak var track: LKRTCVideoTrack?
 
     struct Result: Codable {
         let firstFrameMs: Double?
@@ -30,15 +29,13 @@ import UIKit
 
     func run(session: DeviceStreamSession, view: DeviceStreamUIView, x: Double, y: Double) async throws -> Result {
         guard (0...1).contains(x), (0...1).contains(y), let track = session.videoTrack else { throw Failure.noVideo }
-        self.track = track
         track.add(frames)
-        subscription = session.$stats.sink { [weak self] stats in
+        subscription = session.statsPublisher.sink { [weak self] stats in
             self?.latest = stats
             self?.sequence += 1
         }
         defer {
             track.remove(frames)
-            self.track = nil
             subscription = nil
         }
         var steady: [StreamStats] = []
@@ -158,7 +155,7 @@ private final class BenchmarkFrames: NSObject, LKRTCVideoRenderer, @unchecked Se
             let cx = Int(x * Double(width))
             let cy = Int(y * Double(height))
             return difference(next, left: max(0, cx - 8), top: max(0, cy - 8),
-                              right: min(width, cx + 9), bottom: min(height, cy + 9))
+                              right: min(width, cx + 8), bottom: min(height, cy + 8))
         }
         func launchDifference(_ next: Snapshot) -> Double {
             difference(next, left: width / 5, top: height / 5, right: width * 4 / 5, bottom: height * 3 / 5)

@@ -6,7 +6,7 @@ import MobilerunProtocol
 
 /// An inbound-video sample. Missing fields are nil; rates require two increasing reports.
 /// Created by the SDK with no public initializer, allowing new fields without breaking callers.
-public struct StreamStats: Sendable, Equatable, CustomStringConvertible {
+public struct StreamStats: Sendable, Equatable {
     /// Decoded frames per second, instantaneous or calculated from counter deltas.
     public let fps: Double?
     /// Decoded frame width in pixels, before rotation.
@@ -36,15 +36,7 @@ public struct StreamStats: Sendable, Equatable, CustomStringConvertible {
     /// Time from connection-attempt creation to the first decoded video frame, in milliseconds.
     public let timeToFirstFrameMs: Double?
 
-    public var description: String {
-        "StreamStats(fps: \(String(describing: fps)), size: \(String(describing: width))x\(String(describing: height)), "
-            + "codec: \(String(describing: codec)), bitrateKbps: \(String(describing: bitrateKbps)), "
-            + "rttMs: \(String(describing: rttMs)), jitterBufferDelayMs: \(String(describing: jitterBufferDelayMs)), "
-            + "packetsLost: \(String(describing: packetsLost)), framesDropped: \(String(describing: framesDropped)), "
-            + "freezeCount: \(String(describing: freezeCount)), decodeTimeMs: \(String(describing: decodeTimeMs)), "
-            + "localCandidateType: \(String(describing: localCandidateType)), remoteCandidateType: \(String(describing: remoteCandidateType)), "
-            + "timeToFirstFrameMs: \(String(describing: timeToFirstFrameMs)))"
-    }
+
 }
 
 /// Primitive projection of an RTCStats report; addresses and credentials never enter samples.

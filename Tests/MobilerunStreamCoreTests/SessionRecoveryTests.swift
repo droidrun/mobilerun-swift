@@ -39,7 +39,6 @@ func sessionFullRebuild(trigger: RebuildTrigger) async throws {
     trigger.fire(socket: ws, peer: peer)
     #expect(h.engine.status == .reconnecting(attempt: 1))
     #expect(ws.closed && peer.closed)
-    #expect(ws.closeCodes.first == 1000)
     await settle { h.credentialCalls == 2 }
     h.clock.advance(to: 999)
     #expect(h.sockets.count == 1)

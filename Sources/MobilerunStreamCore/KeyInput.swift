@@ -15,38 +15,50 @@ package struct InputModifiers: OptionSet, Sendable {
     package var isShortcut: Bool { !intersection([.control, .command]).isEmpty }
 }
 
-package enum KeyInput {
+/// Owns keycode DOWN/UP balance; text and clipboard injection never acquire a pressed code.
+package struct KeyInputState {
+    private var pressed: Set<String> = []
+    package init() {}
+
     private static let controlCodes: Set<String> = Set([
         "Backspace", "Delete", "Enter", "Tab", "Escape", "Home", "End", "PageUp", "PageDown", "Insert",
         "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "ShiftLeft", "ShiftRight", "ControlLeft",
         "ControlRight", "AltLeft", "AltRight", "MetaLeft", "MetaRight", "NumpadEnter",
     ] + (1...12).map { "F\($0)" })
 
-    /// Clipboard is read lazily, only for the paste shortcut. The S1 map owns Android keycodes.
-    package static func route(
-        usage: Int, text: String, charactersIgnoringModifiers: String? = nil,
-        down: Bool, modifiers: InputModifiers,
-        clipboard: () -> String?
-    ) -> [Data] {
-        let code = HIDCode.values[usage] ?? "Unknown"
-        // Native control keys can produce CR/TAB rather than browser named key values.
-        let nativeText = nativeKey(code: code, text: text)
-        return route(code: code, text: nativeText, charactersIgnoringModifiers: charactersIgnoringModifiers,
-                     down: down, modifiers: modifiers, clipboard: clipboard)
-    }
-
-    package static func route(
-        code: String, text: String, charactersIgnoringModifiers: String? = nil,
+    package mutating func route(
+        code: String, text: String,
         down: Bool, modifiers: InputModifiers, clipboard: () -> String?
     ) -> [Data] {
+        if !down {
+            guard pressed.remove(code) != nil else { return [] }
+            return keycodePacket(code: code, down: false, modifiers: modifiers)
+        }
+        // UIKit produces control characters for physical controls; vectors use named keys.
+        let text = Self.controlCodes.contains(code) ? code : text
         let keycode = KeyboardCode.values[code]
         let shortcut = modifiers.isShortcut
-        let shortcutText = charactersIgnoringModifiers ?? text
-        if down && shortcut && shortcutText.lowercased() == "v" {
+        if shortcut && text.lowercased() == "v" {
             guard let text = clipboard(), !text.isEmpty else { return [] }
             return [ControlMessages.setClipboard(text: text, paste: true)]
         }
-        if down && shortcut && shortcutText.lowercased() == "m" { return press(AndroidKey.menu) }
+        if shortcut && text.lowercased() == "m" { return KeyInput.press(AndroidKey.menu) }
+        if Self.isControlKey(text) || shortcut {
+            guard keycode != nil else { return [] }
+            pressed.insert(code)
+            return keycodePacket(code: code, down: true, modifiers: modifiers)
+        }
+        // Preserve one extended grapheme without normalization (UAX #29).
+        if text.utf16.count == 1 || (text.count == 1 && !KeyInput.hasControlScalar(text)) {
+            return [ControlMessages.text(text)]
+        }
+        guard keycode != nil else { return [] }
+        pressed.insert(code)
+        return keycodePacket(code: code, down: true, modifiers: modifiers)
+    }
+
+    private func keycodePacket(code: String, down: Bool, modifiers: InputModifiers) -> [Data] {
+        guard let keycode = KeyboardCode.values[code] else { return [] }
         var meta = 0
         let letter = code.hasPrefix("Key") && code.count == 4
         let shifted = modifiers.contains(.shift) != (letter && modifiers.contains(.capsLock))
@@ -54,23 +66,8 @@ package enum KeyInput {
         if modifiers.contains(.control) { meta |= AndroidKey.metaCtrlOn }
         if modifiers.contains(.alternate) { meta |= AndroidKey.metaAltOn }
         if modifiers.contains(.command) { meta |= AndroidKey.metaMetaOn }
-        if isControlKey(text) || shortcut {
-            guard let keycode else { return [] }
-            return [ControlMessages.keycode(action: down ? AndroidKey.actionDown : AndroidKey.actionUp,
-                                            keycode: keycode, metaState: meta)]
-        }
-        // Preserve one extended grapheme without normalization (UAX #29).
-        if text.utf16.count == 1 || (text.count == 1 && !hasControlScalar(text)) { return down ? [ControlMessages.text(text)] : [] }
-        if let keycode {
-            return [ControlMessages.keycode(action: down ? AndroidKey.actionDown : AndroidKey.actionUp,
-                                            keycode: keycode, metaState: meta)]
-        }
-        return []
-    }
-
-    /// UIKit produces CR/TAB for physical controls; abstract vectors already use named keys.
-    package static func nativeKey(code: String, text: String) -> String {
-        controlCodes.contains(code) ? (code == "NumpadEnter" ? "Enter" : code) : text
+        return [ControlMessages.keycode(action: down ? AndroidKey.actionDown : AndroidKey.actionUp,
+                                        keycode: keycode, metaState: meta)]
     }
 
     private static func isControlKey(_ key: String) -> Bool {
@@ -79,12 +76,15 @@ package enum KeyInput {
             || (key.hasPrefix("F") && key.utf16.count <= 3)
     }
 
+}
+
+package enum KeyInput {
     package static func press(_ keycode: Int) -> [Data] {
         [ControlMessages.keycode(action: AndroidKey.actionDown, keycode: keycode),
          ControlMessages.keycode(action: AndroidKey.actionUp, keycode: keycode)]
     }
 
-    private static func hasControlScalar(_ text: String) -> Bool {
+    fileprivate static func hasControlScalar(_ text: String) -> Bool {
         text.unicodeScalars.contains { $0.properties.generalCategory == .control }
     }
 
@@ -107,26 +107,6 @@ package enum KeyInput {
             } else { pending.append(character) }
         }
         if !pending.isEmpty { packets.append(ControlMessages.text(pending)) }
-        return packets
-    }
-}
-
-/// Records only emitted DOWNs, so changed produced text and shortcuts never create orphan UPs.
-package struct KeyInputState {
-    private var pressed: Set<String> = []
-    package init() {}
-
-    package mutating func route(
-        code: String, text: String, down: Bool, modifiers: InputModifiers,
-        clipboard: () -> String?
-    ) -> [Data] {
-        if !down {
-            guard pressed.remove(code) != nil else { return [] }
-            // Empty text takes the mapped fallback path for every recorded physical code.
-            return KeyInput.route(code: code, text: "", down: false, modifiers: modifiers, clipboard: clipboard)
-        }
-        let packets = KeyInput.route(code: code, text: text, down: true, modifiers: modifiers, clipboard: clipboard)
-        if packets.count == 1, packets[0].first == 0, packets[0][1] == 0 { pressed.insert(code) }
         return packets
     }
 }

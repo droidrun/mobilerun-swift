@@ -45,7 +45,6 @@ struct StreamStatsTests {
             bitrateKbps: 1000, rttMs: 30, jitterBufferDelayMs: 10, packetsLost: 2,
             framesDropped: 2, freezeCount: 1, decodeTimeMs: 2.5,
             localCandidateType: "host", remoteCandidateType: "relay", timeToFirstFrameMs: 240))
-        #expect(stats.description.contains("remoteCandidateType"))
     }
 
     @Test func missingFieldsAreNil() {
@@ -56,18 +55,21 @@ struct StreamStatsTests {
             decodeTimeMs: nil, localCandidateType: nil, remoteCandidateType: nil, timeToFirstFrameMs: nil))
     }
 
-    @Test(arguments: ["duplicate", "backward", "reset", "replacement"])
-    func invalidDeltasAreNil(scenario: String) throws {
-        let records = try reports()
+    @Test(arguments: [
+        StatsRecord(id: "video", type: "inbound-rtp", timestampUs: 1_000_000,
+                    values: ["kind": .string("video"), "bytesReceived": .number(126000), "framesDecoded": .number(60)]),
+        StatsRecord(id: "video", type: "inbound-rtp", timestampUs: 500_000,
+                    values: ["kind": .string("video"), "bytesReceived": .number(126000), "framesDecoded": .number(60)]),
+        StatsRecord(id: "video", type: "inbound-rtp", timestampUs: 2_000_000,
+                    values: ["kind": .string("video"), "bytesReceived": .number(0), "framesDecoded": .number(0),
+                             "totalDecodeTime": .number(0), "jitterBufferDelay": .number(0), "jitterBufferEmittedCount": .number(0)]),
+        StatsRecord(id: "replacement", type: "inbound-rtp", timestampUs: 2_000_000,
+                    values: ["kind": .string("video"), "bytesReceived": .number(126000), "framesDecoded": .number(60)]),
+    ])
+    func invalidDeltasAreNil(record: StatsRecord) throws {
         var parser = StreamStatsParser()
-        _ = parser.parse(records[0], firstFrameMs: 240)
-        let record = records[1][0]
-        let timestamp: Double = scenario == "duplicate" ? 1_000_000 : scenario == "backward" ? 500_000 : 2_000_000
-        let changed = StatsRecord(id: scenario == "replacement" ? "new-video" : record.id,
-            type: record.type, timestampUs: timestamp,
-            values: scenario == "reset" ? records[0][0].values.mapValues { _ in .number(0) }
-                .merging(["kind": .string("video")]) { _, new in new } : record.values)
-        let stats = parser.parse([changed], firstFrameMs: nil)
+        _ = parser.parse(try reports()[0], firstFrameMs: 240)
+        let stats = parser.parse([record], firstFrameMs: nil)
         #expect(stats.bitrateKbps == nil)
         #expect(stats.fps == nil)
         #expect(stats.decodeTimeMs == nil)
@@ -89,7 +91,7 @@ struct StreamStatsTests {
         #expect(stats.localCandidateType == nil)
     }
 
-    @Test @MainActor func samplingUsesFixedPublishingTicksAndDiscardsLateReports() throws {
+    @Test @MainActor func samplingPublishesCompletionWithoutOverlapOrStaleGenerations() throws {
         let clock = FakeClock()
         let records = try reports()
         var requests: [StreamStatsSampler.Completion] = []
@@ -97,38 +99,50 @@ struct StreamStatsTests {
         let sampler = StreamStatsSampler(scheduler: clock, request: { requests.append($0) }, publish: { samples.append($0) })
         sampler.setActive(true)
         #expect(requests.count == 1)
+        #expect(samples.isEmpty)
+        clock.advance(to: 900)
         requests[0](records[0], 240)
-        clock.advance(to: 999)
-        #expect(samples.isEmpty) // A native callback cannot publish or advance parser baselines.
+        #expect(samples.count == 1)
+        #expect(samples[0]?.timeToFirstFrameMs == 240)
         clock.advance(to: 1000)
-        #expect(samples.count == 1)
-        #expect(samples[0]?.bitrateKbps == nil)
         #expect(requests.count == 2)
-        requests[1](records[1], 240)
-        clock.advance(to: 1999)
+        clock.advance(to: 3000)
+        #expect(requests.count == 2) // A delayed native report must not overlap another request.
         #expect(samples.count == 1)
-        clock.advance(to: 2000)
+        requests[1](records[1], 240)
         #expect(samples.count == 2)
         #expect(samples[1]?.bitrateKbps == 1000)
-        clock.advance(to: 3000) // Request 2 has not completed: clear the rate baseline.
-        #expect(samples[2] == nil)
-        #expect(requests.count == 3) // No overlapping getStats.
-        requests[2](records[1], 240) // Past its publishing window: discarded.
         clock.advance(to: 4000)
-        #expect(samples[3] == nil)
-        #expect(requests.count == 4)
+        #expect(requests.count == 3)
         sampler.setActive(false)
-        requests[3](records[1], 240)
-        #expect(clock.pendingCount == 0)
+        #expect(samples.last! == nil)
         sampler.setActive(true)
-        requests[4](records[1], 500)
+        #expect(requests.count == 4)
+        requests[2](records[1], 999) // Previous generation cannot publish or clear the new request.
+        #expect(samples.count == 3)
         clock.advance(to: 5000)
+        #expect(requests.count == 4)
+        requests[3](records[1], 500)
         #expect(samples.last??.bitrateKbps == nil)
         #expect(samples.last??.timeToFirstFrameMs == 500)
         sampler.setActive(false)
         clock.advance(to: 10000)
+        #expect(requests.count == 4)
         #expect(clock.pendingCount == 0)
-        #expect(samples.last! == nil)
+    }
+
+    @Test @MainActor func emptyNativeReportsDoNotPublishAnEmptySample() {
+        let clock = FakeClock()
+        var completion: StreamStatsSampler.Completion?
+        var samples: [StreamStats?] = []
+        let sampler = StreamStatsSampler(scheduler: clock, request: { completion = $0 }, publish: { samples.append($0) })
+        sampler.setActive(true)
+        completion?([], nil)
+        #expect(samples.isEmpty)
+        clock.advance(to: 1000)
+        completion?([], 250)
+        #expect(samples.isEmpty)
+        sampler.setActive(false)
     }
 
     @Test func firstFrameIsStampedOncePerAttempt() {

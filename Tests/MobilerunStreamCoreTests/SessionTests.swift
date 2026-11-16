@@ -116,7 +116,6 @@ func sessionChannelGuards() async throws {
     peer.onEvent?(.channel(id: 1, open: false))
     #expect(!h.engine.sendControl(bytes))
     h.engine.close()
-    #expect(h.sockets[0].closeCodes.first == 1000)
     #expect(!h.engine.sendHover(bytes))
     #expect(h.clock.pendingCount == 0)
 }

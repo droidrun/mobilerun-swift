@@ -10,7 +10,6 @@ import Testing
     var onEvent: (@MainActor (SignallingEvent) -> Void)?
     var closed = false
     var credentials: StreamCredentials?
-    var closeCodes: [Int] = []
     var sent: [(Int, [String: JSONValue])] = []
     let clock: FakeClock
     init(_ clock: FakeClock) { self.clock = clock }
@@ -20,7 +19,7 @@ import Testing
         sent.append((clock.now, object))
         return true
     }
-    func close(code: Int) { closeCodes.append(code); closed = true }
+    func close() { closed = true }
     func receive(_ object: [String: JSONValue]) throws {
         onEvent?(.message(String(decoding: try JSONEncoder().encode(object), as: UTF8.self)))
     }

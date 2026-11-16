@@ -45,7 +45,7 @@ import SwiftUI
                 self?.mark(event)
                 if event.hasPrefix("frames decoded=") { self?.auditHostAudio() }
             }
-            statsSubscription = session.$stats.sink { [weak self] stats in
+            statsSubscription = session.statsPublisher.sink { [weak self] stats in
                 if let stats { self?.mark("stats \(stats)") }
                 else { self?.mark("stats nil") }
             }

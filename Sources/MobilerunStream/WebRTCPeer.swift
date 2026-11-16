@@ -184,16 +184,9 @@
         func statistics(_ completion: @escaping StreamStatsSampler.Completion) {
             guard let peer, !closed else { completion([], nil); return }
             peer.statistics { [weak self] report in
-                let records = report.statistics.values.map { record in
-                    var values: [String: JSONValue] = [:]
-                    for (key, value) in record.values {
-                        if let text = value as? String { values[key] = .string(text) }
-                        else if let number = value as? NSNumber {
-                            if CFGetTypeID(number) == CFBooleanGetTypeID() { values[key] = .bool(number.boolValue) }
-                            else { values[key] = .number(number.doubleValue) }
-                        }
-                    }
-                    return StatsRecord(id: record.id, type: record.type, timestampUs: record.timestamp_us, values: values)
+                let records = report.statistics.values.compactMap { record in
+                    projectStatistics(id: record.id, type: record.type,
+                                      timestampUs: record.timestamp_us, values: record.values)
                 }
                 Task { @MainActor [weak self] in
                     guard let self, !self.closed else { return }

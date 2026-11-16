@@ -4,6 +4,10 @@
 import Foundation
 import Testing
 import MobilerunStreamCore
+#if os(iOS)
+import UIKit
+@testable import MobilerunStream
+#endif
 
 private struct InputVector: Decodable, Sendable, CustomTestStringConvertible {
     let name: String
@@ -93,18 +97,32 @@ struct InputConformanceTests {
         #expect(packets(output) == expected)
     }
 
-    @Test(arguments: try inputVectors("ime"))
+    @Test(arguments: try inputVectors("ime").filter { ["commit", "composition_end"].contains($0.operation ?? "") })
     fileprivate func ime(_ vector: InputVector) throws {
-        let output: [Data]
+        let output = KeyInput.committedText(try #require(vector.text))
+        guard case .packets(let expected) = vector.expect else { Issue.record("missing packet oracle"); return }
+        #expect(packets(output) == expected)
+    }
+
+    #if os(iOS)
+    @Test(arguments: try inputVectors("ime").filter { !["commit", "composition_end"].contains($0.operation ?? "") })
+    @MainActor fileprivate func localIME(_ vector: InputVector) throws {
+        let input = StreamTextInput(frame: .zero, textContainer: nil)
+        var output: [Data] = []
+        input.onCommit = { output += KeyInput.committedText($0) }
+        input.onDelete = { output += KeyInput.press(67) }
         switch try #require(vector.operation) {
-        case "commit", "composition_end": output = KeyInput.committedText(try #require(vector.text))
-        case "composition_update": output = [] // Marked text remains in the native text client's buffer.
-        case "delete": output = (try #require(vector.compositionText)).isEmpty ? KeyInput.press(67) : []
-        default: Issue.record("unknown IME operation"); return
+        case "composition_update":
+            input.setMarkedText(try #require(vector.text), selectedRange: NSRange(location: 0, length: 0))
+        case "delete":
+            input.setMarkedText(try #require(vector.compositionText), selectedRange: NSRange(location: 0, length: 0))
+            input.deleteBackward()
+        default: Issue.record("unknown local IME operation"); return
         }
         guard case .packets(let expected) = vector.expect else { Issue.record("missing packet oracle"); return }
         #expect(packets(output) == expected)
     }
+    #endif
 
     @Test(arguments: try inputVectors("geometry"))
     fileprivate func geometry(_ vector: InputVector) throws {
@@ -160,7 +178,7 @@ struct InputConformanceTests {
                 }
             case "move":
                 if mouse && !state.isActive(id) {
-                    output += packets(state.hover(at: point, geometry: geometry,
+                    output += packets(PointerInput<Identity>.hover(at: point, geometry: geometry,
                         buttons: try #require(event.buttons)).map { [$0] } ?? [], channel: "hover")
                 } else {
                     state.move(id, to: point)

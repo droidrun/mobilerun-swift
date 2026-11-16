@@ -440,7 +440,6 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
-MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:s23CustomStringConvertibleP", "targetFallback": "Swift.CustomStringConvertible"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
@@ -482,7 +481,6 @@ MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredential
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
-MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamStats.description"}
 # iOS
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunProtocol relationship {"kind": "conformsTo", "source": "s:17MobilerunProtocol11ServerFrameO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
@@ -845,7 +843,6 @@ MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStre
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B12SurfaceStyleO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B13NavigationBarV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B13NavigationBarV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
-MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B14StatsPublishedV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15ApprovalActionsV", "target": "s:7SwiftUI4ViewP", "targetFallback": "SwiftUICore.View"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15ApprovalActionsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream0B15NavigationStateV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
@@ -889,7 +886,6 @@ MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStre
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream9SystemKeyO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStream relationship {"kind": "conformsTo", "source": "s:15MobilerunStream9SystemKeyO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStream relationship {"kind": "inheritsFrom", "source": "c:@M@MobilerunStream@objc(cs)DeviceStreamUIView", "target": "c:objc(cs)UIView", "targetFallback": "UIKit.UIView"}
-MobilerunStream {"access": "public", "declaration": "@MainActor @propertyWrapper struct StreamStatsPublished", "path": "StreamStatsPublished"}
 MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(session: DeviceStreamSession, hasControl: Bool)", "path": "DeviceStreamUIView.init(session:hasControl:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor convenience init(taskId: String, fetchApproval: @escaping TaskApprovalModel.Fetch, decide: @escaping TaskApprovalModel.Decide, subscribe: TaskApprovalModel.Subscribe? = nil, onError: (@MainActor (any Error) -> Void)? = nil)", "path": "TaskApprovalModel.init(taskId:fetchApproval:decide:subscribe:onError:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor final class DeviceStreamHandle", "path": "DeviceStreamHandle"}
@@ -984,20 +980,19 @@ MobilerunStream {"access": "public", "declaration": "@MainActor var navigation: 
 MobilerunStream {"access": "public", "declaration": "@MainActor var onAction: (SystemKey) -> Void", "path": "StreamNavigationState.onAction"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var onDecide: (ApprovalDecision) -> Void", "path": "TaskApprovalActionsState.onDecide"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var placeholder: (StreamOverlayState) -> AnyView", "path": "StreamSlots.placeholder"}
-MobilerunStream {"access": "public", "declaration": "@MainActor var projectedValue: AnyPublisher<StreamStats?, Never> { get }", "path": "StreamStatsPublished.projectedValue"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var retry: () -> Void", "path": "StreamOverlayState.retry"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamNavigationState", "path": "StreamNavigationBar.state"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamOverlayState", "path": "StreamPlaceholder.state"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamOverlayState", "path": "StreamUnavailableView.state"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: TaskApprovalActionsState", "path": "StreamApprovalActions.state"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var stats: StreamStats? { get }", "path": "DeviceStreamSession.stats"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var statsPublisher: AnyPublisher<StreamStats?, Never> { get }", "path": "DeviceStreamSession.statsPublisher"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var status: StreamStatus", "path": "StreamOverlayState.status"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var taskId: String { get }", "path": "TaskApprovalModel.taskId"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var unavailable: (StreamOverlayState) -> AnyView", "path": "StreamSlots.unavailable"}
-MobilerunStream {"access": "public", "declaration": "@MainActor var wrappedValue: StreamStats? { get set }", "path": "StreamStatsPublished.wrappedValue"}
 MobilerunStream {"access": "public", "declaration": "@Published @MainActor var state: TaskApprovalState { get set }", "path": "TaskApprovalModel.state"}
 MobilerunStream {"access": "public", "declaration": "@Published @MainActor var status: StreamStatus { get set }", "path": "DeviceStreamSession.status"}
 MobilerunStream {"access": "public", "declaration": "@Published @MainActor var videoSize: VideoSize? { get set }", "path": "DeviceStreamSession.videoSize"}
-MobilerunStream {"access": "public", "declaration": "@StreamStatsPublished @MainActor var stats: StreamStats? { get set }", "path": "DeviceStreamSession.stats"}
 MobilerunStream {"access": "public", "declaration": "case approve", "path": "ApprovalDecision.approve"}
 MobilerunStream {"access": "public", "declaration": "case automatic", "path": "StreamConfig.VideoCodec.automatic"}
 MobilerunStream {"access": "public", "declaration": "case back", "path": "SystemKey.back"}
@@ -1097,7 +1092,6 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
-MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:s23CustomStringConvertibleP", "targetFallback": "Swift.CustomStringConvertible"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
@@ -1139,4 +1133,3 @@ MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredential
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
-MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamStats.description"}
