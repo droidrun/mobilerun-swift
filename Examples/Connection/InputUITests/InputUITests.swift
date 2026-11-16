@@ -242,3 +242,5 @@ import XCTest
         app.terminate()
     }
 }
+
+/// Invoked explicitly with runtime credentials injected by the validation runner.

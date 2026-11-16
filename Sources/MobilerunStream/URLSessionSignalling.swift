@@ -12,6 +12,9 @@
         private var receiver: Task<Void, Never>?
         private var sender: Task<Void, Never>?
         private var failed = false
+        #if DEBUG
+            var onDiagnostic: (@MainActor (String) -> Void)?
+        #endif
 
         func open(_ credentials: StreamCredentials) throws {
             guard var components = URLComponents(url: credentials.url, resolvingAgainstBaseURL: false),
@@ -72,7 +75,8 @@
             let old = socket
             socket = nil
             old?.cancel(with: .normalClosure, reason: nil)
-            session?.invalidateAndCancel()
+            // Let URLSession transmit the normal (1000) close frame before invalidation.
+            session?.finishTasksAndInvalidate()
             session = nil
         }
         private func reportFailure(_ task: URLSessionWebSocketTask) {
@@ -82,8 +86,16 @@
         }
         private final class DelegateProxy: NSObject, URLSessionWebSocketDelegate, @unchecked Sendable {
             private weak var owner: URLSessionSignalling?
+            #if DEBUG
+                private let onDiagnostic: (@MainActor (String) -> Void)?
+            #endif
 
-            init(owner: URLSessionSignalling) { self.owner = owner }
+            @MainActor init(owner: URLSessionSignalling) {
+                self.owner = owner
+                #if DEBUG
+                    onDiagnostic = owner.onDiagnostic
+                #endif
+            }
 
             nonisolated func urlSession(
                 _ session: URLSession,
@@ -102,7 +114,10 @@
                 didCloseWith closeCode: URLSessionWebSocketTask.CloseCode,
                 reason: Data?
             ) {
-                Task { @MainActor [weak owner] in
+                Task { @MainActor [weak owner, self] in
+                    #if DEBUG
+                        onDiagnostic?("websocket closed code=\(closeCode.rawValue)")
+                    #endif
                     guard let owner, owner.socket === webSocketTask, !owner.failed else { return }
                     owner.failed = true
                     owner.onEvent?(.closed)

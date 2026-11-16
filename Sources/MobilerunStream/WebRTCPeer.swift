@@ -28,11 +28,13 @@
         private var video: LKRTCVideoTrack?
         private var frameObserver: FrameObserver?
         private var closed = false
+        private let firstFrameTiming: FirstFrameTiming
 
         init(
-            config: StreamConfig, onTrack: @escaping @MainActor (LKRTCVideoTrack?) -> Void,
+            config: StreamConfig, startedAt: TimeInterval, onTrack: @escaping @MainActor (LKRTCVideoTrack?) -> Void,
             onSize: @escaping @MainActor (VideoSize) -> Void
         ) {
+            self.firstFrameTiming = FirstFrameTiming(startedAt: startedAt)
             self.muted = config.muted
             self.config = config
             self.onTrack = onTrack
@@ -179,6 +181,20 @@
             }
             return channel.sendData(LKRTCDataBuffer(data: data, isBinary: true))
         }
+        func statistics(_ completion: @escaping StreamStatsSampler.Completion) {
+            guard let peer, !closed else { completion([], nil); return }
+            peer.statistics { [weak self] report in
+                let records = report.statistics.values.compactMap { record in
+                    projectStatistics(id: record.id, type: record.type,
+                                      timestampUs: record.timestamp_us, values: record.values)
+                }
+                Task { @MainActor [weak self] in
+                    guard let self, !self.closed else { return }
+                    completion(records, self.firstFrameTiming.value)
+                }
+            }
+        }
+
         func setMuted(_ muted: Bool) {
             guard !closed else { return }
             self.muted = muted
@@ -224,7 +240,7 @@
             guard let track = transceiver.receiver.track as? LKRTCVideoTrack, video !== track else { return }
             if let frameObserver { video?.remove(frameObserver) }
             video = track
-            let observer = FrameObserver(onSize: { [weak self] size in
+            let observer = FrameObserver(timing: firstFrameTiming, onSize: { [weak self] size in
                 Task { @MainActor [weak self] in
                     guard let self, !self.closed else { return }
                     self.onSize(size)
@@ -320,14 +336,19 @@
         private var lastSize: VideoSize?
         private var frames = 0
         private let onSize: @Sendable (VideoSize) -> Void
+        private let timing: FirstFrameTiming
         #if DEBUG
             var onProgress: (@Sendable (Int) -> Void)?
         #endif
 
-        init(onSize: @escaping @Sendable (VideoSize) -> Void) { self.onSize = onSize }
+        init(timing: FirstFrameTiming, onSize: @escaping @Sendable (VideoSize) -> Void) {
+            self.timing = timing
+            self.onSize = onSize
+        }
         func setSize(_ size: CGSize) {}
         func renderFrame(_ frame: LKRTCVideoFrame?) {
             guard let frame else { return }
+            timing.stamp(at: ProcessInfo.processInfo.systemUptime)
             let size = VideoSize(
                 width: Int(frame.width), height: Int(frame.height), rotation: Int(frame.rotation.rawValue)
             )

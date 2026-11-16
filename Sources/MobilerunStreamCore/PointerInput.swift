@@ -9,6 +9,7 @@ package struct PointerInput<Identity: Hashable> {
     private static var mouseSlot: Int64 { -1 }
     private static var fingerSlots: ClosedRange<Int64> { 0...9 }
     package var isActive: Bool { !active.isEmpty }
+    package func isActive(_ id: Identity) -> Bool { active[id] != nil }
 
     private struct Pointer {
         let slot: Int64
@@ -21,9 +22,9 @@ package struct PointerInput<Identity: Hashable> {
     package init() {}
 
     package mutating func down(
-        _ id: Identity, at point: CGPoint, geometry: InputGeometry, mouse: Bool = false
+        _ id: Identity, at point: CGPoint, geometry: InputGeometry, mouse: Bool = false, button: Int = 0
     ) -> Data? {
-        guard active[id] == nil, let position = geometry.map(point) else { return nil }
+        guard button == 0, active[id] == nil, let position = geometry.map(point) else { return nil }
         let used = Set(active.values.map(\.slot))
         let slot = mouse ? (used.contains(Self.mouseSlot) ? nil : Self.mouseSlot) : Self.fingerSlots.first { !used.contains($0) }
         guard let slot else { return nil }
@@ -49,8 +50,8 @@ package struct PointerInput<Identity: Hashable> {
         }
     }
 
-    package mutating func up(_ id: Identity, cancelled: Bool = false) -> Data? {
-        guard let pointer = active.removeValue(forKey: id) else { return nil }
+    package mutating func up(_ id: Identity, cancelled: Bool = false, button: Int = 0) -> Data? {
+        guard cancelled || button == 0, let pointer = active.removeValue(forKey: id) else { return nil }
         return packet(cancelled ? MotionEvent.actionCancel : MotionEvent.actionUp, pointer)
     }
 
@@ -58,6 +59,12 @@ package struct PointerInput<Identity: Hashable> {
         let packets = active.values.sorted { $0.slot < $1.slot }.map { packet(MotionEvent.actionCancel, $0) }
         active.removeAll()
         return packets
+    }
+
+    package static func hover(at point: CGPoint, geometry: InputGeometry, buttons: Int) -> Data? {
+        guard let position = geometry.map(point) else { return nil }
+        return ControlMessages.hover(videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight,
+            x: position.x, y: position.y, buttons: buttons)
     }
 
     private func packet(_ action: Int, _ pointer: Pointer) -> Data {

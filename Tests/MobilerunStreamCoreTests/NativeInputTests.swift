@@ -3,6 +3,7 @@
 
 #if os(iOS)
     import UIKit
+    import Combine
     import Testing
     import MobilerunProtocol
     import MobilerunStreamCore
@@ -298,6 +299,214 @@
                 "1:00001d0000000000000000000000", "1:00011d0000000000000000000000",
                 "1:010100000061",
                 "1:00001d0000000000000000000000", "1:00011d0000000000000000000000",
+            ])
+        }
+
+        @Test func deletingMarkedCompositionStaysLocal() {
+            let input = StreamTextInput(frame: .zero, textContainer: nil)
+            var commits: [String] = []
+            var deletes = 0
+            input.onCommit = { commits.append($0) }
+            input.onDelete = { deletes += 1 }
+            input.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
+            input.deleteBackward()
+            #expect(commits.isEmpty)
+            #expect(deletes == 0)
+            input.discardComposition()
+            input.deleteBackward()
+            #expect(deletes == 1)
+        }
+
+        @Test func physicalEnterAndTabNeverInjectProducedControlText() async throws {
+            let (h, session, view) = try await recordingView()
+            defer { view.detach(); session.close() }
+            view.routeKey(usage: 40, text: "\r", down: true)
+            view.routeKey(usage: 40, text: "\r", down: false)
+            view.routeKey(usage: 43, text: "\t", down: true)
+            view.routeKey(usage: 43, text: "\t", down: false)
+            view.routeKey(usage: 40, text: "\n", down: true)
+            view.routeKey(usage: 40, text: "\n", down: false)
+            view.routeKey(usage: 42, text: "\u{8}", down: true)
+            view.routeKey(usage: 42, text: "\u{8}", down: false)
+            view.routeKey(usage: 41, text: "\u{1b}", down: true)
+            view.routeKey(usage: 41, text: "\u{1b}", down: false)
+            #expect(packets(h) == [
+                "1:0000420000000000000000000000", "1:0001420000000000000000000000",
+                "1:00003d0000000000000000000000", "1:00013d0000000000000000000000",
+                "1:0000420000000000000000000000", "1:0001420000000000000000000000",
+                "1:0000430000000000000000000000", "1:0001430000000000000000000000",
+                "1:00006f0000000000000000000000", "1:00016f0000000000000000000000",
+            ])
+        }
+
+        private var videoReport: [StatsRecord] {
+            [StatsRecord(id: "video", type: "inbound-rtp", timestampUs: 1_000_000,
+                         values: ["kind": .string("video"), "framesPerSecond": .number(30)])]
+        }
+
+        @Test func statsRequireObserversAndStopAfterLastCancellation() async throws {
+            let h = try SessionHarness()
+            var requests: [StreamStatsSampler.Completion] = []
+            let session = DeviceStreamSession(engine: h.engine, videoSize: VideoSize(width: 100, height: 200),
+                statsScheduler: h.clock, statistics: { requests.append($0) })
+            defer { session.close() }
+            try await h.connected()
+            #expect(requests.isEmpty)
+            let first = session.statsPublisher.sink { _ in }
+            await drain()
+            #expect(requests.count == 1)
+            requests[0](videoReport, 250)
+            #expect(session.stats?.fps == 30)
+            let second = session.statsPublisher.sink { _ in }
+            first.cancel()
+            await drain()
+            #expect(session.stats?.fps == 30)
+            second.cancel()
+            await drain()
+            #expect(session.stats == nil)
+            h.clock.advance(to: h.clock.now + 2000)
+            #expect(requests.count == 1)
+        }
+
+        @Test func subscribedWhileConnectingDoesNotRequestStatistics() async throws {
+            let h = try SessionHarness()
+            var requests: [StreamStatsSampler.Completion] = []
+            let session = DeviceStreamSession(engine: h.engine, videoSize: VideoSize(width: 100, height: 200),
+                statsScheduler: h.clock, statistics: { requests.append($0) })
+            let subscription = session.statsPublisher.sink { _ in }
+            defer { subscription.cancel(); session.close() }
+            await h.start()
+            await drain()
+            h.clock.advance(to: h.clock.now + 1000)
+            #expect(session.status == .connecting)
+            #expect(requests.isEmpty)
+        }
+
+        @Test func hiddenStatisticsStopRequestsAndRejectOldReports() async throws {
+            let h = try SessionHarness()
+            var requests: [StreamStatsSampler.Completion] = []
+            let session = DeviceStreamSession(engine: h.engine, videoSize: VideoSize(width: 100, height: 200),
+                statsScheduler: h.clock, statistics: { requests.append($0) })
+            let subscription = session.statsPublisher.sink { _ in }
+            defer { subscription.cancel(); session.close() }
+            try await h.connected()
+            await drain()
+            #expect(requests.count == 1)
+            session.setHidden(true)
+            requests[0](videoReport, 999)
+            h.clock.advance(to: h.clock.now + 2000)
+            #expect(session.stats == nil)
+            #expect(requests.count == 1)
+            session.setHidden(false)
+            #expect(requests.count == 2)
+            requests[1](videoReport, 250)
+            #expect(session.stats?.timeToFirstFrameMs == 250)
+        }
+
+        @Test func suppressedPeerDipClearsStatisticsUntilRawConnectivityReturns() async throws {
+            let h = try SessionHarness()
+            var requests: [StreamStatsSampler.Completion] = []
+            let session = DeviceStreamSession(engine: h.engine, videoSize: VideoSize(width: 100, height: 200),
+                statsScheduler: h.clock, statistics: { requests.append($0) })
+            let subscription = session.statsPublisher.sink { _ in }
+            defer { subscription.cancel(); session.close() }
+            try await h.connected()
+            await drain()
+            requests[0](videoReport, 250)
+            #expect(session.stats?.fps == 30)
+            h.clock.advance(to: h.clock.now + 1000)
+            #expect(requests.count == 2)
+            try h.sockets[0].receive(h.sequenceMessage("refresh", step: 1))
+            await settle { h.peers[0].restarts.count == 2 }
+            h.peers[0].onEvent?(.state(.connecting))
+            #expect(session.status == .connected)
+            #expect(session.stats == nil)
+            requests[1](videoReport, 999)
+            #expect(session.stats == nil)
+            h.clock.advance(to: h.clock.now + 1000)
+            #expect(requests.count == 2)
+            h.peers[0].onEvent?(.state(.connected))
+            #expect(requests.count == 3)
+            requests[2](videoReport, 250)
+            #expect(session.stats?.fps == 30)
+        }
+
+        @Test func closeFinishesStatisticsWithoutViewInvalidationPerSample() async throws {
+            let h = try SessionHarness()
+            var requests: [StreamStatsSampler.Completion] = []
+            let session = DeviceStreamSession(engine: h.engine, videoSize: VideoSize(width: 100, height: 200),
+                statsScheduler: h.clock, statistics: { requests.append($0) })
+            var finished = false
+            let subscription = session.statsPublisher.sink(receiveCompletion: { _ in finished = true }, receiveValue: { _ in })
+            try await h.connected()
+            await drain()
+            var invalidations = 0
+            let changes = session.objectWillChange.sink { invalidations += 1 }
+            requests[0](videoReport, 250)
+            #expect(session.stats?.fps == 30)
+            #expect(invalidations == 0)
+            h.clock.advance(to: h.clock.now + 1000)
+            #expect(requests.count == 2)
+            session.close()
+            #expect(finished)
+            #expect(session.stats == nil)
+            requests[1](videoReport, 999)
+            h.clock.advance(to: h.clock.now + 5000)
+            #expect(session.stats == nil)
+            #expect(requests.count == 2)
+            changes.cancel()
+            subscription.cancel()
+        }
+
+        @Test func nativeStatisticsProjectionPreservesFoundationValueTypes() throws {
+            let record = try #require(projectStatistics(id: "pair", type: "candidate-pair", timestampUs: 123,
+                values: ["selected": NSNumber(value: true), "currentRoundTripTime": NSNumber(value: 0.025),
+                         "localCandidateId": NSString(string: "local"), "unsupported": NSArray(array: [1, 2])]))
+            #expect(record.id == "pair")
+            #expect(record.type == "candidate-pair")
+            #expect(record.timestampUs == 123)
+            #expect(record.values == ["selected": .bool(true), "currentRoundTripTime": .number(0.025),
+                                     "localCandidateId": .string("local")])
+        }
+
+        @Test(arguments: ["inbound-rtp", "codec", "transport", "candidate-pair", "local-candidate", "remote-candidate"])
+        func nativeStatisticsProjectionRetainsRequiredTypes(type: String) {
+            #expect(projectStatistics(id: "record", type: type, timestampUs: 1, values: [:])?.type == type)
+        }
+
+        @Test func nativeStatisticsProjectionDropsUnrelatedRecords() {
+            #expect(projectStatistics(id: "data", type: "data-channel", timestampUs: 1, values: [:]) == nil)
+        }
+
+        @Test func heldPhysicalEnterRepeatsOnlyKeycodeDowns() async throws {
+            let (h, session, view) = try await recordingView()
+            defer { view.detach(); session.close() }
+            view.routeKey(usage: 40, text: "\r", down: true)
+            let start = h.clock.now
+            h.clock.advance(to: start + 500)
+            h.clock.advance(to: start + 533)
+            view.routeKey(usage: 40, text: "\r", down: false)
+            h.clock.advance(to: start + 1000)
+            #expect(packets(h) == [
+                "1:0000420000000000000000000000", "1:0000420000000000000000000000",
+                "1:0000420000000000000000000000", "1:0001420000000000000000000000",
+            ])
+        }
+
+        @Test func pointerButtonsUseTheSharedPrimaryOnlyRule() async throws {
+            let (h, session, view) = try await recordingView()
+            defer { view.detach(); session.close() }
+            let mouse = NSObject()
+            let id = ObjectIdentifier(mouse)
+            view.beginPointer(id, at: CGPoint(x: 100, y: 100), mouse: true, button: 2)
+            #expect(h.peers[0].packets.isEmpty)
+            view.beginPointer(id, at: CGPoint(x: 100, y: 100), mouse: true, button: 0)
+            view.endPointer(id, button: 2)
+            #expect(h.peers[0].packets.count == 1)
+            view.endPointer(id, button: 0)
+            #expect(packets(h) == [
+                "1:0200ffffffffffffffff32000000640000006400c800ffff0100000001000000",
+                "1:0201ffffffffffffffff32000000640000006400c800ffff0100000001000000",
             ])
         }
 

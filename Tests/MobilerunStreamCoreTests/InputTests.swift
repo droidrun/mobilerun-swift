@@ -98,63 +98,6 @@ struct InputTests {
         #expect(HIDCode.values[231] == "MetaRight")
     }
 
-    @Test func reactPasteAndMenuTakePrecedenceOnlyOnKeydown() {
-        var reads = 0
-        func clipboard() -> String? { reads += 1; return "hello" }
-        for modifier: InputModifiers in [.command, .control] {
-            #expect(KeyInput.route(usage: 25, text: "\u{16}", charactersIgnoringModifiers: "v", down: true, modifiers: modifier,
-                                    clipboard: clipboard)
-                    == [ControlMessages.setClipboard(text: "hello", paste: true)])
-            #expect(KeyInput.route(usage: 16, text: "m", down: true, modifiers: modifier,
-                                    clipboard: clipboard)
-                    == KeyInput.press(82))
-        }
-        #expect(reads == 2)
-        #expect(KeyInput.route(usage: 25, text: "v", down: false, modifiers: .command, clipboard: clipboard)
-                == [ControlMessages.keycode(action: 1, keycode: 50, metaState: 65536)])
-        #expect(reads == 2)
-    }
-
-    static let keyCases: [(Int, String, Bool, InputModifiers, [Data])] = [
-        (4, "a", true, InputModifiers(), [ControlMessages.text("a")]),
-        (4, "a", false, InputModifiers(), []),
-        (4, "A", true, .shift, [ControlMessages.text("A")]),
-        (42, "", true, [], [ControlMessages.keycode(action: 0, keycode: 67)]),
-        (76, "", false, [], [ControlMessages.keycode(action: 1, keycode: 112)]),
-        (40, "\r", true, [], [ControlMessages.keycode(action: 0, keycode: 66)]),
-        (88, "\r", true, [], [ControlMessages.keycode(action: 0, keycode: 160)]),
-        (88, "\r", false, [], [ControlMessages.keycode(action: 1, keycode: 160)]),
-        (89, "\u{1}", true, [], [ControlMessages.text("\u{1}")]),
-        (89, "\u{1}", false, [], []),
-        (9, "F", true, .shift, [ControlMessages.text("F")]),
-        (79, "", true, [], [ControlMessages.keycode(action: 0, keycode: 22)]),
-        (58, "", false, [], [ControlMessages.keycode(action: 1, keycode: 131)]),
-        (225, "", true, .shift, [ControlMessages.keycode(action: 0, keycode: 59, metaState: 1)]),
-        (4, "a", true, [.control, .capsLock],
-         [ControlMessages.keycode(action: 0, keycode: 29, metaState: 4097)]),
-        (4, "a", true, [.control, .capsLock, .shift],
-         [ControlMessages.keycode(action: 0, keycode: 29, metaState: 4096)]),
-        (4, "", true, [], [ControlMessages.keycode(action: 0, keycode: 29)]),
-        (4, "", false, [], [ControlMessages.keycode(action: 1, keycode: 29)]),
-        (4, "Dead", true, [], [ControlMessages.keycode(action: 0, keycode: 29)]),
-        (4, "Dead", false, [], [ControlMessages.keycode(action: 1, keycode: 29)]),
-        (999, "\u{1}", true, [], [ControlMessages.text("\u{1}")]),
-        (999, "\u{1}", false, [], []),
-        (999, "a", true, [], [ControlMessages.text("a")]),
-        (999, "a", false, [], []),
-        (999, "", true, [], []),
-        (999, "", false, [], []),
-    ]
-
-    @Test(arguments: keyCases)
-    func reactKeyRouting(usage: Int, text: String, down: Bool, flags: InputModifiers, expected: [Data]) {
-        #expect(KeyInput.route(usage: usage, text: text, down: down, modifiers: flags,
-                               clipboard: {
-                                   Issue.record("unexpected clipboard read")
-                                   return nil
-                               }) == expected)
-    }
-
     @Test func committedIMETextAndReturn() {
         #expect(KeyInput.committedText("你好🙂\nnext\r\n") ==
                 [ControlMessages.text("你好🙂")] + KeyInput.press(66)

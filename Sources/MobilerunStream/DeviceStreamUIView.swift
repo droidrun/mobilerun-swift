@@ -16,10 +16,11 @@
         private var track: LKRTCVideoTrack?
         private var subscriptions = Set<AnyCancellable>()
         private var pointers = PointerInput<ObjectIdentifier>()
+        private var keyState = KeyInputState()
         private var geometry: InputGeometry?
         private var displayLink: DisplayLinkTarget?
         private weak var handle: DeviceStreamHandle?
-        private var pressedKeys: [Int: (text: String, unmodified: String, modifiers: InputModifiers,
+        private var pressedKeys: [Int: (code: String, key: String, modifiers: InputModifiers,
                                          timer: (any ScheduledTask)?)] = [:]
         private let scheduler: any ReconnectScheduler
 
@@ -199,10 +200,9 @@
 
         private func stopLocalInput() {
             resetInput()
-            for (usage, key) in pressedKeys.sorted(by: { $0.key < $1.key }) {
+            for (_, key) in pressedKeys.sorted(by: { $0.key < $1.key }) {
                 key.timer?.cancel()
-                send(KeyInput.route(usage: usage, text: key.text, charactersIgnoringModifiers: key.unmodified,
-                                    down: false, modifiers: key.modifiers, clipboard: { nil }))
+                send(keyPackets(code: key.code, key: key.key, down: false, modifiers: key.modifiers))
             }
             pressedKeys.removeAll()
             textClient.discardComposition()
@@ -228,11 +228,9 @@
             #endif
             guard hasControl else { return }
             for touch in touches {
-                let isNonPrimaryClick = touch.type == .indirectPointer
-                    && event?.buttonMask.contains(.primary) != true
-                if isNonPrimaryClick { continue }
                 beginPointer(ObjectIdentifier(touch), at: touch.location(in: self),
-                             mouse: touch.type == .indirectPointer)
+                             mouse: touch.type == .indirectPointer,
+                             button: touch.type == .indirectPointer ? Self.clickButton(event) : 0)
             }
         }
 
@@ -242,23 +240,30 @@
         }
 
         public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-            finish(touches, cancelled: false)
+            finish(touches, event: event, cancelled: false)
         }
 
         public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-            finish(touches, cancelled: true)
+            finish(touches, event: event, cancelled: true)
         }
 
-        private func finish(_ touches: Set<UITouch>, cancelled: Bool) {
+        private static func clickButton(_ event: UIEvent?) -> Int {
+            let mask = event?.buttonMask ?? []
+            if mask.isEmpty || mask.contains(.primary) { return 0 }
+            return mask.contains(.secondary) ? 2 : 1
+        }
+
+        private func finish(_ touches: Set<UITouch>, event: UIEvent?, cancelled: Bool) {
             for touch in touches {
-                endPointer(ObjectIdentifier(touch), cancelled: cancelled)
+                endPointer(ObjectIdentifier(touch), cancelled: cancelled,
+                           button: touch.type == .indirectPointer ? Self.clickButton(event) : 0)
             }
         }
 
         // Shared by native events and the Debug example's deterministic simulator input driver.
-        func beginPointer(_ id: ObjectIdentifier, at point: CGPoint, mouse: Bool = false) {
+        func beginPointer(_ id: ObjectIdentifier, at point: CGPoint, mouse: Bool = false, button: Int = 0) {
             guard hasControl, let geometry,
-                  let packet = pointers.down(id, at: point, geometry: geometry, mouse: mouse) else { return }
+                  let packet = pointers.down(id, at: point, geometry: geometry, mouse: mouse, button: button) else { return }
             if !textClient.isFirstResponder { becomeFirstResponder() }
             if displayLink == nil { displayLink = DisplayLinkTarget(view: self) }
             send([packet])
@@ -269,8 +274,8 @@
             pointers.move(id, to: point)
         }
 
-        func endPointer(_ id: ObjectIdentifier, cancelled: Bool = false) {
-            if let packet = pointers.up(id, cancelled: cancelled) { send([packet]) }
+        func endPointer(_ id: ObjectIdentifier, cancelled: Bool = false, button: Int = 0) {
+            if let packet = pointers.up(id, cancelled: cancelled, button: button) { send([packet]) }
             if !pointers.isActive {
                 displayLink?.invalidate()
                 displayLink = nil
@@ -283,11 +288,9 @@
         }
 
         func routeHover(at location: CGPoint, buttons: UIEvent.ButtonMask) {
-            guard hasControl, let geometry, let point = geometry.map(location) else { return }
-            session.sendHover(ControlMessages.hover(
-                videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight,
-                x: point.x, y: point.y, buttons: Int(buttons.rawValue)
-            ))
+            guard hasControl, let geometry,
+                  let packet = PointerInput<ObjectIdentifier>.hover(at: location, geometry: geometry, buttons: Int(buttons.rawValue)) else { return }
+            session.sendHover(packet)
         }
 
         @objc private func scroll(_ recognizer: UIPanGestureRecognizer) {
@@ -298,12 +301,11 @@
         }
 
         func routeScroll(at location: CGPoint, translation: CGPoint, buttons: UIEvent.ButtonMask) {
-            guard hasControl, let geometry, let point = geometry.map(location) else { return }
-            send([ControlMessages.scroll(
-                videoWidth: geometry.videoWidth, videoHeight: geometry.videoHeight, x: point.x, y: point.y,
-                hscrollTicks: translation.x * ScrollInput.ticksPerPoint,
-                vscrollTicks: translation.y * ScrollInput.ticksPerPoint, buttons: Int(buttons.rawValue)
-            )])
+            guard hasControl, let geometry,
+                  let packet = ScrollInput.route(at: location, geometry: geometry,
+                    h: translation.x * ScrollInput.ticksPerPoint,
+                    v: translation.y * ScrollInput.ticksPerPoint, buttons: Int(buttons.rawValue)) else { return }
+            send([packet])
         }
 
         public override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -349,18 +351,16 @@
             }
             if down, pressedKeys[usage] != nil { return true }
             let modifiers = Self.modifiers(flags)
-            // Match the original down route even if releasing Shift/composition changes the key's text.
-            let routeText = down ? text : (pressedKeys[usage]?.text ?? text)
+            let code = HIDCode.values[usage] ?? "Unknown\(usage)"
             let unmodified = charactersIgnoringModifiers ?? text
-            let packets = KeyInput.route(usage: usage, text: routeText, charactersIgnoringModifiers: unmodified,
-                                         down: down, modifiers: modifiers,
-                                         clipboard: { UIPasteboard.general.string })
+            let key = modifiers.isShortcut ? unmodified : text
+            let packets = keyPackets(code: code, key: key, down: down, modifiers: modifiers)
             let isShortcut = modifiers.isShortcut && ["v", "m"].contains(unmodified.lowercased())
             guard HIDCode.values[usage] != nil || !packets.isEmpty || pressedKeys[usage] != nil
                     || (down && isShortcut) else { return false }
             if down {
                 // UIKit does not promise repeated pressesBegan. Own the cadence.
-                pressedKeys[usage] = (text, unmodified, modifiers, nil)
+                pressedKeys[usage] = (code, key, modifiers, nil)
                 if !(224...231).contains(usage) { scheduleRepeat(usage, delayMs: 500) }
             } else {
                 pressedKeys.removeValue(forKey: usage)?.timer?.cancel()
@@ -376,11 +376,14 @@
                     self.pressedKeys[usage]?.timer = nil
                     return
                 }
-                self.send(KeyInput.route(usage: usage, text: key.text, charactersIgnoringModifiers: key.unmodified,
-                                         down: true, modifiers: key.modifiers,
-                                         clipboard: { UIPasteboard.general.string }))
+                self.send(self.keyPackets(code: key.code, key: key.key, down: true, modifiers: key.modifiers))
                 self.scheduleRepeat(usage, delayMs: 33)
             }
+        }
+
+        private func keyPackets(code: String, key: String, down: Bool, modifiers: InputModifiers) -> [Data] {
+            keyState.route(code: code, text: key, down: down, modifiers: modifiers,
+                           clipboard: { UIPasteboard.general.string })
         }
 
         private static func modifiers(_ flags: UIKeyModifierFlags) -> InputModifiers {

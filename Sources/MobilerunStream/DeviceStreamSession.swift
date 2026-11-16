@@ -13,11 +13,20 @@
     @MainActor public final class DeviceStreamSession: ObservableObject {
         @Published public private(set) var status: StreamStatus = .connecting
         @Published public private(set) var videoSize: VideoSize?
+        /// Latest inbound-video sample; nil unless connected, visible and subscribed.
+        public var stats: StreamStats? { statistics.value }
+        /// Samples native reports once per second. Completes when the session closes.
+        public var statsPublisher: AnyPublisher<StreamStats?, Never> { statistics.publisher }
+        private let statistics = StreamStatsObservation()
         // Only the package's native renderer consumes tracks; apps use DeviceStreamView.
         @Published package private(set) var videoTrack: LKRTCVideoTrack?
         private weak var signalling: URLSessionSignalling?
         private weak var peer: WebRTCPeer?
         private var muted: Bool
+        private var hidden = false
+        private var peerConnected = false
+        private var attemptStartedAt = ProcessInfo.processInfo.systemUptime
+        private var sampler: StreamStatsSampler?
         private var engine: StreamSessionEngine!
 
         #if DEBUG
@@ -34,6 +43,9 @@
                 scheduler: MainActorScheduler(),
                 signalling: { [weak self] in
                     let socket = URLSessionSignalling()
+                    #if DEBUG
+                        socket.onDiagnostic = { [weak self] in self?.onDiagnostic?($0) }
+                    #endif
                     self?.signalling = socket
                     return socket
                 },
@@ -41,7 +53,7 @@
                     var currentConfig = config
                     currentConfig.muted = self?.muted ?? config.muted
                     let peer = WebRTCPeer(
-                        config: currentConfig,
+                        config: currentConfig, startedAt: self?.attemptStartedAt ?? ProcessInfo.processInfo.systemUptime,
                         onTrack: { [weak self] track in
                             self?.videoTrack = track
                             if track == nil { self?.videoSize = nil }
@@ -55,13 +67,52 @@
                     return peer
                 }
             )
-            engine.onStatus = { [weak self] in self?.status = $0 }
+            bindSession(scheduler: MainActorScheduler(), request: { [weak self] completion in
+                guard let peer = self?.peer else { completion([], nil); return }
+                peer.statistics(completion)
+            })
+        }
+
+        private func bindSession(
+            scheduler: any ReconnectScheduler,
+            request: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void
+        ) {
+            sampler = StreamStatsSampler(scheduler: scheduler, request: { [weak self] completion in
+                guard self?.canSampleStats == true else { completion([], nil); return }
+                request(completion)
+            }, publish: { [weak self] sample in
+                self?.statistics.send(sample)
+            })
+            statistics.onObserversChanged = { [weak self] in self?.updateSampling() }
+            engine.onAttemptStarted = { [weak self] in
+                self?.attemptStartedAt = ProcessInfo.processInfo.systemUptime
+            }
+            engine.onPeerConnectivity = { [weak self] connected in
+                self?.peerConnected = connected
+                self?.updateSampling()
+            }
+            engine.onStatus = { [weak self] status in
+                guard let self else { return }
+                self.status = status
+                self.updateSampling()
+                if status == .closed { self.statistics.finish() }
+            }
         }
 
         deinit {
             let engine = engine
-            Task { @MainActor in engine?.close() }
+            let sampler = sampler
+            let statistics = statistics
+            Task { @MainActor in
+                sampler?.setActive(false)
+                statistics.finish()
+                engine?.close()
+            }
         }
+
+        private var canSampleStats: Bool { status == .connected && peerConnected && !hidden && statistics.isObserved }
+
+        private func updateSampling() { sampler?.setActive(canSampleStats) }
 
         /// Idempotent. A closed session cannot be restarted.
         public func start() { engine.start() }
@@ -69,7 +120,11 @@
         public func retry() { engine.retry() }
         public func close() { engine.close() }
         /// Suspend keep-alives while hidden. The default UI manages this automatically.
-        public func setHidden(_ hidden: Bool) { engine.setHidden(hidden) }
+        public func setHidden(_ hidden: Bool) {
+            self.hidden = hidden
+            updateSampling()
+            engine.setHidden(hidden)
+        }
         /// Foreground/network recovery skips backoff or restarts an unavailable session.
         public func handleWake() { engine.handleWake() }
         /// Updates received audio and the shared manual-audio gate. Muted sessions never activate audio.
@@ -90,14 +145,18 @@
 
         #if DEBUG
             /// Keeps transport recording tests on the same session-to-engine path as the native adapter.
-            init(engine: StreamSessionEngine, videoSize: VideoSize) {
+            init(engine: StreamSessionEngine, videoSize: VideoSize,
+                 statsScheduler: any ReconnectScheduler = MainActorScheduler(),
+                 statistics: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void = { $0([], nil) }) {
                 muted = true
                 self.engine = engine
                 self.videoSize = videoSize
-                engine.onStatus = { [weak self] in self?.status = $0 }
+                bindSession(scheduler: statsScheduler, request: statistics)
             }
 
             func presentForTesting(_ status: StreamStatus) { self.status = status }
+
+            var transportsReleasedForTesting: Bool { peer == nil && signalling == nil }
 
             func forceSignallingClose() { signalling?.forceClose() }
             func requestConfigurationRefresh() { engine.requestConfigurationRefresh() }

@@ -12,6 +12,9 @@ import MobilerunProtocol
         }
     }
     package var onStatus: (@MainActor (StreamStatus) -> Void)?
+    package var onAttemptStarted: (@MainActor () -> Void)?
+    /// Raw peer connectivity, including dips hidden by the public ICE-refresh grace period.
+    package var onPeerConnectivity: (@MainActor (Bool) -> Void)?
     #if DEBUG
         package var onDiagnostic: (@MainActor (String) -> Void)?
     #endif
@@ -211,6 +214,7 @@ import MobilerunProtocol
     }
 
     private func releaseAttempt() {
+        onPeerConnectivity?(false)
         let previous = attempt
         attempt = nil
         previous?.release()
@@ -220,6 +224,7 @@ import MobilerunProtocol
         guard !closed, let target = latestTarget else { return }
         releaseAttempt()
         activeTarget = target
+        onAttemptStarted?()
         let next = Attempt(owner: self, scheduler: scheduler)
         attempt = next
         controller?.attemptMounted()
@@ -463,6 +468,7 @@ import MobilerunProtocol
                 sendMessage(
                     .candidate(candidate: sdp, sdpMid: mid, sdpMLineIndex: index, sessionID: sessionID))
             case .state(let state):
+                owner?.onPeerConnectivity?(state == .connected)
                 self.state = state
                 if state == .failed || state == .closed {
                     fail()

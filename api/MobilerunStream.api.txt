@@ -439,6 +439,8 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
@@ -456,12 +458,27 @@ MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "pat
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
 MobilerunStreamCore {"access": "public", "declaration": "init(width: Int, height: Int, rotation: Int = 0)", "path": "VideoSize.init(width:height:rotation:)"}
+MobilerunStreamCore {"access": "public", "declaration": "let bitrateKbps: Double?", "path": "StreamStats.bitrateKbps"}
+MobilerunStreamCore {"access": "public", "declaration": "let codec: String?", "path": "StreamStats.codec"}
+MobilerunStreamCore {"access": "public", "declaration": "let decodeTimeMs: Double?", "path": "StreamStats.decodeTimeMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let fps: Double?", "path": "StreamStats.fps"}
+MobilerunStreamCore {"access": "public", "declaration": "let framesDropped: Int64?", "path": "StreamStats.framesDropped"}
+MobilerunStreamCore {"access": "public", "declaration": "let freezeCount: Int64?", "path": "StreamStats.freezeCount"}
 MobilerunStreamCore {"access": "public", "declaration": "let height: Int", "path": "VideoSize.height"}
+MobilerunStreamCore {"access": "public", "declaration": "let height: Int?", "path": "StreamStats.height"}
+MobilerunStreamCore {"access": "public", "declaration": "let jitterBufferDelayMs: Double?", "path": "StreamStats.jitterBufferDelayMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let localCandidateType: String?", "path": "StreamStats.localCandidateType"}
+MobilerunStreamCore {"access": "public", "declaration": "let packetsLost: Int64?", "path": "StreamStats.packetsLost"}
+MobilerunStreamCore {"access": "public", "declaration": "let remoteCandidateType: String?", "path": "StreamStats.remoteCandidateType"}
 MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "path": "VideoSize.rotation"}
+MobilerunStreamCore {"access": "public", "declaration": "let rttMs: Double?", "path": "StreamStats.rttMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let timeToFirstFrameMs: Double?", "path": "StreamStats.timeToFirstFrameMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let token: String?", "path": "StreamCredentials.token"}
 MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": "StreamCredentials.url"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
+MobilerunStreamCore {"access": "public", "declaration": "let width: Int?", "path": "StreamStats.width"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
+MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
 # iOS
@@ -968,6 +985,8 @@ MobilerunStream {"access": "public", "declaration": "@MainActor var state: Strea
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamOverlayState", "path": "StreamPlaceholder.state"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamOverlayState", "path": "StreamUnavailableView.state"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: TaskApprovalActionsState", "path": "StreamApprovalActions.state"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var stats: StreamStats? { get }", "path": "DeviceStreamSession.stats"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var statsPublisher: AnyPublisher<StreamStats?, Never> { get }", "path": "DeviceStreamSession.statsPublisher"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var status: StreamStatus", "path": "StreamOverlayState.status"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var taskId: String { get }", "path": "TaskApprovalModel.taskId"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var unavailable: (StreamOverlayState) -> AnyView", "path": "StreamSlots.unavailable"}
@@ -1072,6 +1091,8 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5StatsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B6StatusO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
@@ -1089,11 +1110,26 @@ MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "pat
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
 MobilerunStreamCore {"access": "public", "declaration": "init(width: Int, height: Int, rotation: Int = 0)", "path": "VideoSize.init(width:height:rotation:)"}
+MobilerunStreamCore {"access": "public", "declaration": "let bitrateKbps: Double?", "path": "StreamStats.bitrateKbps"}
+MobilerunStreamCore {"access": "public", "declaration": "let codec: String?", "path": "StreamStats.codec"}
+MobilerunStreamCore {"access": "public", "declaration": "let decodeTimeMs: Double?", "path": "StreamStats.decodeTimeMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let fps: Double?", "path": "StreamStats.fps"}
+MobilerunStreamCore {"access": "public", "declaration": "let framesDropped: Int64?", "path": "StreamStats.framesDropped"}
+MobilerunStreamCore {"access": "public", "declaration": "let freezeCount: Int64?", "path": "StreamStats.freezeCount"}
 MobilerunStreamCore {"access": "public", "declaration": "let height: Int", "path": "VideoSize.height"}
+MobilerunStreamCore {"access": "public", "declaration": "let height: Int?", "path": "StreamStats.height"}
+MobilerunStreamCore {"access": "public", "declaration": "let jitterBufferDelayMs: Double?", "path": "StreamStats.jitterBufferDelayMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let localCandidateType: String?", "path": "StreamStats.localCandidateType"}
+MobilerunStreamCore {"access": "public", "declaration": "let packetsLost: Int64?", "path": "StreamStats.packetsLost"}
+MobilerunStreamCore {"access": "public", "declaration": "let remoteCandidateType: String?", "path": "StreamStats.remoteCandidateType"}
 MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "path": "VideoSize.rotation"}
+MobilerunStreamCore {"access": "public", "declaration": "let rttMs: Double?", "path": "StreamStats.rttMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let timeToFirstFrameMs: Double?", "path": "StreamStats.timeToFirstFrameMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let token: String?", "path": "StreamCredentials.token"}
 MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": "StreamCredentials.url"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
+MobilerunStreamCore {"access": "public", "declaration": "let width: Int?", "path": "StreamStats.width"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
+MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
