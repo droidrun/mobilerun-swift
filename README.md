@@ -6,41 +6,33 @@ The connection library supports iOS 15+; `MobilerunProtocol` also supports macOS
 - `MobilerunStream`: observable session, SwiftUI/UIKit video and input, and native WebRTC on iOS.
 - `MobilerunProtocol`: binary control encoders, typed signalling and protocol constants.
 
-## Installation (after first release)
+## Quick start
 
-No release is available yet. After `v0.1.0` is released, add:
-
-```swift
-.package(url: "https://github.com/droidrun/mobilerun-swift.git", .upToNextMinor(from: "0.1.0"))
-```
-
-Until 1.0, constrain upgrades to the next minor version as shown above.
-Choose `MobilerunStream` for the iOS SDK or `MobilerunProtocol` for standalone wire
-helpers. See [RELEASING.md](RELEASING.md) for the API contract and release process.
-
-## Connect
-
-Add the `MobilerunStream` library product to your app. It pins LiveKitWebRTC to exactly
-`150.7871.05` (SwiftPM normalizes the version to `150.7871.5`).
+Until publishing, add this repository's `main` branch in Xcode's Package Dependencies
+and select `MobilerunStream`. Keep your API key on your backend; fetch fresh stream
+credentials there. The session owner creates and starts the session, keeps it across
+view remounts, and closes it on owner teardown (not view disappearance):
 
 ```swift
 import MobilerunStream
 
-// Create and use the session on the main actor. The provider may fetch from your API.
 let session = DeviceStreamSession(credentials: {
-    guard let response = try await loadStreamCredentials() else { return nil }
-    return StreamCredentials(url: response.url, token: response.token)
+    try await backend.streamCredentials() // Your backend returns StreamCredentials?; nil means not ready.
 })
-session.start()
-// Observe session.status and session.videoSize.
-// Use DeviceStreamView(session: session, hasControl: true) in your SwiftUI hierarchy.
-
-session.openURL("https://example.com")
-let image = try await session.screenshot(timeout: 30)
-// When finished:
-session.setMuted(true)
+session.start() // In the main-actor session owner.
+// In your SwiftUI view:
+DeviceStream(session: session)
+// When the owner is permanently torn down:
 session.close()
 ```
+
+After release, use `.package(url: "https://github.com/droidrun/mobilerun-swift", .upToNextMinor(from: "0.1.0"))`.
+
+Run the interactive sample and follow the checklist in [TESTING.md](TESTING.md).
+`MobilerunProtocol` is also available for standalone wire helpers.
+See [RELEASING.md](RELEASING.md) for the API contract and release process.
+
+## Connection
 
 The session is an `@MainActor ObservableObject`. Native video tracks are internal to the package.
 It publishes `status` (`connecting`, `connected`,
@@ -115,7 +107,8 @@ struct PhoneView: View {
 The view uses a Metal renderer with aspect-fit video and a transparent background. Without a
 track it shows nothing. `DeviceStreamUIView(session:hasControl:)` is the UIKit equivalent;
 it provides the same keyboard/system-key methods.
-The optional handle controls one mounted SwiftUI view and does not retain it. The app owns
+Both `DeviceStreamView` and the default `DeviceStream(session:handle:)` composite accept
+the optional handle. The handle controls one mounted SwiftUI view and does not retain it. The app owns
 session start/close and lifecycle decisions. Unmounting the view detaches its renderer without
 closing the session.
 
@@ -192,11 +185,7 @@ camera-measured glass-to-glass latency.
 
 ## Validation
 
-```sh
-swift test
-xcodebuild -scheme MobilerunStream -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath DerivedData build CODE_SIGNING_ALLOWED=NO
-```
+Build and test commands are in [TESTING.md](TESTING.md#automated-checks).
 
 macOS tests use fake transports and a virtual clock, without loading WebRTC. They replay the
 vendored conformance sequence, initial negotiation and refresh, candidate buffering, timer
@@ -205,6 +194,8 @@ Fixtures are pinned in [`conformance/VERSION`](conformance/VERSION).
 
 [`Examples/Connection`](Examples/Connection) contains the validation app and runners; see
 [`run-input.py --help`](Examples/Connection/tool/run-input.py) for the input scenario contract.
+Existing runners inject `credentials.json` to select the native validation view;
+`--default-ui` selects default UI validation. Normal launch opens the tester app.
 
 To refresh protocol fixtures:
 

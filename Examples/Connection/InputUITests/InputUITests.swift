@@ -243,4 +243,37 @@ import XCTest
     }
 }
 
-/// Invoked explicitly with runtime credentials injected by the validation runner.
+@MainActor final class SampleUITests: XCTestCase {
+    func testApprovalCountdownDecisionsRefetchAndTheme() {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.secureTextFields["stream-token"].waitForExistence(timeout: 10))
+        app.buttons["Demo approval"].tap()
+        XCTAssertTrue(app.staticTexts["Visa 4242"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'left'")).firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Approve"].tap()
+        XCTAssertTrue(app.staticTexts["Decision: approve · refetch 2"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Approve"].waitForNonExistence(timeout: 5))
+        app.buttons["Demo approval"].tap()
+        XCTAssertTrue(app.buttons["Deny"].waitForExistence(timeout: 5))
+        app.buttons["Deny"].tap()
+        XCTAssertTrue(app.staticTexts["Decision: deny · refetch 2"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Deny"].waitForNonExistence(timeout: 5))
+        let solid = app.switches["solid-chrome"].firstMatch
+        for theme in ["Light", "Dark", "Brand"] {
+            app.buttons[theme].tap()
+            solid.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            XCTAssertEqual(solid.value as? String, "1")
+            solid.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            XCTAssertEqual(solid.value as? String, "0")
+        }
+        solid.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        app.buttons["Demo approval"].tap()
+        XCTAssertTrue(app.buttons["Allow"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Decline"].exists)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "sample-brand-approval-solid"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+}
