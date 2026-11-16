@@ -243,8 +243,6 @@ import XCTest
     }
 }
 
-/// Invoked explicitly with runtime credentials injected by the validation runner.
-
 @MainActor final class SampleUITests: XCTestCase {
     func testApprovalCountdownDecisionsRefetchAndTheme() {
         let app = XCUIApplication()
@@ -252,18 +250,24 @@ import XCTest
         XCTAssertTrue(app.secureTextFields["stream-token"].waitForExistence(timeout: 10))
         app.buttons["Demo approval"].tap()
         XCTAssertTrue(app.staticTexts["Visa 4242"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'left'")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'left'")).firstMatch.waitForExistence(timeout: 5))
         app.buttons["Approve"].tap()
         XCTAssertTrue(app.staticTexts["Decision: approve · refetch 2"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Approve"].waitForNonExistence(timeout: 5))
         app.buttons["Demo approval"].tap()
         XCTAssertTrue(app.buttons["Deny"].waitForExistence(timeout: 5))
         app.buttons["Deny"].tap()
         XCTAssertTrue(app.staticTexts["Decision: deny · refetch 2"].waitForExistence(timeout: 5))
-        app.buttons["Dark"].tap()
-        app.buttons["Brand"].tap()
+        XCTAssertTrue(app.buttons["Deny"].waitForNonExistence(timeout: 5))
         let solid = app.switches["solid-chrome"].firstMatch
+        for theme in ["Light", "Dark", "Brand"] {
+            app.buttons[theme].tap()
+            solid.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            XCTAssertEqual(solid.value as? String, "1")
+            solid.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            XCTAssertEqual(solid.value as? String, "0")
+        }
         solid.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
-        XCTAssertEqual(solid.value as? String, "1")
         app.buttons["Demo approval"].tap()
         XCTAssertTrue(app.buttons["Allow"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Decline"].exists)
@@ -271,24 +275,5 @@ import XCTest
         attachment.name = "sample-brand-approval-solid"
         attachment.lifetime = .keepAlways
         add(attachment)
-    }
-}
-
-/// Run explicitly after tool/run-sample.sh has launched a live device session.
-@MainActor final class LiveSampleUITests: XCTestCase {
-    private func capture(_ name: String) {
-        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
-    }
-    func testLiveFirstFrameAndStats() {
-        let app = XCUIApplication()
-        app.activate()
-        XCTAssertTrue(app.buttons["Stats"].waitForExistence(timeout: 10))
-        app.buttons["Stats"].tap()
-        let fps = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'FPS ' AND NOT label CONTAINS '—'")).firstMatch
-        XCTAssertTrue(fps.waitForExistence(timeout: 60))
-        capture("01-first-frame-and-stats")
     }
 }

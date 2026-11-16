@@ -12,12 +12,12 @@ struct SampleCredentials: Decodable, CustomStringConvertible, CustomDebugStringC
 
     init(url: String, token: String) throws {
         guard let parsed = URL(string: url.trimmingCharacters(in: .whitespacesAndNewlines)),
-              ["ws", "wss"].contains(parsed.scheme ?? ""), parsed.host != nil,
+              ["ws", "wss"].contains(parsed.scheme ?? ""), let host = parsed.host, !host.isEmpty,
               !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw SampleError.invalidCredentials
         }
         streamUrl = parsed
-        streamToken = token
+        streamToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     init(from decoder: any Decoder) throws {
         let fields = try decoder.container(keyedBy: CodingKeys.self)
@@ -41,7 +41,7 @@ struct SampleCredentials: Decodable, CustomStringConvertible, CustomDebugStringC
     }
 }
 
-enum SampleError: LocalizedError {
+enum SampleError: LocalizedError, Equatable {
     case invalidCredentials
     var errorDescription: String? { "Enter a WebSocket stream URL and a nonblank stream token." }
 }
@@ -66,23 +66,22 @@ enum SampleAppearance: String, CaseIterable {
 
 /// Local backend stand-in: no network, polling, or real task.
 @MainActor final class SampleApproval: ObservableObject {
-    @Published var result = ""
+    @Published var decision: ApprovalDecision?
     private var pending: PendingApproval?
-    private var fetchCount = 0
+    @Published private(set) var fetchCount = 0
     lazy var model = TaskApprovalModel(taskId: "sample", fetchApproval: { [weak self] _ in
         guard let self else { return nil }
         self.fetchCount += 1
-        if self.pending == nil { self.result += " · refetch \(self.fetchCount)" }
         return self.pending
     }, decide: { [weak self] _, _, decision in
         self?.pending = nil
-        self?.result = "Decision: \(decision.rawValue)"
+        self?.decision = decision
     }, subscribe: { _, _ in .success({ .success(()) }) })
 
     func show() {
         model.stop()
         fetchCount = 0
-        result = ""
+        decision = nil
         pending = PendingApproval(approvalId: UUID().uuidString, kind: "payment_card", details: [
             "label": .string("Visa 4242"), "targetPackage": .string("com.example.shop")
         ], expiresAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(30)))
@@ -106,6 +105,7 @@ enum SampleAppearance: String, CaseIterable {
             }
         } catch { self.error = SampleError.invalidCredentials.localizedDescription }
     }
+    isolated deinit { session?.close() }
     func connect() {
         do {
             let credentials = try SampleCredentials(url: url, token: token)
@@ -122,12 +122,18 @@ enum SampleAppearance: String, CaseIterable {
 
 @MainActor struct SampleAppView: View {
     @StateObject private var connection = SampleConnection()
-    @StateObject private var approval = SampleApproval()
+    @StateObject private var approval: SampleApproval
+    @StateObject private var approvalModel: TaskApprovalModel
     @State private var appearance = SampleAppearance.light
     @State private var solid = false
     @State private var showStats = false
     @State private var showCredentials = false
     @State private var showApproval = false
+    init() {
+        let demo = SampleApproval()
+        _approval = StateObject(wrappedValue: demo)
+        _approvalModel = StateObject(wrappedValue: demo.model)
+    }
     var body: some View {
         VStack(spacing: 8) {
             Text("Mobilerun sample").font(.headline)
@@ -149,8 +155,8 @@ enum SampleAppearance: String, CaseIterable {
                 Button(showStats ? "Hide stats" : "Stats") { showStats.toggle() }
             }.font(.caption)
             Button("Demo approval") { approval.show(); showApproval = true }
-            if !approval.result.isEmpty {
-                Text(approval.result).font(.caption).accessibilityIdentifier("sample-decision")
+            if let decision = approval.decision {
+                Text("Decision: \(decision.rawValue) · refetch \(approval.fetchCount)").font(.caption).accessibilityIdentifier("sample-decision")
             }
             if let session = connection.session {
                 SampleStreamView(session: session, showStats: showStats)
@@ -163,73 +169,35 @@ enum SampleAppearance: String, CaseIterable {
         .sheet(isPresented: $showApproval) {
             ScrollView {
                 VStack(spacing: 16) {
-                    SampleApprovalView(approval: approval, model: approval.model)
+                    TaskApprovalCard(state: approvalModel.state, onDecide: approvalModel.decide)
+                        .fixedSize(horizontal: false, vertical: true)
                     Button("Close demo") { showApproval = false }
                 }.padding(16)
             }
         }
-        .onReceive(approval.$result) { result in
-            if result.hasPrefix("Decision:") { showApproval = false }
+        .onChange(of: approval.decision) { decision in
+            if decision != nil { showApproval = false }
         }
         .streamTheme(appearance.theme(solid: solid))
         .streamLabels(appearance.labels)
         .taskApprovalLabels(appearance.approvalLabels)
         .preferredColorScheme(appearance == .dark ? .dark : .light)
-        .onDisappear { connection.session?.close(); approval.model.stop() }
-    }
-}
-
-@MainActor private struct SampleApprovalView: View {
-    @ObservedObject var approval: SampleApproval
-    @ObservedObject var model: TaskApprovalModel
-    var body: some View {
-        VStack {
-            if model.state.approval != nil {
-                TaskApprovalCard(state: model.state, onDecide: model.decide)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
     }
 }
 
 @MainActor private struct SampleStreamView: View {
     @ObservedObject var session: DeviceStreamSession
     let showStats: Bool
-    @State private var keyboardMode = false
+    @State private var handle = DeviceStreamHandle()
     var body: some View {
         VStack(spacing: 4) {
             if showStats { SampleStatsView(session: session) }
-            Toggle("Keyboard mode", isOn: $keyboardMode).font(.caption)
-            if keyboardMode {
-                SampleKeyboardView(session: session)
-            } else {
-                DeviceStream(session: session).accessibilityIdentifier("sample-stream")
-            }
-        }
-    }
-}
-
-/// Explicit input controls use the native view's public handle and lifecycle adapter.
-@MainActor private struct SampleKeyboardView: View {
-    @ObservedObject var session: DeviceStreamSession
-    @State private var input = DeviceStreamHandle()
-    @StateObject private var lifecycle: StreamLifecycleAdapter
-    init(session: DeviceStreamSession) {
-        self.session = session
-        _lifecycle = StateObject(wrappedValue: StreamLifecycleAdapter(session: session))
-    }
-    var body: some View {
-        VStack {
-            DeviceStreamView(session: session, hasControl: true, handle: input)
-                .accessibilityIdentifier("sample-input-stream")
             HStack {
-                Button("Keyboard") { input.showKeyboard() }
-                Button("Hide keyboard") { input.hideKeyboard() }
+                Button("Keyboard") { handle.showKeyboard() }
+                Button("Hide keyboard") { handle.hideKeyboard() }
             }.font(.caption)
-            StreamNavigationBar(state: StreamNavigationState(
-                canControl: session.status != .unavailable, onAction: input.sendSystemKey))
-        }.onAppear { lifecycle.start() }.onDisappear { lifecycle.stop() }
-            .onChange(of: ObjectIdentifier(session)) { _ in lifecycle.rebind(session: session) }
+            DeviceStream(session: session, handle: handle).accessibilityIdentifier("sample-stream")
+        }
     }
 }
 

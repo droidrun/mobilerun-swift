@@ -39,18 +39,21 @@ import MobilerunStreamCore
 @MainActor public struct DeviceStream: View {
     @ObservedObject private var session: DeviceStreamSession
     @StateObject private var lifecycle: StreamLifecycleAdapter
-    @State private var handle = DeviceStreamHandle()
+    @State private var defaultHandle = DeviceStreamHandle()
+    private let suppliedHandle: DeviceStreamHandle?
     @Environment(\.streamTheme) private var theme
     private let hasControl: Bool
     private let showsNavigation: Bool
     private let slots: StreamSlots
     public init(session: DeviceStreamSession, hasControl: Bool = true,
-                showsNavigation: Bool = true, slots: StreamSlots = StreamSlots()) {
+                showsNavigation: Bool = true, slots: StreamSlots = StreamSlots(),
+                handle: DeviceStreamHandle? = nil) {
         self.session = session; self.hasControl = hasControl
-        self.showsNavigation = showsNavigation; self.slots = slots
+        self.showsNavigation = showsNavigation; self.slots = slots; self.suppliedHandle = handle
         _lifecycle = StateObject(wrappedValue: StreamLifecycleAdapter(session: session))
     }
     public var body: some View {
+        let handle = suppliedHandle ?? defaultHandle
         let presentation = StreamPresentation(status: session.status, hasControl: hasControl)
         VStack(spacing: 0) {
             let context = StreamOverlayState(status: session.status, hasVideo: session.videoSize != nil, retry: session.retry)

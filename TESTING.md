@@ -44,18 +44,18 @@ on that device. Every row includes the expected result.
 | Tap | The remote control responds, including near the picture's edges. |
 | Swipe | A scrollable remote page scrolls in the drag direction. |
 | Two fingers | A zoomable page zooms. Hold Option in Simulator for pinch; gesture support depends on host configuration. |
-| Soft keyboard | Enable Keyboard mode, focus a remote text field, and tap Keyboard to show Simulator's software keyboard (disconnect its hardware keyboard if needed). Latin letters arrive per character; Backspace deletes one character and Enter sends a return. Try emoji and CJK composition too; see the known limitation below. |
+| Soft keyboard | Focus a remote text field and tap Keyboard to show Simulator's software keyboard (disconnect its hardware keyboard if needed). Latin letters arrive per character; Backspace deletes one character and Enter sends a return. Try emoji and CJK composition too; see the known limitation below. |
 | Back / Home / Recent | Each navigation button performs the corresponding remote Android action. |
 | Rotate | Rotate Simulator using Device > Orientation; video stays fitted and taps remain aligned. Rotate the remote app too if it supports it. |
 | Background / foreground | Go to Simulator Home, then reopen the sample; video resumes or recovers. |
 | Network off / on | On a physical iPhone, disable connectivity and restore it; video recovers. Simulator cannot independently switch its network, so this requires a physical device. |
 | Forced reconnect | Tap Reconnect; a fresh connection produces video again. |
 | Unavailable / Retry | Connect with an invalid token and wait for attempts to exhaust; unavailable and Retry appear. Retry attempts recovery again. Restore valid credentials using Credentials and Connect. |
-| Themes / labels / chrome | Light, Dark and Brand change tokens. Brand uses indigo controls, rounded cards, Go back / Start / Apps and Allow / Decline. Solid chrome toggles opaque surfaces; iOS 26+ otherwise uses Liquid Glass, subject to accessibility settings. |
+| Themes / labels / chrome | Light, Dark and Brand change tokens. Brand uses indigo controls and rounded cards. Go back / Start / Apps are navigation accessibility labels; Try again is the visible retry label. Approval buttons show Allow / Decline. Solid chrome toggles opaque surfaces; iOS 26+ otherwise uses Liquid Glass, subject to accessibility settings. |
 | Demo approval | A 30-second countdown appears for Visa 4242 and com.example.shop. Approve or Deny removes the card and shows the decision plus refetch 2. Repeat for the other action. No real task is sent and the fake never polls. |
 | Stats | Stats shows updating fps, payload kbit/s, RTT, jitter-buffer delay, ICE candidate types and first-frame ms. Unsupported values show —. Hide stats removes the subscription. |
 
-Typical simulator values on a relay connection: first frame about 6.6 seconds, 59.9 fps, 52.8 kbit/s on a static launcher, RTT 20.6 ms and tap-to-pixel median 156.1 ms (p90 183.6 ms).
+Reference ranges from the [benchmark runner](tool/benchmark.sh) on a simulator relay connection: first frame 6–7 seconds, 59–61 fps, 50–55 kbit/s on a static launcher, RTT 20–25 ms and tap-to-pixel median 150–160 ms (p90 180–190 ms).
 
 ## Automated checks
 
@@ -73,9 +73,7 @@ xcodebuild -project Examples/Connection/Connection.xcodeproj -scheme Connection 
 Choose an installed iPhone name for the last command. Sample tests cover credential
 validation, one-time deletion, token redaction and secure input, theme tokens and
 labels, and local approval decisions/refetch. Library suites cover the stream,
-input, countdown ticking, approvals and UI internals. Existing E2E and benchmark
-runners remain under `Examples/Connection/tool/`; the native validation view uses
-`--probe` and default UI validation uses `--default-ui`.
+input, countdown ticking, approvals and UI internals.
 
 ## Known limitations
 
