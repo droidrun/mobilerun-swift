@@ -324,7 +324,7 @@ import SwiftUI
 
     @main struct ConnectionApp: App {
         // Existing E2E/benchmark runners inject this distinct file before launching.
-        private var hasProbeCredentials: Bool {
+        private static var hasProbeCredentials: Bool {
             let file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("credentials.json")
             return FileManager.default.fileExists(atPath: file.path)
@@ -332,7 +332,7 @@ import SwiftUI
         var body: some Scene {
             WindowGroup {
                 if ProcessInfo.processInfo.arguments.contains("--default-ui") { DefaultUIExample() }
-                else if hasProbeCredentials {
+                else if Self.hasProbeCredentials {
                     NativeConnectionExample()
                 }
                 else { SampleAppView() }
