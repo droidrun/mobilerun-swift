@@ -2,13 +2,13 @@
 {
 archiveVersion = 1; classes = {}; objectVersion = 56;
 objects = {
-A00000000000000000000001 = {isa = PBXProject; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; mainGroup = A00000000000000000000002; productRefGroup = A00000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000004,B00000000000000000000001,); packageReferences = (A00000000000000000000020,); };
-A00000000000000000000002 = {isa = PBXGroup; children = (D00000000000000000000001,C00000000000000000000001,A00000000000000000000005,B00000000000000000000002,A00000000000000000000003,); sourceTree = "<group>";};
-A00000000000000000000003 = {isa = PBXGroup; children = (A00000000000000000000006,B00000000000000000000003,); name = Products; sourceTree = "<group>";};
+A00000000000000000000001 = {isa = PBXProject; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; mainGroup = A00000000000000000000002; productRefGroup = A00000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (E00000000000000000000001,A00000000000000000000004,B00000000000000000000001,); packageReferences = (A00000000000000000000020,); };
+A00000000000000000000002 = {isa = PBXGroup; children = (E00000000000000000000002,D00000000000000000000001,C00000000000000000000001,A00000000000000000000005,B00000000000000000000002,A00000000000000000000003,); sourceTree = "<group>";};
+A00000000000000000000003 = {isa = PBXGroup; children = (E00000000000000000000003,A00000000000000000000006,B00000000000000000000003,); name = Products; sourceTree = "<group>";};
 A00000000000000000000004 = {isa = PBXNativeTarget; buildConfigurationList = A00000000000000000000011; buildPhases = (A00000000000000000000007,A00000000000000000000008,); buildRules = (); dependencies = (); name = Connection; productName = Connection; productReference = A00000000000000000000006; productType = "com.apple.product-type.application"; packageProductDependencies = (A00000000000000000000021,);};
 A00000000000000000000005 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection/Connection.swift; sourceTree = "<group>";};
 A00000000000000000000006 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Connection.app; sourceTree = BUILT_PRODUCTS_DIR;};
-A00000000000000000000007 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (D00000000000000000000002,C00000000000000000000002,A00000000000000000000009,); runOnlyForDeploymentPostprocessing = 0;};
+A00000000000000000000007 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (F00000000000000000000002,D00000000000000000000002,C00000000000000000000002,A00000000000000000000009,); runOnlyForDeploymentPostprocessing = 0;};
 A00000000000000000000008 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000022,); runOnlyForDeploymentPostprocessing = 0;};
 A00000000000000000000009 = {isa = PBXBuildFile; fileRef = A00000000000000000000005;};
 A00000000000000000000010 = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000012,A00000000000000000000013,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
@@ -34,5 +34,16 @@ C00000000000000000000001 = {isa = PBXFileReference; lastKnownFileType = sourceco
 C00000000000000000000002 = {isa = PBXBuildFile; fileRef = C00000000000000000000001;};
 D00000000000000000000001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection/StreamBenchmark.swift; sourceTree = "<group>";};
 D00000000000000000000002 = {isa = PBXBuildFile; fileRef = D00000000000000000000001;};
+F00000000000000000000001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection/SampleApp.swift; sourceTree = "<group>";};
+F00000000000000000000002 = {isa = PBXBuildFile; fileRef = F00000000000000000000001;};
+
+E00000000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = E00000000000000000000007; buildPhases = (E00000000000000000000004,); buildRules = (); dependencies = (B00000000000000000000010,); name = SampleTests; productName = SampleTests; productReference = E00000000000000000000003; productType = "com.apple.product-type.bundle.unit-test";};
+E00000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleTests/SampleTests.swift; sourceTree = "<group>";};
+E00000000000000000000003 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = SampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR;};
+E00000000000000000000004 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E00000000000000000000005,); runOnlyForDeploymentPostprocessing = 0;};
+E00000000000000000000005 = {isa = PBXBuildFile; fileRef = E00000000000000000000002;};
+E00000000000000000000007 = {isa = XCConfigurationList; buildConfigurations = (E00000000000000000000008,E00000000000000000000009,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+E00000000000000000000008 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.Connection.SampleTests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Connection.app/Connection"; BUNDLE_LOADER = "$(TEST_HOST)"; TARGETED_DEVICE_FAMILY = "1,2"; CODE_SIGNING_ALLOWED = NO; };};
+E00000000000000000000009 = {isa = XCBuildConfiguration; name = Release; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = io.mobilerun.Connection.SampleTests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Connection.app/Connection"; BUNDLE_LOADER = "$(TEST_HOST)"; TARGETED_DEVICE_FAMILY = "1,2"; CODE_SIGNING_ALLOWED = NO; };};
 }; rootObject = A00000000000000000000001;
 }

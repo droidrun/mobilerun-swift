@@ -323,17 +323,26 @@ import SwiftUI
     }
 
     @main struct ConnectionApp: App {
+        // Existing E2E/benchmark runners inject this distinct file before launching.
+        private static var hasProbeCredentials: Bool {
+            let file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("credentials.json")
+            return FileManager.default.fileExists(atPath: file.path)
+        }
         var body: some Scene {
             WindowGroup {
                 if ProcessInfo.processInfo.arguments.contains("--default-ui") { DefaultUIExample() }
-                else { NativeConnectionExample() }
+                else if ProcessInfo.processInfo.arguments.contains("--probe") || Self.hasProbeCredentials {
+                    NativeConnectionExample()
+                }
+                else { SampleAppView() }
             }
         }
     }
 #else
     @main struct ConnectionApp: App {
         var body: some Scene {
-            WindowGroup { Text("Build this validation example in Debug.") }
+            WindowGroup { SampleAppView() }
         }
     }
 #endif

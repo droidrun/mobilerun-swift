@@ -6,41 +6,29 @@ The connection library supports iOS 15+; `MobilerunProtocol` also supports macOS
 - `MobilerunStream`: observable session, SwiftUI/UIKit video and input, and native WebRTC on iOS.
 - `MobilerunProtocol`: binary control encoders, typed signalling and protocol constants.
 
-## Installation (after first release)
+## Quick start
 
-No release is available yet. After `v0.1.0` is released, add:
-
-```swift
-.package(url: "https://github.com/droidrun/mobilerun-swift.git", .upToNextMinor(from: "0.1.0"))
-```
-
-Until 1.0, constrain upgrades to the next minor version as shown above.
-Choose `MobilerunStream` for the iOS SDK or `MobilerunProtocol` for standalone wire
-helpers. See [RELEASING.md](RELEASING.md) for the API contract and release process.
-
-## Connect
-
-Add the `MobilerunStream` library product to your app. It pins LiveKitWebRTC to exactly
-`150.7871.05` (SwiftPM normalizes the version to `150.7871.5`).
+Until publishing, add this repository's `main` branch in Xcode's Package Dependencies
+and select `MobilerunStream`. Keep your API key on your backend; fetch fresh stream
+credentials there. Retain a session in your main-actor view model:
 
 ```swift
 import MobilerunStream
 
-// Create and use the session on the main actor. The provider may fetch from your API.
 let session = DeviceStreamSession(credentials: {
-    guard let response = try await loadStreamCredentials() else { return nil }
-    return StreamCredentials(url: response.url, token: response.token)
+    try await backend.streamCredentials() // Your backend returns StreamCredentials?; nil means not ready.
 })
-session.start()
-// Observe session.status and session.videoSize.
-// Use DeviceStreamView(session: session, hasControl: true) in your SwiftUI hierarchy.
-
-session.openURL("https://example.com")
-let image = try await session.screenshot(timeout: 30)
-// When finished:
-session.setMuted(true)
-session.close()
+// In your SwiftUI view:
+DeviceStream(session: session)
+    .onAppear { session.start() }
+    .onDisappear { session.close() }
 ```
+
+Run the interactive sample and follow the checklist in [TESTING.md](TESTING.md).
+`MobilerunProtocol` is also available for standalone wire helpers.
+See [RELEASING.md](RELEASING.md) for the API contract and release process.
+
+## Connection
 
 The session is an `@MainActor ObservableObject`. Native video tracks are internal to the package.
 It publishes `status` (`connecting`, `connected`,
