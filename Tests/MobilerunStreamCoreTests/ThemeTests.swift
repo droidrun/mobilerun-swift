@@ -9,6 +9,21 @@ import Testing
 import MobilerunStreamCore
 
 @Suite @MainActor struct ThemeTests {
+    @Test(arguments: [
+        (nil, "wss://example.test/stream?token=embedded%2Bvalue&other=a+b&escaped=%2f%20"),
+        ("", "wss://example.test/stream?token=embedded%2Bvalue&other=a+b&escaped=%2f%20"),
+        ("a+b/c=d&e", "wss://example.test/stream?other=a+b&escaped=%2f%20&token=a%2Bb%2Fc%3Dd%26e"),
+    ])
+    func signallingTokenURL(token: String?, expected: String) throws {
+        let credentials = StreamCredentials(url: URL(string: "wss://example.test/stream?token=embedded%2Bvalue&other=a+b&escaped=%2f%20")!, token: token)
+        #expect(try URLSessionSignalling.endpoint(credentials).absoluteString == expected)
+    }
+    @Test func countdownStartsBeforeFirstTick() {
+        let future = ISO8601DateFormatter().string(from: Date().addingTimeInterval(65))
+        #expect(abs(remainingMs(expiresAt: future) - 65_000) < 2_000)
+        let expired = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-1))
+        #expect(remainingMs(expiresAt: expired) <= 0)
+    }
     @Test func surfaceStyleAndAccessibility() {
         #expect(StreamTheme().surfaceStyle == .glass)
         #expect(StreamTheme.light.surfaceStyle == .glass)
@@ -81,7 +96,9 @@ import MobilerunStreamCore
         #expect(abs(UIColor(dark.border).cgColor.alpha - 0.1) < 0.000001)
         #expect(channels(EnvironmentValues().streamTheme.background) == [255,255,255])
         #expect(StreamTheme.light.with { $0.radius = 20 }.radius == 20)
-        #expect(light.radius == 12)
+        #expect(light.radius == 8)
+        #expect(light.buttonRadius == 6)
+        #expect(light.cardRadius == 12)
     }
 }
 @MainActor private final class LifecycleRequests {

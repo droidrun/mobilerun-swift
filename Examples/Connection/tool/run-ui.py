@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Validate default chrome without a device; optionally attempt live video last.
 
-Run under an exclusive simulator lock. Credentials are read at runtime, injected only
-into app Documents and always removed. 401/404 marks the live portion PENDING: device.
+Run one simulator validation at a time. Credentials are read at runtime, injected only
+into app Documents and always removed. HTTP 401/404 skips the live portion.
 All local tests/screenshots still finish. Evidence and screenshots are caller-supplied paths.
 """
 import argparse
@@ -13,6 +13,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import time
+import tempfile
 
 from run_connection import sim, ROOT, BUNDLE, create_simulator
 
@@ -22,12 +23,12 @@ def main():
     parser.add_argument('--evidence', type=Path, required=True)
     parser.add_argument('--shots', type=Path, required=True)
     parser.add_argument('--credentials', type=Path)
-    parser.add_argument('--skip-native', action='store_true', help='Reuse an already-passing native test result')
-    parser.add_argument('--skip-phone', action='store_true', help='Reuse an already-passing phone UI result')
+    parser.add_argument('--skip-native', action='store_true', help='Skip native tests')
+    parser.add_argument('--skip-phone', action='store_true', help='Skip phone UI tests')
     args = parser.parse_args()
     args.evidence.mkdir(parents=True, exist_ok=True)
     args.shots.mkdir(parents=True, exist_ok=True)
-    derived = ROOT / 'DerivedData'
+    derived = Path(tempfile.mkdtemp(prefix='mobilerun-validation-'))
     device = documents = tablet = None
 
     def build(arguments, name):
@@ -52,7 +53,7 @@ def main():
         sim('boot', device); sim('bootstatus', device, '-b')
         sim('install', device, str(derived / 'Build/Products/Debug-iphonesimulator/Connection.app'))
         if not args.skip_native:
-            build(['-scheme', 'MobilerunStream-Package', '-destination', 'id=' + device,
+            build(['-scheme', 'MobilerunStream', '-destination', 'id=' + device,
                    '-parallel-testing-enabled', 'NO', '-only-testing:MobilerunConformanceTests/NativeInputTests',
                    '-only-testing:MobilerunConformanceTests/ThemeTests', 'test'], 'native.log')
         if not args.skip_phone:
@@ -102,7 +103,7 @@ def main():
                     marker in line for marker in ['status ', 'device unavailable http=', 'frame received']))
                 (args.evidence / 'live.log').write_text(safe)
                 if any('device unavailable http=' + str(code) in text for code in [401, 404]):
-                    print('PENDING: device', flush=True); break
+                    print('SKIPPED: device unavailable (HTTP 401/404)', flush=True); break
                 if 'status connected' in text and 'frame received' in text:
                     time.sleep(2); shot('live-connected-navigation')
                     print('PASS live video with navigation', flush=True); break
@@ -120,7 +121,7 @@ def main():
                         marker in line for marker in ['status ', 'device unavailable http=', 'frame received']))
                     (args.evidence / 'live-reconnecting.log').write_text(safe)
                     if any('device unavailable http=' + str(code) in text for code in [401, 404]):
-                        print('PENDING: device', flush=True); break
+                        print('SKIPPED: device unavailable (HTTP 401/404)', flush=True); break
                     if 'status reconnecting(attempt: 3)' in text and 'frame received' in text:
                         time.sleep(2); shot('live-reconnecting-opaque')
                         print('PASS retained video reconnecting with opaque placeholder', flush=True); break

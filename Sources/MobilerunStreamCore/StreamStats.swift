@@ -35,8 +35,6 @@ public struct StreamStats: Sendable, Equatable {
     public let remoteCandidateType: String?
     /// Time from connection-attempt creation to the first decoded video frame, in milliseconds.
     public let timeToFirstFrameMs: Double?
-
-
 }
 
 /// Primitive projection of an RTCStats report; addresses and credentials never enter samples.

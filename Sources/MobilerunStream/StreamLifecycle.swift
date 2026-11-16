@@ -45,7 +45,7 @@ import MobilerunStreamCore
         guard monitor == nil else { return }
         let foreground = UIApplication.shared.applicationState != .background
         transitions = StreamWakeTransitions(foreground: foreground)
-        session?.setHidden(!foreground)
+        session?.setVisible(foreground)
         epoch += 1
         let current = epoch
         NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
@@ -71,7 +71,7 @@ import MobilerunStreamCore
     deinit { monitor?.cancel() }
     private func foreground(_ value: Bool, epoch: Int) {
         guard self.epoch == epoch, monitor != nil else { return }
-        session?.setHidden(!value)
+        session?.setVisible(value)
         if transitions.setForeground(value) { session?.handleWake() }
     }
 }

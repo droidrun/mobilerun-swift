@@ -126,10 +126,10 @@ import SwiftUI
                     } catch { self?.mark("benchmark failed") }
                 }
             case "hidden":
-                session.setHidden(command.enabled ?? true)
+                session.setVisible(!(command.enabled ?? true))
                 mark("hidden \(command.enabled ?? true)")
             case "wake":
-                session.setHidden(false)
+                session.setVisible(true)
                 session.handleWake()
                 mark("wake")
             case "retry":
@@ -189,7 +189,7 @@ import SwiftUI
                 mark("teardown status=\(session.status) videoReleased=\(session.videoTrack == nil && session.videoSize == nil) statsReleased=\(session.stats == nil) transportsReleased=\(session.transportsReleasedForTesting)")
                 auditHostAudio()
                 hostPlayer?.stop()
-                mark("closed")
+                mark("session closed")
             default: break
             }
         }
@@ -323,7 +323,7 @@ import SwiftUI
     }
 
     @main struct ConnectionApp: App {
-        // Existing E2E/benchmark runners inject this distinct file before launching.
+        // The validation runners inject this distinct file before launching.
         private static var hasProbeCredentials: Bool {
             let file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("credentials.json")

@@ -17,6 +17,7 @@ import statistics
 import subprocess
 import sys
 import time
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'Examples/Connection/tool'))
@@ -38,7 +39,7 @@ def main():
         parser.error('tap coordinates must be normalized to [0, 1]')
     args.evidence.mkdir(parents=True, exist_ok=True)
     credentials = {}
-    derived = ROOT / 'DerivedData'
+    derived = Path(tempfile.mkdtemp(prefix='mobilerun-validation-'))
     device = documents = None
     results = []
     report = args.evidence / 'benchmark-results.md'
@@ -129,7 +130,7 @@ def main():
             (args.evidence / 'benchmark.json').write_text(json.dumps(results, indent=2) + '\n')
             render()
             command('stop')
-            wait(lambda text: 'status closed' in text)
+            wait(lambda text: 'session closed' in text)
             try:
                 wait(lambda text: 'websocket closed code=' in text, timeout=5)
             except RuntimeError:

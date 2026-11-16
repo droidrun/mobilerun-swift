@@ -392,12 +392,12 @@
             try await h.connected()
             await drain()
             #expect(requests.count == 1)
-            session.setHidden(true)
+            session.setVisible(false)
             requests[0](videoReport, 999)
             h.clock.advance(to: h.clock.now + 2000)
             #expect(session.stats == nil)
             #expect(requests.count == 1)
-            session.setHidden(false)
+            session.setVisible(true)
             #expect(requests.count == 2)
             requests[1](videoReport, 250)
             #expect(session.stats?.timeToFirstFrameMs == 250)
@@ -429,6 +429,25 @@
             #expect(requests.count == 3)
             requests[2](videoReport, 250)
             #expect(session.stats?.fps == 30)
+        }
+
+        @Test func closeFreezesStatusAndDisablesControls() async throws {
+            let h = try SessionHarness()
+            let session = DeviceStreamSession(engine: h.engine, videoSize: VideoSize(width: 100, height: 200))
+            let view = DeviceStreamUIView(session: session, hasControl: true)
+            try await h.connected()
+            var updates: [StreamStatus] = []
+            let subscription = session.$status.sink { updates.append($0) }
+            let beforeClose = updates
+            session.close()
+            session.retry()
+            session.start()
+            view.hasControl = true
+            #expect(session.status == .connected)
+            #expect(updates == beforeClose)
+            #expect(!view.hasControl)
+            #expect(!view.canBecomeFirstResponder)
+            subscription.cancel()
         }
 
         @Test func closeFinishesStatisticsWithoutViewInvalidationPerSample() async throws {

@@ -17,18 +17,7 @@
         #endif
 
         func open(_ credentials: StreamCredentials) throws {
-            guard var components = URLComponents(url: credentials.url, resolvingAgainstBaseURL: false),
-                let scheme = components.scheme, ["ws", "wss"].contains(scheme), components.host != nil
-            else {
-                throw SignallingError.invalidEndpoint
-            }
-            if let token = credentials.token {
-                var query = components.queryItems ?? []
-                query.removeAll { $0.name == "token" }
-                query.append(URLQueryItem(name: "token", value: token))
-                components.queryItems = query
-            }
-            guard let url = components.url else { throw SignallingError.invalidEndpoint }
+            let url = try Self.endpoint(credentials)
             let config = URLSessionConfiguration.ephemeral
             config.urlCache = nil
             let session = URLSession(
@@ -50,6 +39,26 @@
                     }
                 } catch { self?.reportFailure(socket) }
             }
+        }
+        static func endpoint(_ credentials: StreamCredentials) throws -> URL {
+            guard var components = URLComponents(url: credentials.url, resolvingAgainstBaseURL: false),
+                let scheme = components.scheme, ["ws", "wss"].contains(scheme), components.host != nil
+            else {
+                throw SignallingError.invalidEndpoint
+            }
+            if let token = credentials.token, !token.isEmpty {
+                // Preserve existing query bytes; only the replacement token is encoded.
+                var query = components.percentEncodedQuery?.components(separatedBy: "&") ?? []
+                query.removeAll { $0.components(separatedBy: "=")[0].removingPercentEncoding == "token" }
+                let unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+                guard let encodedToken = token.addingPercentEncoding(withAllowedCharacters: unreserved) else {
+                    throw SignallingError.invalidEndpoint
+                }
+                query.append("token=" + encodedToken)
+                components.percentEncodedQuery = query.joined(separator: "&")
+            }
+            guard let url = components.url else { throw SignallingError.invalidEndpoint }
+            return url
         }
         @discardableResult func send(_ text: String) -> Bool {
             guard let socket, !failed else { return false }

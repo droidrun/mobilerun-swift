@@ -82,9 +82,10 @@ enum SampleAppearance: String, CaseIterable {
         model.stop()
         fetchCount = 0
         decision = nil
-        pending = PendingApproval(approvalId: UUID().uuidString, kind: "payment_card", details: [
-            "label": .string("Visa 4242"), "targetPackage": .string("com.example.shop")
-        ], expiresAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(30)))
+        pending = PendingApproval(
+            approvalId: UUID().uuidString, kind: "payment_card",
+            details: ["label": .string("Visa 4242"), "targetPackage": .string("com.example.shop")],
+            expiresAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(30)))
         model.start()
     }
 }

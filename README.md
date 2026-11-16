@@ -1,10 +1,10 @@
 # mobilerun-swift
 
-Pre-release Swift libraries for live Mobilerun device streams. Requires Swift 6.0 or newer.
-The connection library supports iOS 15+; `MobilerunProtocol` also supports macOS 13+.
+Pre-release Swift SDK for device streaming, remote input and task approvals.
+Requires Swift 6.2 and Xcode 26 or newer. `MobilerunStream` supports iOS 15+ only;
+macOS is used for transport-independent tests and does not provide streaming.
 
-- `MobilerunStream`: observable session, SwiftUI/UIKit video and input, and native WebRTC on iOS.
-- `MobilerunProtocol`: binary control encoders, typed signalling and protocol constants.
+The protocol target is an implementation detail, not a library product.
 
 ## Quick start
 
@@ -29,15 +29,14 @@ session.close()
 After release, use `.package(url: "https://github.com/droidrun/mobilerun-swift", .upToNextMinor(from: "0.1.0"))`.
 
 Run the interactive sample and follow the checklist in [TESTING.md](TESTING.md).
-`MobilerunProtocol` is also available for standalone wire helpers.
 See [RELEASING.md](RELEASING.md) for the API contract and release process.
 
 ## Connection
 
 The session is an `@MainActor ObservableObject`. Native video tracks are internal to the package.
 It publishes `status` (`connecting`, `connected`,
-`reconnecting(attempt:)`, `unavailable`, or `closed`) and `videoSize` (raw frame width,
-height and clockwise rotation). `start()` is idempotent; `close()` is permanent. Call `retry()` when
+`reconnecting(attempt:)`, or `unavailable`) and `videoSize` (raw frame width,
+height and clockwise rotation). `start()` is idempotent; `close()` is permanent. After close, status is no longer updated and controls are disabled. Call `retry()` when
 unavailable to start a fresh retry budget and fetch fresh credentials. The credentials provider runs
 at start, on recovery, and when a token is rejected. Nil means the device is not ready;
 the engine alone polls at 3,000 ms only until the first target is found (a thrown provider
@@ -45,7 +44,10 @@ error also counts as not ready). Each provider call is bounded by the connection
 Remounts reuse the newest cached target; a heal refreshes it in the background and survives
 remounts. Nil or failed refreshes preserve that cache, and connection failures still consume
 the retry budget until unavailable/Retry. Pass your integrator backend call directly as the
-provider; no separate credentials helper is needed.
+provider; no separate credentials helper is needed. A token-only refresh while connected is
+stored for the next mount; a changed URL, or changed credentials while disconnected,
+remounts immediately once pending recovery permits it. A nil or empty token leaves the
+stream URL unchanged; supplied tokens are percent-encoded, including `+`.
 The API key must stay on your backend and must never ship inside an app. Credentials are never logged by the SDK.
 
 A closed signalling socket or failed/closed peer rebuilds both transports through the reconnect
@@ -71,12 +73,19 @@ preferences are VP9, H.265, H.264, then the rest; the server selects from the of
 has no H.265 decoder, only H.264 is offered. `StreamConfig(videoCodec: .h264Only)` explicitly forces
 that fallback while preserving retransmission and redundancy codecs. The pinned framework exposes
 no receiver playout-delay/jitter-buffer target setter,
-so the SDK cannot apply the browser's zero-playout-delay hint.
+so the SDK cannot request zero playout delay.
 
 All sessions share one peer connection factory, initialized lazily on the main actor and retained
 for the process lifetime. `close()` releases the session's WebSocket, peer, data channels, timers,
 requests and media references. Dropping the session also tears down its transports; explicit close
 is recommended for deterministic release.
+
+### Using alongside other WebRTC SDKs
+
+All stream sessions share the process-wide WebRTC audio session. Changing mute state
+also changes that shared audio gate, which can affect another SDK using the same framework.
+SwiftPM pins LiveKitWebRTC exactly to `150.7871.05`; dependencies sharing it must resolve
+to that version.
 
 ## Video and input
 
@@ -154,7 +163,7 @@ foreground and subscribed. Use `sink` or SwiftUI `onReceive(session.statsPublish
 for the desired measurement lifetime. Cancelling the last subscriber stops native sampling and clears
 `stats`. It also becomes nil when hidden, disconnected or closed, including transient peer dips
 hidden by the public ICE-restart grace period. Each connection attempt resets
-first-frame timing and rate baselines. The session's lifecycle owner calls `setHidden(_:)`;
+first-frame timing and rate baselines. The session's lifecycle owner calls `setVisible(_:)`;
 the default UI already does this. The publisher completes when the session closes. Statistics
 updates do not emit session-wide `objectWillChange` notifications; observe the publisher for samples.
 
@@ -194,17 +203,15 @@ Fixtures are pinned in [`conformance/VERSION`](conformance/VERSION).
 
 [`Examples/Connection`](Examples/Connection) contains the validation app and runners; see
 [`run-input.py --help`](Examples/Connection/tool/run-input.py) for the input scenario contract.
-Existing runners inject `credentials.json` to select the native validation view;
+The runners inject `credentials.json` to select the native validation view;
 `--default-ui` selects default UI validation. Normal launch opens the tester app.
 
-To refresh protocol fixtures:
+Maintainers refresh the vendored protocol fixtures from a local fixture checkout:
 
 ```sh
 tool/sync-conformance.sh "$(cat conformance/VERSION)" /path/to/conformance-clone
 python3 tool/generate-constants.py
 ```
-
-Licensed under Apache-2.0; see [LICENSE](LICENSE).
 
 ## Default UI
 
@@ -222,7 +229,7 @@ DeviceStream(session: session, hasControl: true) // optional showsNavigation: fa
 
 `DeviceStream` composes the native video/input view, a connecting/reconnecting pill,
 retry view and Back/Home/Recent navigation. It has no logo or branding. The host still
-starts and closes the session. A single `canControl = hasControl && status != unavailable`
+starts and closes the session. One control setting, enabled while the session is open and available,
 is passed to both video input and navigation. Display-only mode keeps video visible.
 The backend remains responsible for authorization.
 
@@ -230,18 +237,17 @@ Light tokens are the default, regardless of the phone's appearance. Opt into dar
 `.streamTheme(.dark)`, or explicitly follow the host with `.streamThemeFollowsSystem(light: .light, dark: .dark)` (both palettes are customizable).
 Every React semantic color token is available: background, foreground, card,
 cardForeground, muted, mutedForeground, border, ring, primary, primaryForeground,
-accent, accentForeground and destructive. `radius` controls card corners;
-`typography` controls the component font. Buttons use React's 6-point radius.
+accent, accentForeground and destructive. `radius` is the base radius, defaulting to 8 points. Buttons use `radius × 0.75`
+and cards use `radius + 4`, giving 6-point buttons and 12-point cards by default;
+`typography` controls the component font.
 Defaults convert the React CSS OKLCH values once using CSS Color 4's OKLab-to-linear-sRGB
 matrix and sRGB transfer function, clamping out-of-gamut channels to [0, 1]. The dark
 border preserves the source's 10% white alpha. Colors are stored as gamma-encoded sRGB.
 
 `StreamLabels` contains stream/navigation labels; `TaskApprovalLabels` independently
-contains approval labels via `.taskApprovalLabels(_:)`. `StreamLabels.statusLabel(_:)`
-formats the connecting/reconnecting placeholder. `connecting` replaces React's
-`placeholderLabel`; reconnect attempts accept `{attempt}` and `{max}`; countdown accepts
-`{time}`. Theme, both label types and slots support `with { ... }` copies. Other value
-types use explicit initializers with defaulted fields. The default `.subheadline` font
+contains approval labels via `.taskApprovalLabels(_:)`. `connecting` replaces React's
+`placeholderLabel`; reconnect attempts accept `{attempt}` and `{max}` (`ReconnectPolicy.maxAttempts` is 6); countdown accepts
+`{time}`. Theme, both label types and slots support `with { ... }` copies. SDK-created values have no public constructors or copy helpers. The default `.subheadline` font
 scales with Dynamic Type.
 
 Replace any piece using `StreamSlots`; each builder defaults to the matching component:
@@ -261,8 +267,8 @@ let slots = StreamSlots(
 DeviceStream(session: session, slots: slots)
 ```
 
-The overlay context contains status, video presence and retry action; builders
-inherit theme/labels through the environment. Navigation and approval actions each
+Each overlay receives one `StreamOverlayState` with status, labels, video presence
+and retry action; builders inherit theme through the environment and read labels from the state. Navigation and approval actions each
 receive one state object. `StreamStatusPill`, `StreamNavigationBar`, `StreamPlaceholder`
 and `StreamUnavailableView` can also be used independently.
 
@@ -270,7 +276,7 @@ The composite observes real background→foreground and offline→online transit
 Background pauses keep-alives; foreground resumes them and wakes pending recovery.
 Initial foreground/online registration does not wake or restart a connection. Custom
 UI can retain `StreamLifecycleAdapter(session:)` and call `start()`/`stop()` with its
-visible lifetime, or call `setHidden(_:)`/`handleWake()` directly. Use one lifecycle
+visible lifetime, or call `setVisible(_:)`/`handleWake()` directly. Use one lifecycle
 adapter for the current session; use `rebind(session:)` if it changes. `DeviceStream`
 rebinds automatically. Unmounting the composite removes its observers; it does not close
 the app-owned session.
@@ -300,13 +306,13 @@ Omit the `device` builder for a standalone card. Unknown kinds or malformed paym
 details show the generic heading and still allow decisions. The card parses `label`
 (falling back to `credentialName`), `targetPackage` and optional `targetHost`.
 `PendingApproval` is Codable and preserves arbitrary JSON details via `JSONValue` from
-`MobilerunProtocol`. `PendingApproval.paymentCardDetails()` exposes validated payment-card
+`import MobilerunStream` alone. `PendingApproval.paymentCardDetails()` exposes validated payment-card
 details to custom UI. Parsing/countdown free functions stay internal.
 
 Without `subscribe`, the model polls every 3 seconds after each completed fetch.
 An optional `subscribe(taskId, onChange) -> Result<Unsubscribe, Error>` replaces polling;
 `Unsubscribe` returns `Result<Void, Error>`, and `onError` is non-throwing.
-events only trigger a fetch, and the backend response remains authoritative.
+Subscription notifications only trigger a fetch, and the backend response remains authoritative.
 Overlapping/stale fetch results and results from old tasks or disposed models are ignored.
 `setTaskId(_:)` resets decision state and rebinds a model whose host requested running;
 an empty task pauses work, and a subsequent nonempty task resumes it until `stop()`.
@@ -315,18 +321,19 @@ Every completed decision refetches, including 404/409 failures. Decision errors 
 until the next decision/task change; fetch errors clear on the next successful fetch.
 Integrator cancellation and timeout errors are ordinary failures: deciding clears, the
 error appears and the model refetches. Only the model's own stop/disposal discards
-cancelled work silently. Subscription failures publish an error; unsubscribe failures
-only reach `onError` and never replace task state. `TaskApprovalState.error` is a display
+cancelled work silently. Subscription failures are reported through `onError`, and through
+`state.error` until the next successful fetch. The controller falls back to polling every
+3 seconds; unsubscribe failures only reach `onError` and never replace task state. `TaskApprovalState.error` is a display
 string and the model retains its underlying `error` object. State and theme are Equatable.
 
 The countdown is display-only, isolated from the card/device and stops ticking at expiry;
 only the backend decides whether a late approval is accepted. Errors announce immediately
 through VoiceOver. Both actions disable while deciding. Replace them with the `actions`
-builder, whose `TaskApprovalActionsState` supplies deciding/decision and `onDecide`.
+builder, whose `TaskApprovalActionsState` supplies `isPending`, decision and `onDecide`.
 Below 768 points of card width (including padding) the card switches Details/Device;
 at 768 and above it shows them side by side. Long details scroll inside their fixed-height
-area. Error/actions sit below that area and remain available in either tab. New approval
-identifiers reset the selected tab; repeated error text is announced only once until changed.
+area. Error/actions sit below that area and remain available in either view. New approval
+identifiers reset the selected view; repeated error text is announced only once until changed.
 The device remains mounted through switches and width changes.
 
 The validation example supports `--default-ui --ui-state <state>` with connecting,
@@ -347,11 +354,10 @@ The video renderer never receives a glass effect. While reconnecting retains vid
 placeholder has an opaque theme background so glass cannot sample it; the phone glyph
 appears only when no video is available.
 
-Build the iOS UI with Xcode 26 or later (the iOS 26 SDK); the app deployment target
-remains iOS 15.
-
 Set `.streamTheme(.light.with { $0.surfaceStyle = .solid })` to keep opaque chrome,
 or apply the same override to `.dark`. Theme tokens still supply tint and text colors.
-The deployment target remains iOS 15; earlier systems use the existing solid styling.
+The deployment target remains iOS 15; earlier systems use solid styling.
 Reduce Transparency and Increase Contrast dynamically select the opaque token-based
 fallback for readable controls, including when preferences change while mounted.
+
+Licensed under Apache-2.0; see [LICENSE](LICENSE).

@@ -12,6 +12,7 @@
     /// All sessions share one process-wide peer factory. close releases the session's resources.
     @MainActor public final class DeviceStreamSession: ObservableObject {
         @Published public private(set) var status: StreamStatus = .connecting
+        @Published private(set) var isClosed = false
         @Published public private(set) var videoSize: VideoSize?
         /// Latest inbound-video sample; nil unless connected, visible and subscribed.
         public var stats: StreamStats? { statistics.value }
@@ -95,7 +96,6 @@
                 guard let self else { return }
                 self.status = status
                 self.updateSampling()
-                if status == .closed { self.statistics.finish() }
             }
         }
 
@@ -110,7 +110,7 @@
             }
         }
 
-        private var canSampleStats: Bool { status == .connected && peerConnected && !hidden && statistics.isObserved }
+        private var canSampleStats: Bool { !isClosed && status == .connected && peerConnected && !hidden && statistics.isObserved }
 
         private func updateSampling() { sampler?.setActive(canSampleStats) }
 
@@ -118,12 +118,18 @@
         public func start() { engine.start() }
         /// Starts a fresh cycle after the retry budget is exhausted.
         public func retry() { engine.retry() }
-        public func close() { engine.close() }
-        /// Suspend keep-alives while hidden. The default UI manages this automatically.
-        public func setHidden(_ hidden: Bool) {
-            self.hidden = hidden
+        public func close() {
+            guard !isClosed else { return }
+            engine.close()
+            isClosed = true
             updateSampling()
-            engine.setHidden(hidden)
+            statistics.finish()
+        }
+        /// Suspend keep-alives while not visible. The default UI manages this automatically.
+        public func setVisible(_ visible: Bool) {
+            self.hidden = !visible
+            updateSampling()
+            engine.setVisible(visible)
         }
         /// Foreground/network recovery skips backoff or restarts an unavailable session.
         public func handleWake() { engine.handleWake() }
@@ -138,7 +144,7 @@
         @discardableResult package func sendHover(_ data: Data) -> Bool { engine.sendHover(data) }
         public func openURL(_ url: String) { engine.openURL(url) }
         public func screenshot(
-            timeout: TimeInterval = TimeInterval(SignallingTiming.screenshotTimeoutMs) / 1000
+            timeout: TimeInterval = 30
         ) async throws -> Data {
             try await engine.screenshot(timeout: timeout)
         }

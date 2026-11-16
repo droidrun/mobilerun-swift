@@ -1,5 +1,5 @@
 #!/bin/bash
-# Dump public declarations for both supported platforms with the selected Xcode.
+# Dump public declarations for the iOS product and macOS test destination with the selected Xcode.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 case "${1:-}" in

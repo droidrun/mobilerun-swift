@@ -27,7 +27,7 @@ public struct StreamLabels: Sendable, Equatable, StreamCustomizable {
         self.reconnectingAttempt = reconnectingAttempt; self.unavailable = unavailable
         self.retry = retry; self.back = back; self.home = home; self.recent = recent
     }
-    public func statusLabel(_ status: StreamStatus) -> String {
+    func statusLabel(_ status: StreamStatus) -> String {
         switch status {
         case .reconnecting(let attempt):
             return attempt > 1 ? reconnectingAttempt

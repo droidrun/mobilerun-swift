@@ -7,12 +7,12 @@ import UIKit
 import MobilerunProtocol
 
 @MainActor public struct TaskApprovalActionsState {
-    public var isDeciding: Bool
+    public var isPending: Bool
     public var decision: ApprovalDecision?
     public var onDecide: (ApprovalDecision) -> Void
-    public init(isDeciding: Bool = false, decision: ApprovalDecision? = nil,
-                onDecide: @escaping (ApprovalDecision) -> Void = { _ in }) {
-        self.isDeciding = isDeciding; self.decision = decision; self.onDecide = onDecide
+    public init(isPending: Bool = false, decision: ApprovalDecision? = nil,
+                onDecide: @escaping (ApprovalDecision) -> Void) {
+        self.isPending = isPending; self.decision = decision; self.onDecide = onDecide
     }
 }
 
@@ -40,7 +40,7 @@ private enum TaskApprovalLayout {
     private let device: Device
     private let hasDevice: Bool
     private let actions: (TaskApprovalActionsState) -> AnyView
-    public init(state: TaskApprovalState = TaskApprovalState(), onDecide: @escaping (ApprovalDecision) -> Void,
+    public init(state: TaskApprovalState, onDecide: @escaping (ApprovalDecision) -> Void,
                 actions: @escaping (TaskApprovalActionsState) -> AnyView = { AnyView(StreamApprovalActions(state: $0)) },
                 @ViewBuilder device: () -> Device) {
         self.state = state; self.onDecide = onDecide; self.actions = actions
@@ -53,7 +53,8 @@ private enum TaskApprovalLayout {
             let viewportHeight = wide ? TaskApprovalLayout.wideHeight : TaskApprovalLayout.narrowHeight
             VStack(alignment: .leading, spacing: 16) {
                 Text(approval.paymentCardDetails() == nil ? labels.waiting : labels.paymentCardTitle).fontWeight(.semibold)
-                ApprovalCountdown(approvalId: approval.approvalId, expiresAt: approval.expiresAt)
+                ApprovalCountdown(expiresAt: approval.expiresAt)
+                    .id([approval.approvalId, approval.expiresAt])
                 if hasDevice {
                     if !wide { viewSwitch(approvalId: approval.approvalId, showingDevice: showingDevice) }
                     GeometryReader { geometry in
@@ -82,8 +83,8 @@ private enum TaskApprovalLayout {
                     .onAppear { cardWidth = geometry.size.width }
                     .onChange(of: geometry.size.width) { cardWidth = $0 }
             })
-            .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.radius))
-            .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
+            .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.cardRadius))
+            .overlay(RoundedRectangle(cornerRadius: theme.cardRadius).stroke(theme.border, lineWidth: 1))
             .onAppear { announceErrorIfChanged() }
             .onChange(of: state.error) { _ in announceErrorIfChanged() }
         }
@@ -93,7 +94,7 @@ private enum TaskApprovalLayout {
             if let error = state.error {
                 Text(error).foregroundColor(theme.destructive).fixedSize(horizontal: false, vertical: true)
             }
-            actions(TaskApprovalActionsState(isDeciding: state.isDeciding, decision: state.decision, onDecide: onDecide))
+            actions(TaskApprovalActionsState(isPending: state.isDeciding, decision: state.decision, onDecide: onDecide))
         }
     }
     private func viewSwitch(approvalId: String, showingDevice: Bool) -> some View {
@@ -107,7 +108,7 @@ private enum TaskApprovalLayout {
     private func switchButton(_ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) { Text(label).frame(maxWidth: .infinity) }
             .modifier(StreamChromeButton(kind: selected ? .primary : .outline))
-            .overlay(RoundedRectangle(cornerRadius: StreamMetrics.buttonRadius).stroke(selected ? theme.ring : .clear, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: theme.buttonRadius).stroke(selected ? theme.ring : .clear, lineWidth: 1))
             .accessibilityAddTraits(selected ? .isSelected : [])
     }
     @ViewBuilder private func details(_ approval: PendingApproval) -> some View {
@@ -120,13 +121,13 @@ private enum TaskApprovalLayout {
                     Divider().overlay(theme.border)
                     fact(labels.domain, value: host, symbol: "globe")
                 }
-            }.overlay(RoundedRectangle(cornerRadius: 8).stroke(theme.border, lineWidth: 1))
+            }.overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
         }
     }
     private func fact(_ label: String, value: String, symbol: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol).frame(width: 36, height: 36).foregroundColor(theme.mutedForeground)
-                .background(theme.muted).cornerRadius(StreamMetrics.buttonRadius).accessibilityHidden(true)
+                .background(theme.muted).cornerRadius(theme.buttonRadius).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(label).foregroundColor(theme.mutedForeground)
                 Text(value).fontWeight(.medium).fixedSize(horizontal: false, vertical: true)
@@ -143,7 +144,7 @@ private enum TaskApprovalLayout {
     }
 }
 public extension TaskApprovalCard where Device == EmptyView {
-    init(state: TaskApprovalState = TaskApprovalState(), onDecide: @escaping (ApprovalDecision) -> Void,
+    init(state: TaskApprovalState, onDecide: @escaping (ApprovalDecision) -> Void,
          actions: @escaping (TaskApprovalActionsState) -> AnyView = { AnyView(StreamApprovalActions(state: $0)) }) {
         self.init(state: state, onDecide: onDecide, actions: actions) { EmptyView() }
     }
@@ -152,7 +153,7 @@ public extension TaskApprovalCard where Device == EmptyView {
 @MainActor public struct StreamApprovalActions: View {
     @Environment(\.taskApprovalLabels) private var labels
     public var state: TaskApprovalActionsState
-    public init(state: TaskApprovalActionsState = TaskApprovalActionsState()) { self.state = state }
+    public init(state: TaskApprovalActionsState) { self.state = state }
     public var body: some View {
         StreamGlassGroup {
             HStack(spacing: 8) {
@@ -162,35 +163,37 @@ public extension TaskApprovalCard where Device == EmptyView {
         }
     }
     private func action(_ decision: ApprovalDecision, label: String, symbol: String) -> some View {
-        Button { if !state.isDeciding { state.onDecide(decision) } } label: {
+        Button { if !state.isPending { state.onDecide(decision) } } label: {
             HStack {
-                if state.isDeciding && state.decision == decision { ProgressView() }
+                if state.isPending && state.decision == decision { ProgressView() }
                 else { Image(systemName: symbol) }
                 Text(label)
             }.frame(maxWidth: .infinity)
-        }.modifier(StreamChromeButton(kind: decision == .approve ? .primary : .outline)).disabled(state.isDeciding)
+        }.modifier(StreamChromeButton(kind: decision == .approve ? .primary : .outline)).disabled(state.isPending)
     }
 }
 
 /// Only this leaf ticks; expiry cancels its task. The card/device never observes the clock.
-private struct ApprovalCountdown: View {
+struct ApprovalCountdown: View {
     @Environment(\.streamTheme) private var theme
     @Environment(\.taskApprovalLabels) private var labels
-    let approvalId: String
     let expiresAt: String
-    @State private var remaining = 0.0
+    @State private(set) var remaining: Double
+    init(expiresAt: String) {
+        self.expiresAt = expiresAt
+        _remaining = State(initialValue: remainingMs(expiresAt: expiresAt))
+    }
     var body: some View {
         Label(remaining > 0 ? labels.timeLeft.replacingOccurrences(of: "{time}", with: formatRemaining(remaining)) : labels.expired,
               systemImage: "clock")
             .monospacedDigit().padding(.horizontal, 10).padding(.vertical, 4)
             .foregroundColor(theme.mutedForeground).background(theme.muted).clipShape(Capsule())
             .accessibilityAddTraits(.updatesFrequently)
-            .task(id: [approvalId, expiresAt]) {
-                let deadline = approvalExpiryMs(expiresAt) ?? 0
-                remaining = deadline - Date().timeIntervalSince1970 * 1000
+            .task {
+                remaining = remainingMs(expiresAt: expiresAt)
                 while remaining > 0 {
                     do { try await Task.sleep(nanoseconds: UInt64(min(1000, remaining) * 1_000_000)) } catch { return }
-                    remaining = deadline - Date().timeIntervalSince1970 * 1000
+                    remaining = remainingMs(expiresAt: expiresAt)
                 }
             }
     }

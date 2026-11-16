@@ -154,32 +154,6 @@ public enum ServerMessage: Sendable, Equatable {
         default: return .ignored
         }
     }
-
-    // Re-serialize recognized fields for conformance comparisons.
-    func toJSON() throws -> String {
-        let object: [String: JSONValue]
-        switch self {
-        case .answer(let answer):
-            object = ["type": .string("answer"), "sdp": .string(answer.sdp)]
-        case .candidate(let candidate):
-            object = ["type": .string("candidate"), "candidate": .string(candidate.candidate),
-                      "sdpMid": candidate.sdpMid.map(JSONValue.string) ?? .null,
-                      "sdpMLineIndex": candidate.sdpMLineIndex.map { .number(Double($0)) } ?? .null]
-        case .rtcConfiguration(let config):
-            var fields: [String: JSONValue] = ["type": .string("rtcConfiguration")]
-            if let configuration = config.configuration {
-                fields["rtcConfiguration"] = .object(configuration)
-            }
-            object = fields
-        case .screenshot(let screenshot):
-            object = ["type": .string("screenshot"), "id": .string(screenshot.id),
-                      "dataUri": .string(screenshot.dataURI)]
-        case .screenshotError(let error):
-            object = ["type": .string("screenshotError"), "id": .string(error.id),
-                      "message": .string(error.message)]
-        }
-        return try jsonText(object)
-    }
 }
 
 private func validOptionalString(_ value: JSONValue?) -> Bool {

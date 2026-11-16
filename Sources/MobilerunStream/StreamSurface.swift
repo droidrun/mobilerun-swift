@@ -5,7 +5,6 @@
 import SwiftUI
 
 enum StreamMetrics {
-    static let buttonRadius: CGFloat = 6
     static let navigationHeight: CGFloat = 40
 }
 
@@ -69,11 +68,11 @@ struct StreamChromeButton: ViewModifier {
         if #available(iOS 26, *), policy.usesGlass {
             if kind == .primary {
                 content.buttonStyle(.glassProminent).tint(policy.theme.primary)
-                    .buttonBorderShape(.roundedRectangle(radius: StreamMetrics.buttonRadius))
+                    .buttonBorderShape(.roundedRectangle(radius: policy.theme.buttonRadius))
                     .foregroundColor(policy.theme.primaryForeground)
             } else {
                 content.buttonStyle(.glass).tint(policy.theme.accent)
-                    .buttonBorderShape(.roundedRectangle(radius: StreamMetrics.buttonRadius))
+                    .buttonBorderShape(.roundedRectangle(radius: policy.theme.buttonRadius))
                     .foregroundColor(kind == .navigation ? policy.theme.foreground : policy.theme.accentForeground)
             }
         } else if kind == .navigation {
@@ -88,7 +87,8 @@ struct StreamNavigationButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var enabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.foregroundColor(theme.foreground)
-            .background(configuration.isPressed ? theme.muted : theme.background).opacity(enabled ? 1 : 0.5)
+            .background(configuration.isPressed ? theme.muted : theme.background)
+            .clipShape(RoundedRectangle(cornerRadius: theme.buttonRadius)).opacity(enabled ? 1 : 0.5)
     }
 }
 struct StreamButtonStyle: ButtonStyle {
@@ -100,8 +100,8 @@ struct StreamButtonStyle: ButtonStyle {
             .font(theme.typography)
             .foregroundColor(configuration.isPressed ? theme.accentForeground : (outline ? theme.foreground : theme.primaryForeground))
             .background(configuration.isPressed ? theme.accent : (outline ? theme.background : theme.primary))
-            .clipShape(RoundedRectangle(cornerRadius: StreamMetrics.buttonRadius))
-            .overlay(RoundedRectangle(cornerRadius: StreamMetrics.buttonRadius).stroke(outline ? theme.border : .clear, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: theme.buttonRadius))
+            .overlay(RoundedRectangle(cornerRadius: theme.buttonRadius).stroke(outline ? theme.border : .clear, lineWidth: 1))
             .opacity(enabled ? 1 : 0.5)
     }
 }

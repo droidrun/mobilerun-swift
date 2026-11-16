@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 // Copyright 2026 Mobilerun
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,7 +9,6 @@ let package = Package(
     platforms: [.iOS(.v15), .macOS(.v13)],
     products: [
         .library(name: "MobilerunStream", targets: ["MobilerunStream"]),
-        .library(name: "MobilerunProtocol", targets: ["MobilerunProtocol"]),
     ],
     dependencies: [
         .package(url: "https://github.com/livekit/webrtc-xcframework", exact: "150.7871.05"),

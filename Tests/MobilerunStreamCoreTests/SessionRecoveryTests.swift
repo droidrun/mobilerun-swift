@@ -99,7 +99,7 @@ func sessionHandshakeTimeout(event: SignallingEvent?) async throws {
     h.engine.retry()
     h.engine.start()
     h.clock.advance(to: 200000)
-    #expect(h.engine.status == .closed)
+    #expect(h.engine.status == .reconnecting(attempt: 1))
     #expect(h.sockets.count == 1)
     #expect(h.clock.pendingCount == 0)
 }
@@ -203,7 +203,7 @@ func sessionCloseDuringSetup(phase: PendingPhase) async throws {
         await settle { h.peers[0].closed && gate.continuation == nil }
         #expect(h.sockets[0].frames("offer").isEmpty)
     }
-    #expect(h.engine.status == .closed)
+    #expect(h.engine.status == .connecting)
     #expect(h.clock.pendingCount == 0)
 }
 
@@ -282,9 +282,9 @@ func sessionCredentialsPoll() async throws {
 func sessionLifecycle() async throws {
     let h = try SessionHarness(); defer { h.engine.close() }
     try await h.connected(); let ws = h.sockets[0]
-    h.engine.setHidden(true); h.clock.advance(to: 30000)
+    h.engine.setVisible(false); h.clock.advance(to: 30000)
     #expect(ws.frames("keepAlive").isEmpty)
-    h.engine.setHidden(false); h.clock.advance(to: 40000)
+    h.engine.setVisible(true); h.clock.advance(to: 40000)
     #expect(ws.frames("keepAlive").count == 1)
     ws.onEvent?(.closed); #expect(h.engine.status == .reconnecting(attempt: 1))
     h.engine.handleWake(); await settle { h.sockets.count == 2 }
@@ -314,4 +314,34 @@ func sessionProviderFailures() async throws {
     #expect(recovery.engine.status == .unavailable)
     #expect(recovery.credentialCalls == 2)
     #expect(recovery.credentialCancellations == 1)
+}
+
+@Test("Connected credential refresh only remounts for a changed URL", arguments: [
+    ("wss://stream.example.test", 2, false),
+    ("wss://changed.example.test", 3, true),
+]) @MainActor
+func sessionConnectedCredentialRefresh(refreshedURL: String, mountCount: Int, previousClosed: Bool) async throws {
+    let h = try SessionHarness()
+    defer { h.engine.close() }
+    try await h.connected()
+    h.hangCredentials = true
+    h.peers[0].onEvent?(.state(.disconnected))
+    await settle { h.credentialGate != nil }
+    h.clock.advance(to: 1000)
+    h.sockets[1].onEvent?(.opened)
+    try h.sockets[1].receive(h.object("server-rtc-configuration"))
+    await settle { h.peers.count == 2 }
+    h.peers[1].onEvent?(.state(.connected))
+    h.credentialGate?.resume(returning: StreamCredentials(url: URL(string: refreshedURL)!, token: "refreshed-token"))
+    h.credentialGate = nil
+    await drain()
+    #expect(h.sockets.count == mountCount)
+    #expect(h.sockets[1].credentials?.token == "test-token-1")
+    #expect(h.sockets[1].closed == previousClosed)
+    // A later mount must use the stored token even when the healthy connection was retained.
+    h.sockets.last?.onEvent?(.closed)
+    await drain()
+    h.clock.advance(to: h.clock.now + 60_000)
+    #expect(h.sockets.last?.credentials?.token == "refreshed-token")
+    #expect(h.sockets.last?.credentials?.url.absoluteString == refreshedURL)
 }

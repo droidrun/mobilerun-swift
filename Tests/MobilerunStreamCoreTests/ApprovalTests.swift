@@ -8,6 +8,34 @@ import MobilerunStreamCore
 import Testing
 
 struct ApprovalValueTests {
+    @Test(arguments: [
+        #"{"approvalId":"a","kind":"future","expiresAt":"nope"}"#,
+        #"{"approvalId":"a","kind":"future","expiresAt":"nope","details":null}"#,
+    ])
+    func absentDetailsDecodeAsEmpty(_ json: String) throws {
+        let approval = try JSONDecoder().decode(PendingApproval.self, from: Data(json.utf8))
+        #expect(approval.approvalId == "a")
+        #expect(approval.details == [:])
+    }
+    @Test func credentialsRedactAllDescriptions() {
+        let credentials = StreamCredentials(url: URL(string: "wss://private.example.test/secret?token=url-secret")!, token: "token-secret")
+        var reflected = ""
+        dump(credentials, to: &reflected)
+        #expect(String(describing: credentials) == "StreamCredentials(<redacted>)")
+        #expect(String(reflecting: credentials) == "StreamCredentials(<redacted>)")
+        #expect(!reflected.contains("private.example.test"))
+        #expect(!reflected.contains("url-secret"))
+        #expect(!reflected.contains("token-secret"))
+    }
+    @Test(arguments: [
+        (StreamError.notConnected, "Stream is not connected."),
+        (.disconnected, "Stream disconnected."),
+        (.screenshotFailed, "Screenshot failed."),
+        (.screenshotTimeout, "Screenshot timed out."),
+    ])
+    func neutralErrorMessages(error: StreamError, message: String) {
+        #expect(error.localizedDescription == message)
+    }
     @Test func paymentCardVectors() {
         #expect(parsePaymentCardDetails(.object(["label": .string("Visa 4242"), "targetPackage": .string("com.shop"), "targetHost": .string("shop.com")])) == PaymentCardDetails(card: "Visa 4242", targetPackage: "com.shop", targetHost: "shop.com"))
         #expect(parsePaymentCardDetails(.object(["credentialName": .string("corp"), "targetPackage": .string("com.shop")])) == PaymentCardDetails(card: "corp", targetPackage: "com.shop"))
@@ -43,11 +71,11 @@ struct ApprovalValueTests {
         let approval = PendingApproval(approvalId: "a", kind: "future", details: ["nested": .object(["x": .bool(true)])], expiresAt: "nope")
         #expect(try JSONDecoder().decode(PendingApproval.self, from: JSONEncoder().encode(approval)) == approval)
         #expect(approval.paymentCardDetails() == nil)
-        #expect(PendingApproval(kind: "payment_card", details: ["label": .string("x"), "targetPackage": .string("a")]).paymentCardDetails()?.card == "x")
+        #expect(PendingApproval(approvalId: "a", kind: "payment_card", details: ["label": .string("x"), "targetPackage": .string("a")], expiresAt: "nope").paymentCardDetails()?.card == "x")
         #expect(TaskApprovalLabels().with { $0.waiting = "Loading" }.approve == "Approve")
     }
     @Test func stateMapping() {
-        let statuses: [StreamStatus] = [.connecting, .reconnecting(attempt: 2), .connected, .unavailable, .closed]
+        let statuses: [StreamStatus] = [.connecting, .reconnecting(attempt: 2), .connected, .unavailable]
         for status in statuses {
             for control in [false, true] {
                 let mapping = StreamPresentation(status: status, hasControl: control)
@@ -56,6 +84,10 @@ struct ApprovalValueTests {
                 #expect(mapping.showsPlaceholder == (status == .connecting || status == .reconnecting(attempt: 2)))
             }
         }
+    }
+    @Test func closedPresentationDisablesControls() {
+        let mapping = StreamPresentation(status: .connected, hasControl: true, isClosed: true)
+        #expect(!mapping.canControl)
     }
     @Test func errorsAndLabels() {
         #expect(TaskApprovalState(error: "failed") == TaskApprovalState(error: "failed"))
@@ -106,6 +138,9 @@ struct ApprovalValueTests {
 enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
 
 @Suite @MainActor struct ApprovalControllerTests {
+    private func approval(_ id: String) -> PendingApproval {
+        PendingApproval(approvalId: id, kind: "future", expiresAt: "nope")
+    }
     private var approval: PendingApproval { PendingApproval(approvalId: "a", kind: "payment_card", expiresAt: "2000-01-01T00:00:00Z") }
     @Test func pollingAndDecisionRefetch() async {
         let clock = FakeClock()
@@ -131,12 +166,12 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
         let model = TaskApprovalModel(taskId: "first", fetchApproval: { _ in try await gate.fetch() }, decide: { _, _, _ in }, scheduler: clock)
         model.start(); await settle { gate.requests.count == 1 }
         model.refetch(); await settle { gate.requests.count == 2 }
-        gate.requests[1].resume(returning: PendingApproval(approvalId: "new"))
+        gate.requests[1].resume(returning: approval("new"))
         await settle { model.state.approval?.approvalId == "new" }
-        gate.requests[0].resume(returning: PendingApproval(approvalId: "old"))
+        gate.requests[0].resume(returning: approval("old"))
         await drain(); #expect(model.state.approval?.approvalId == "new")
         model.setTaskId("second"); await settle { gate.requests.count == 3 }
-        model.stop(); gate.requests[2].resume(returning: PendingApproval(approvalId: "late"))
+        model.stop(); gate.requests[2].resume(returning: approval("late"))
         await drain(); #expect(model.state.approval == nil); #expect(!model.state.isLoading)
     }
     @Test(arguments: [ApprovalFailure.http404, .http409, .timeout])
@@ -167,6 +202,28 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
         #expect(model.error is CancellationError); #expect(reported == 2)
         model.stop()
     }
+    @Test func failedSubscriptionFallsBackToPolling() async {
+        let clock = FakeClock()
+        var fetches = 0
+        var reported: [ApprovalFailure] = []
+        let model = TaskApprovalModel(taskId: "t", fetchApproval: { _ in fetches += 1; return nil },
+            decide: { _, _, _ in }, subscribe: { _, _ in .failure(ApprovalFailure.timeout) },
+            onError: { reported.append($0 as! ApprovalFailure) }, scheduler: clock)
+        model.start()
+        #expect(model.state.error == ApprovalFailure.timeout.localizedDescription)
+        await settle { !model.state.isLoading }
+        #expect(model.state.error == nil)
+        #expect(reported == [.timeout])
+        clock.advance(to: 2999)
+        #expect(fetches == 1)
+        clock.advance(to: 3000)
+        await drain()
+        #expect(fetches == 2)
+        model.stop()
+        clock.advance(to: 6000)
+        await drain()
+        #expect(fetches == 2)
+    }
     @Test func subscriptionFailuresAndCleanupAreSeparate() async {
         let clock = FakeClock()
         var reported = 0
@@ -174,7 +231,7 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
             subscribe: { _, _ in .failure(ApprovalFailure.timeout) }, onError: { _ in reported += 1 }, scheduler: clock)
         model.start(); await settle { !model.state.isLoading }
         #expect(model.error as? ApprovalFailure == .http404); #expect(reported == 2)
-        #expect(clock.pendingCount == 0)
+        #expect(clock.pendingCount == 1)
         model.stop()
         let cleanup = TaskApprovalModel(taskId: "t", fetchApproval: { _ in throw ApprovalFailure.http409 }, decide: { _, _, _ in },
             subscribe: { _, _ in .success { .failure(ApprovalFailure.timeout) } }, onError: { _ in reported += 1 }, scheduler: clock)

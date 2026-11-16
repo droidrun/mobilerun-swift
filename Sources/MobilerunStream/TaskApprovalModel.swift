@@ -13,12 +13,21 @@ public struct PendingApproval: Sendable, Equatable, Codable {
     public var details: [String: JSONValue]
     public var expiresAt: String
     public var deviceId: String?
+    private enum CodingKeys: String, CodingKey { case approvalId, kind, details, expiresAt, deviceId }
+    public init(from decoder: any Decoder) throws {
+        let fields = try decoder.container(keyedBy: CodingKeys.self)
+        approvalId = try fields.decode(String.self, forKey: .approvalId)
+        kind = try fields.decode(String.self, forKey: .kind)
+        details = try fields.decodeIfPresent([String: JSONValue].self, forKey: .details) ?? [:]
+        expiresAt = try fields.decode(String.self, forKey: .expiresAt)
+        deviceId = try fields.decodeIfPresent(String.self, forKey: .deviceId)
+    }
     /// Validated card fields, or nil for another kind or malformed details.
     public func paymentCardDetails() -> PaymentCardDetails? {
         kind == "payment_card" ? parsePaymentCardDetails(.object(details)) : nil
     }
-    public init(approvalId: String = "", kind: String = "", details: [String: JSONValue] = [:],
-                expiresAt: String = "", deviceId: String? = nil) {
+    public init(approvalId: String, kind: String, details: [String: JSONValue] = [:],
+                expiresAt: String, deviceId: String? = nil) {
         self.approvalId = approvalId; self.kind = kind; self.details = details
         self.expiresAt = expiresAt; self.deviceId = deviceId
     }
@@ -27,22 +36,22 @@ public struct PendingApproval: Sendable, Equatable, Codable {
 public enum ApprovalDecision: String, Sendable, Codable { case approve, deny }
 
 public struct PaymentCardDetails: Sendable, Equatable {
-    public var card: String
-    public var targetPackage: String
-    public var targetHost: String?
-    public init(card: String = "", targetPackage: String = "", targetHost: String? = nil) {
+    public let card: String
+    public let targetPackage: String
+    public let targetHost: String?
+    init(card: String, targetPackage: String, targetHost: String? = nil) {
         self.card = card; self.targetPackage = targetPackage; self.targetHost = targetHost
     }
 }
 
 /// Fetch errors clear on a successful reload; decision errors persist until the next decision/task.
 public struct TaskApprovalState: Equatable {
-    public var approval: PendingApproval?
-    public var isLoading: Bool
-    public var isDeciding: Bool
-    public var decision: ApprovalDecision?
-    public var error: String?
-    public init(approval: PendingApproval? = nil, isLoading: Bool = false,
+    public internal(set) var approval: PendingApproval?
+    public internal(set) var isLoading: Bool
+    public internal(set) var isDeciding: Bool
+    public internal(set) var decision: ApprovalDecision?
+    public internal(set) var error: String?
+    init(approval: PendingApproval? = nil, isLoading: Bool = false,
                 isDeciding: Bool = false, decision: ApprovalDecision? = nil, error: String? = nil) {
         self.approval = approval; self.isLoading = isLoading; self.isDeciding = isDeciding
         self.decision = decision; self.error = error
@@ -153,7 +162,7 @@ public struct TaskApprovalState: Equatable {
             case .failure(let error): self.fetchError = error; self.report(error)
             }
             self.state.isLoading = false; self.publishError()
-            if self.subscribe == nil {
+            if self.unsubscribe == nil {
                 self.poll = self.scheduler.schedule(delayMs: Self.pollIntervalMs) { [weak self] in self?.refetch() }
             }
         }
