@@ -200,6 +200,7 @@ def main():
         print("PASS simulator session", flush=True)
     except DeviceUnavailable as error:
         print(str(error), flush=True)
+        raise SystemExit(2)
     finally:
         if documents:
             (documents / "credentials.json").unlink(missing_ok=True)

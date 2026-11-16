@@ -53,7 +53,7 @@ private enum TaskApprovalLayout {
             let viewportHeight = wide ? TaskApprovalLayout.wideHeight : TaskApprovalLayout.narrowHeight
             VStack(alignment: .leading, spacing: 16) {
                 Text(approval.paymentCardDetails() == nil ? labels.waiting : labels.paymentCardTitle).fontWeight(.semibold)
-                ApprovalCountdown(approvalId: approval.approvalId, expiresAt: approval.expiresAt)
+                ApprovalCountdown(expiresAt: approval.expiresAt)
                     .id([approval.approvalId, approval.expiresAt])
                 if hasDevice {
                     if !wide { viewSwitch(approvalId: approval.approvalId, showingDevice: showingDevice) }
@@ -83,8 +83,8 @@ private enum TaskApprovalLayout {
                     .onAppear { cardWidth = geometry.size.width }
                     .onChange(of: geometry.size.width) { cardWidth = $0 }
             })
-            .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.radius + 4))
-            .overlay(RoundedRectangle(cornerRadius: theme.radius + 4).stroke(theme.border, lineWidth: 1))
+            .background(theme.card).clipShape(RoundedRectangle(cornerRadius: theme.cardRadius))
+            .overlay(RoundedRectangle(cornerRadius: theme.cardRadius).stroke(theme.border, lineWidth: 1))
             .onAppear { announceErrorIfChanged() }
             .onChange(of: state.error) { _ in announceErrorIfChanged() }
         }
@@ -94,7 +94,7 @@ private enum TaskApprovalLayout {
             if let error = state.error {
                 Text(error).foregroundColor(theme.destructive).fixedSize(horizontal: false, vertical: true)
             }
-            actions(TaskApprovalActionsState(isPending: state.isPending, decision: state.decision, onDecide: onDecide))
+            actions(TaskApprovalActionsState(isPending: state.isDeciding, decision: state.decision, onDecide: onDecide))
         }
     }
     private func viewSwitch(approvalId: String, showingDevice: Bool) -> some View {
@@ -108,7 +108,7 @@ private enum TaskApprovalLayout {
     private func switchButton(_ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) { Text(label).frame(maxWidth: .infinity) }
             .modifier(StreamChromeButton(kind: selected ? .primary : .outline))
-            .overlay(RoundedRectangle(cornerRadius: theme.radius * 0.75).stroke(selected ? theme.ring : .clear, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: theme.buttonRadius).stroke(selected ? theme.ring : .clear, lineWidth: 1))
             .accessibilityAddTraits(selected ? .isSelected : [])
     }
     @ViewBuilder private func details(_ approval: PendingApproval) -> some View {
@@ -121,13 +121,13 @@ private enum TaskApprovalLayout {
                     Divider().overlay(theme.border)
                     fact(labels.domain, value: host, symbol: "globe")
                 }
-            }.overlay(RoundedRectangle(cornerRadius: 8).stroke(theme.border, lineWidth: 1))
+            }.overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: 1))
         }
     }
     private func fact(_ label: String, value: String, symbol: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol).frame(width: 36, height: 36).foregroundColor(theme.mutedForeground)
-                .background(theme.muted).cornerRadius(theme.radius * 0.75).accessibilityHidden(true)
+                .background(theme.muted).cornerRadius(theme.buttonRadius).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(label).foregroundColor(theme.mutedForeground)
                 Text(value).fontWeight(.medium).fixedSize(horizontal: false, vertical: true)
@@ -177,11 +177,9 @@ public extension TaskApprovalCard where Device == EmptyView {
 struct ApprovalCountdown: View {
     @Environment(\.streamTheme) private var theme
     @Environment(\.taskApprovalLabels) private var labels
-    let approvalId: String
     let expiresAt: String
     @State private(set) var remaining: Double
-    init(approvalId: String, expiresAt: String) {
-        self.approvalId = approvalId
+    init(expiresAt: String) {
         self.expiresAt = expiresAt
         _remaining = State(initialValue: remainingMs(expiresAt: expiresAt))
     }
@@ -191,7 +189,7 @@ struct ApprovalCountdown: View {
             .monospacedDigit().padding(.horizontal, 10).padding(.vertical, 4)
             .foregroundColor(theme.mutedForeground).background(theme.muted).clipShape(Capsule())
             .accessibilityAddTraits(.updatesFrequently)
-            .task(id: [approvalId, expiresAt]) {
+            .task {
                 remaining = remainingMs(expiresAt: expiresAt)
                 while remaining > 0 {
                     do { try await Task.sleep(nanoseconds: UInt64(min(1000, remaining) * 1_000_000)) } catch { return }

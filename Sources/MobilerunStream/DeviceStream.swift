@@ -11,7 +11,7 @@ import MobilerunStreamCore
     public var hasVideo: Bool
     public var labels: StreamLabels
     public var retry: () -> Void
-    public init(status: StreamStatus = .connecting, labels: StreamLabels = StreamLabels(),
+    public init(status: StreamStatus = .connecting, labels: StreamLabels,
                 hasVideo: Bool = false, retry: @escaping () -> Void) {
         self.status = status; self.labels = labels; self.hasVideo = hasVideo; self.retry = retry
     }
@@ -123,7 +123,7 @@ import MobilerunStreamCore
             Button(action: state.retry) { Label(state.labels.retry, systemImage: "arrow.clockwise") }
                 .modifier(StreamChromeButton(kind: .primary))
         }.padding(24)
-            .modifier(StreamSurfaceModifier(shape: RoundedRectangle(cornerRadius: theme.radius + 4), fill: theme.card))
+            .modifier(StreamSurfaceModifier(shape: RoundedRectangle(cornerRadius: theme.cardRadius), fill: theme.card))
             .font(theme.typography).foregroundColor(theme.mutedForeground)
             .frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background)
     }

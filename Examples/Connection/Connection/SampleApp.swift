@@ -82,13 +82,10 @@ enum SampleAppearance: String, CaseIterable {
         model.stop()
         fetchCount = 0
         decision = nil
-        let payload: JSONValue = .object([
-            "approvalId": .string(UUID().uuidString),
-            "kind": .string("payment_card"),
-            "details": .object(["label": .string("Visa 4242"), "targetPackage": .string("com.example.shop")]),
-            "expiresAt": .string(ISO8601DateFormatter().string(from: Date().addingTimeInterval(30))),
-        ])
-        pending = try? JSONDecoder().decode(PendingApproval.self, from: JSONEncoder().encode(payload))
+        pending = PendingApproval(
+            approvalId: UUID().uuidString, kind: "payment_card",
+            details: ["label": .string("Visa 4242"), "targetPackage": .string("com.example.shop")],
+            expiresAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(30)))
         model.start()
     }
 }

@@ -17,6 +17,7 @@ for module in modules:
             s["identifier"]["precise"]: s
             for s in graph["symbols"]
             if s["accessLevel"] in ("public", "open") and not s.get("spi")
+            and (module != "MobilerunProtocol" or s["pathComponents"][0] == "JSONValue")
         }
         for identifier, symbol in symbols.items():
             declaration = "".join(f["spelling"] for f in symbol["declarationFragments"])

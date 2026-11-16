@@ -154,8 +154,6 @@ public enum ServerMessage: Sendable, Equatable {
         default: return .ignored
         }
     }
-
-
 }
 
 private func validOptionalString(_ value: JSONValue?) -> Bool {

@@ -340,7 +340,8 @@ func sessionConnectedCredentialRefresh(refreshedURL: String, mountCount: Int, pr
     #expect(h.sockets[1].closed == previousClosed)
     // A later mount must use the stored token even when the healthy connection was retained.
     h.sockets.last?.onEvent?(.closed)
-    h.clock.advance(to: h.clock.now + ReconnectPolicy.delayMs(attempt: 2, random: 0.5))
+    await drain()
+    h.clock.advance(to: h.clock.now + 60_000)
     #expect(h.sockets.last?.credentials?.token == "refreshed-token")
     #expect(h.sockets.last?.credentials?.url.absoluteString == refreshedURL)
 }

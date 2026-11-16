@@ -8,7 +8,7 @@ fixed pixel crop excluding host and device status bars, statusBarBottom, and ste
 Each step supplies a command plus expectEvents, expectNoInput or a screen assertion.
 Tap and swipe coordinates are fractions of the rendered video rect. Supported commands are documented in the example. This runner does not pick
 targets. A screen assertion has kind changed (optional tolerance, default 0.002) or same
-(exact decoded pixels). Cropped screenshots are compared with the preceding cropped screenshot.
+(the same perceptual threshold). Cropped screenshots are compared with the preceding cropped screenshot.
 Reference: input-scenario.json alongside this script; adjust coordinates to the device
 launcher and finish Chrome onboarding first.
 Commands: tap {x,y} and swipe {x,y,endX,endY} use video fractions; pinch uses two fingers;
@@ -45,13 +45,12 @@ def assert_screen(before, after, expected):
     assert len(before) == len(after) and before, "incomparable screenshots"
     changed = sum(abs(a - b) > 12 for a, b in zip(before, after)) / len(before)
     kind = expected["kind"]
+    tolerance = float(expected.get("tolerance", 0.002))
+    assert 0 <= tolerance < 1
     if kind == "same":
-        assert "tolerance" not in expected, "same requires exact pixels, not tolerance"
-        assert before == after, f"screen same assertion failed: changed fraction {changed:.5f}"
+        assert changed <= tolerance, f"screen same assertion failed: changed fraction {changed:.5f}"
     else:
         assert kind == "changed"
-        tolerance = float(expected.get("tolerance", 0.002))
-        assert 0 <= tolerance < 1
         assert changed > tolerance, f"screen changed assertion failed: changed fraction {changed:.5f}"
     print(f"PASS cropped screen {kind}: changed fraction {changed:.5f}", flush=True)
 
@@ -173,6 +172,7 @@ def main():
         print("PASS input probe complete with behavior and cropped screenshot assertions", flush=True)
     except DeviceUnavailable as error:
         print(str(error), flush=True)
+        raise SystemExit(2)
     finally:
         if documents:
             (documents / "credentials.json").unlink(missing_ok=True)

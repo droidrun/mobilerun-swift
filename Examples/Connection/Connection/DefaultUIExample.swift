@@ -3,7 +3,6 @@
 
 #if DEBUG
 import SwiftUI
-import MobilerunProtocol
 @testable import MobilerunStream
 
 private enum ExampleFailure: LocalizedError {
@@ -94,7 +93,7 @@ private enum ExampleFailure: LocalizedError {
                 ZStack {
                     // A bright stand-in frame makes any glass sampling/phone glyph regression visible offline.
                     LinearGradient(colors: [.red, .blue], startPoint: .top, endPoint: .bottom)
-                    StreamPlaceholder(state: StreamOverlayState(status: .reconnecting(attempt: 3), hasVideo: true, retry: {}))
+                    StreamPlaceholder(state: StreamOverlayState(status: .reconnecting(attempt: 3), labels: StreamLabels(), hasVideo: true, retry: {}))
                 }
                 StreamNavigationBar(state: StreamNavigationState(onAction: { _ in }))
             }

@@ -3,7 +3,4 @@
 
 @_exported import MobilerunStreamCore
 
-import MobilerunProtocol
-
-/// Arbitrary JSON data preserved in approval details.
-public typealias JSONValue = MobilerunProtocol.JSONValue
+@_exported import enum MobilerunProtocol.JSONValue

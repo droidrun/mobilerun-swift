@@ -122,7 +122,7 @@
             guard !isClosed else { return }
             engine.close()
             isClosed = true
-            sampler?.setActive(false)
+            updateSampling()
             statistics.finish()
         }
         /// Suspend keep-alives while not visible. The default UI manages this automatically.
@@ -144,7 +144,7 @@
         @discardableResult package func sendHover(_ data: Data) -> Bool { engine.sendHover(data) }
         public func openURL(_ url: String) { engine.openURL(url) }
         public func screenshot(
-            timeout: TimeInterval = TimeInterval(SignallingTiming.screenshotTimeoutMs) / 1000
+            timeout: TimeInterval = 30
         ) async throws -> Data {
             try await engine.screenshot(timeout: timeout)
         }

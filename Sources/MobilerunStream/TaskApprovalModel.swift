@@ -26,7 +26,7 @@ public struct PendingApproval: Sendable, Equatable, Codable {
     public func paymentCardDetails() -> PaymentCardDetails? {
         kind == "payment_card" ? parsePaymentCardDetails(.object(details)) : nil
     }
-    init(approvalId: String, kind: String, details: [String: JSONValue] = [:],
+    public init(approvalId: String, kind: String, details: [String: JSONValue] = [:],
                 expiresAt: String, deviceId: String? = nil) {
         self.approvalId = approvalId; self.kind = kind; self.details = details
         self.expiresAt = expiresAt; self.deviceId = deviceId
@@ -36,9 +36,9 @@ public struct PendingApproval: Sendable, Equatable, Codable {
 public enum ApprovalDecision: String, Sendable, Codable { case approve, deny }
 
 public struct PaymentCardDetails: Sendable, Equatable {
-    public var card: String
-    public var targetPackage: String
-    public var targetHost: String?
+    public let card: String
+    public let targetPackage: String
+    public let targetHost: String?
     init(card: String, targetPackage: String, targetHost: String? = nil) {
         self.card = card; self.targetPackage = targetPackage; self.targetHost = targetHost
     }
@@ -46,14 +46,14 @@ public struct PaymentCardDetails: Sendable, Equatable {
 
 /// Fetch errors clear on a successful reload; decision errors persist until the next decision/task.
 public struct TaskApprovalState: Equatable {
-    public var approval: PendingApproval?
-    public var isLoading: Bool
-    public var isPending: Bool
-    public var decision: ApprovalDecision?
-    public var error: String?
+    public internal(set) var approval: PendingApproval?
+    public internal(set) var isLoading: Bool
+    public internal(set) var isDeciding: Bool
+    public internal(set) var decision: ApprovalDecision?
+    public internal(set) var error: String?
     init(approval: PendingApproval? = nil, isLoading: Bool = false,
-                isPending: Bool = false, decision: ApprovalDecision? = nil, error: String? = nil) {
-        self.approval = approval; self.isLoading = isLoading; self.isPending = isPending
+                isDeciding: Bool = false, decision: ApprovalDecision? = nil, error: String? = nil) {
+        self.approval = approval; self.isLoading = isLoading; self.isDeciding = isDeciding
         self.decision = decision; self.error = error
     }
 }
@@ -136,7 +136,7 @@ public struct TaskApprovalState: Equatable {
         fetches.values.forEach { $0.cancel() }; fetches.removeAll()
         deciding?.cancel(); deciding = nil
         let cleanup = unsubscribe; unsubscribe = nil
-        state.isLoading = false; state.isPending = false
+        state.isLoading = false; state.isDeciding = false
         // Cleanup failures are diagnostic only and cannot overwrite task errors.
         if case .failure(let error) = cleanup?() { report(error) }
     }
@@ -169,14 +169,14 @@ public struct TaskApprovalState: Equatable {
     }
     /// Expiry never gates this call. Every decision completion, including 404/409, reloads the backend.
     public func decide(_ decision: ApprovalDecision) {
-        guard active, !state.isPending, let approval = state.approval else { return }
-        state.isPending = true; state.decision = decision; decideError = nil; publishError()
+        guard active, !state.isDeciding, let approval = state.approval else { return }
+        state.isDeciding = true; state.decision = decision; decideError = nil; publishError()
         let epoch = generation, id = taskId
         deciding = Task { [weak self, sendDecision] in
             var failure: (any Error)?
             do { try await sendDecision(id, approval.approvalId, decision) } catch { failure = error }
             guard let self, self.active, self.generation == epoch else { return }
-            self.state.isPending = false; self.deciding = nil
+            self.state.isDeciding = false; self.deciding = nil
             if let failure { self.decideError = failure; self.report(failure) }
             self.publishError(); self.refetch()
         }

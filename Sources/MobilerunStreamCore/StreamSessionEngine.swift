@@ -127,7 +127,7 @@ import MobilerunProtocol
     }
 
     package func screenshot(
-        timeout: TimeInterval = TimeInterval(SignallingTiming.screenshotTimeoutMs) / 1000
+        timeout: TimeInterval = 30
     ) async throws -> Data {
         guard let attempt, attempt.socketOpen else { throw StreamError.notConnected }
         return try await attempt.screenshot(timeout: timeout)

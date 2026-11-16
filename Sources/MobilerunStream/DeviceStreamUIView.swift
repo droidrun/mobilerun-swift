@@ -29,8 +29,8 @@
             private(set) var inputEventSource = "driver"
         #endif
 
-        /// Disabling local control clears composition, focus and active input.
         private var controlEnabled: Bool
+        /// Disabling local control clears composition, focus and active input.
         public var hasControl: Bool {
             get { controlEnabled && !session.isClosed }
             set {

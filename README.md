@@ -213,7 +213,6 @@ tool/sync-conformance.sh "$(cat conformance/VERSION)" /path/to/conformance-clone
 python3 tool/generate-constants.py
 ```
 
-
 ## Default UI
 
 ```swift
@@ -269,7 +268,7 @@ DeviceStream(session: session, slots: slots)
 ```
 
 Each overlay receives one `StreamOverlayState` with status, labels, video presence
-and retry action; builders also inherit theme/labels through the environment. Navigation and approval actions each
+and retry action; builders inherit theme through the environment and read labels from the state. Navigation and approval actions each
 receive one state object. `StreamStatusPill`, `StreamNavigationBar`, `StreamPlaceholder`
 and `StreamUnavailableView` can also be used independently.
 
@@ -322,9 +321,9 @@ Every completed decision refetches, including 404/409 failures. Decision errors 
 until the next decision/task change; fetch errors clear on the next successful fetch.
 Integrator cancellation and timeout errors are ordinary failures: deciding clears, the
 error appears and the model refetches. Only the model's own stop/disposal discards
-cancelled work silently. Subscription failures publish an error through the normal error output and fall back
-to polling every 3 seconds; unsubscribe failures
-only reach `onError` and never replace task state. `TaskApprovalState.error` is a display
+cancelled work silently. Subscription failures are reported through `onError`, and through
+`state.error` until the next successful fetch. The controller falls back to polling every
+3 seconds; unsubscribe failures only reach `onError` and never replace task state. `TaskApprovalState.error` is a display
 string and the model retains its underlying `error` object. State and theme are Equatable.
 
 The countdown is display-only, isolated from the card/device and stops ticking at expiry;

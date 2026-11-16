@@ -21,6 +21,8 @@ public struct StreamTheme: Equatable, StreamCustomizable {
     public var accentForeground: Color
     public var destructive: Color
     public var radius: CGFloat
+    var buttonRadius: CGFloat { radius * 0.75 }
+    var cardRadius: CGFloat { radius + 4 }
     public var typography: Font
     public var surfaceStyle: StreamSurfaceStyle
     public init(

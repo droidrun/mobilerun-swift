@@ -138,6 +138,9 @@ struct ApprovalValueTests {
 enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
 
 @Suite @MainActor struct ApprovalControllerTests {
+    private func approval(_ id: String) -> PendingApproval {
+        PendingApproval(approvalId: id, kind: "future", expiresAt: "nope")
+    }
     private var approval: PendingApproval { PendingApproval(approvalId: "a", kind: "payment_card", expiresAt: "2000-01-01T00:00:00Z") }
     @Test func pollingAndDecisionRefetch() async {
         let clock = FakeClock()
@@ -153,7 +156,7 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
         clock.advance(to: 3000); await settle { fetches == 2 }
         await drain()
         model.decide(.approve); model.decide(.deny)
-        await settle { decisions == 1 && fetches == 3 && !model.state.isPending }
+        await settle { decisions == 1 && fetches == 3 && !model.state.isDeciding }
         #expect(model.state.error == nil)
         #expect(model.state.decision == .approve) // Expired payload still sent to backend.
         model.stop(); clock.advance(to: 9000); await drain(); #expect(fetches == 3)
@@ -163,12 +166,12 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
         let model = TaskApprovalModel(taskId: "first", fetchApproval: { _ in try await gate.fetch() }, decide: { _, _, _ in }, scheduler: clock)
         model.start(); await settle { gate.requests.count == 1 }
         model.refetch(); await settle { gate.requests.count == 2 }
-        gate.requests[1].resume(returning: PendingApproval(approvalId: "new", kind: "future", expiresAt: "nope"))
+        gate.requests[1].resume(returning: approval("new"))
         await settle { model.state.approval?.approvalId == "new" }
-        gate.requests[0].resume(returning: PendingApproval(approvalId: "old", kind: "future", expiresAt: "nope"))
+        gate.requests[0].resume(returning: approval("old"))
         await drain(); #expect(model.state.approval?.approvalId == "new")
         model.setTaskId("second"); await settle { gate.requests.count == 3 }
-        model.stop(); gate.requests[2].resume(returning: PendingApproval(approvalId: "late", kind: "future", expiresAt: "nope"))
+        model.stop(); gate.requests[2].resume(returning: approval("late"))
         await drain(); #expect(model.state.approval == nil); #expect(!model.state.isLoading)
     }
     @Test(arguments: [ApprovalFailure.http404, .http409, .timeout])
@@ -178,7 +181,7 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
         let model = TaskApprovalModel(taskId: "t", fetchApproval: { _ in fetches += 1; return fetches == 1 ? pending : nil }, decide: { _, _, _ in throw failure }, onError: { _ in reported += 1 }, scheduler: clock)
         model.start(); await settle { model.state.approval != nil }
         model.decide(.deny)
-        await settle { fetches == 2 && !model.state.isPending && model.state.approval == nil }
+        await settle { fetches == 2 && !model.state.isDeciding && model.state.approval == nil }
         #expect(model.state.error != nil); #expect(reported == 1)
         model.stop()
     }
@@ -195,7 +198,7 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
         clock.advance(to: 3000); await settle { model.state.approval != nil }
         #expect(model.state.error == nil)
         model.decide(.approve)
-        await settle { fetches == 3 && !model.state.isPending }
+        await settle { fetches == 3 && !model.state.isDeciding }
         #expect(model.error is CancellationError); #expect(reported == 2)
         model.stop()
     }
@@ -207,7 +210,9 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
             decide: { _, _, _ in }, subscribe: { _, _ in .failure(ApprovalFailure.timeout) },
             onError: { reported.append($0 as! ApprovalFailure) }, scheduler: clock)
         model.start()
+        #expect(model.state.error == ApprovalFailure.timeout.localizedDescription)
         await settle { !model.state.isLoading }
+        #expect(model.state.error == nil)
         #expect(reported == [.timeout])
         clock.advance(to: 2999)
         #expect(fetches == 1)
@@ -271,7 +276,7 @@ enum ApprovalFailure: Error, Equatable { case http404, http409, timeout }
         model.decide(.approve); await settle { gate.continuation != nil }
         model.setTaskId("next")
         gate.cancel(); await drain()
-        #expect(!model.state.isPending); #expect(model.state.error == nil); #expect(reported == 0)
+        #expect(!model.state.isDeciding); #expect(model.state.error == nil); #expect(reported == 0)
         model.stop()
     }
 }

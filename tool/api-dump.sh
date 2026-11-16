@@ -8,7 +8,7 @@ case "${1:-}" in
 esac
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-modules=(MobilerunStreamCore MobilerunStream)
+modules=(MobilerunProtocol MobilerunStreamCore MobilerunStream)
 for platform in macOS iOS; do
   if [[ "$platform" == macOS ]]; then
     sdk=$(xcrun --sdk macosx --show-sdk-path)

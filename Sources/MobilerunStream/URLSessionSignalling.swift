@@ -47,12 +47,15 @@
                 throw SignallingError.invalidEndpoint
             }
             if let token = credentials.token, !token.isEmpty {
-                var query = components.queryItems ?? []
-                query.removeAll { $0.name == "token" }
-                query.append(URLQueryItem(name: "token", value: token))
-                components.queryItems = query
-                // Form-style query parsers treat a raw plus as a space.
-                components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+                // Preserve existing query bytes; only the replacement token is encoded.
+                var query = components.percentEncodedQuery?.components(separatedBy: "&") ?? []
+                query.removeAll { $0.components(separatedBy: "=")[0].removingPercentEncoding == "token" }
+                let unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+                guard let encodedToken = token.addingPercentEncoding(withAllowedCharacters: unreserved) else {
+                    throw SignallingError.invalidEndpoint
+                }
+                query.append("token=" + encodedToken)
+                components.percentEncodedQuery = query.joined(separator: "&")
             }
             guard let url = components.url else { throw SignallingError.invalidEndpoint }
             return url
