@@ -12,6 +12,7 @@ import MobilerunStreamCore
     @Test(arguments: [
         (nil, "wss://example.test/stream?token=embedded%2Bvalue&other=a+b&escaped=%2f%20"),
         ("", "wss://example.test/stream?token=embedded%2Bvalue&other=a+b&escaped=%2f%20"),
+        (" key &+%=", "wss://example.test/stream?other=a+b&escaped=%2f%20&token=%20key%20%26%2B%25%3D"),
         ("a+b/c=d&e", "wss://example.test/stream?other=a+b&escaped=%2f%20&token=a%2Bb%2Fc%3Dd%26e"),
     ])
     func signallingTokenURL(token: String?, expected: String) throws {

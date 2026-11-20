@@ -8,6 +8,10 @@ import Testing
 
 @Test("Replay conformance happy path with virtual timing") @MainActor
 func sessionSequenceReplay() async throws {
+    let legacy: (URL, String?) -> StreamCredentials = StreamCredentials.init(url:token:)
+    let target = legacy(URL(string: "wss://stream.example.test")!, "legacy")
+    #expect(target.token == "legacy")
+    #expect(target.tokenProvider == nil)
     let h = try SessionHarness()
     defer { h.engine.close() }
     await h.start()
@@ -128,6 +132,8 @@ func sessionInvalidJSONPhases() async throws {
     h.sockets[0].onEvent?(.opened)
     h.sockets[0].onEvent?(.message("{"))
     #expect(h.engine.status == .reconnecting(attempt: 1))
+    await settle { h.credentialCalls == 2 }
+    await drain()
     h.clock.advance(to: 1000)
     await settle { h.sockets.count == 2 }
     let ws = h.sockets[1]

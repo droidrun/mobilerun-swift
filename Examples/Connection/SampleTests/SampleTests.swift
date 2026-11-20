@@ -98,3 +98,97 @@ final class SampleCredentialsTests: XCTestCase {
         XCTAssertFalse(view.textClient.isFirstResponder)
     }
 }
+
+final class SampleHTTPProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var requests: [URLRequest] = []
+    nonisolated(unsafe) static var status = 200
+    private static let lock = NSLock()
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        Self.lock.lock()
+        Self.requests.append(request)
+        let status = Self.status
+        Self.lock.unlock()
+        let mint = request.httpMethod == "POST"
+        let body = mint
+            ? #"{"key":" key-a &+%=","keyId":"id-a","expiresAt":"2026-11-20T12:02:00Z"}"#
+            : #"{"id":"device-a","state":"ready","streamUrl":"wss://stream.test/a"}"#
+        let response = HTTPURLResponse(url: request.url!, statusCode: status,
+                                       httpVersion: nil, headerFields: ["Cache-Control": "no-store"])!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+    static func reset(status: Int = 200) {
+        lock.lock()
+        defer { lock.unlock() }
+        requests = []
+        self.status = status
+    }
+}
+
+final class SampleBackendTests: XCTestCase {
+    func testAcceptsIPv6LoopbackHelper() throws {
+        let backend = try SampleBackend(helperBaseUrl: XCTUnwrap(URL(string: "http://[::1]:3001")),
+                                        deviceId: "device-a")
+        XCTAssertEqual(backend.helperBaseUrl.absoluteString, "http://[::1]:3001")
+    }
+
+    func testHelperLaunchConfigIsConsumedAndDeleted() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try Data(#"{"helperBaseUrl":"http://localhost:3001","deviceId":"device-a"}"#.utf8).write(to: file)
+        let launch = try XCTUnwrap(SampleCredentials.consume(file, as: SampleLaunchConfiguration.self))
+        guard case .helper(let backend) = launch else { return XCTFail("Expected helper configuration") }
+        XCTAssertEqual(backend.deviceId, "device-a")
+        XCTAssertEqual(backend.helperBaseUrl.absoluteString, "http://localhost:3001")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+        XCTAssertNil(try SampleCredentials.consume(file, as: SampleLaunchConfiguration.self))
+    }
+
+    func testMalformedHelperLaunchConfigIsDeleted() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try Data(#"{"helperBaseUrl":"http://public.test:3001","deviceId":"device-a"}"#.utf8).write(to: file)
+        XCTAssertThrowsError(try SampleCredentials.consume(file, as: SampleLaunchConfiguration.self))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+    }
+
+    func testBackendBindsDiscoveryAndEveryMintToOneDeviceWithoutStoringKeys() async throws {
+        SampleHTTPProtocol.reset()
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [SampleHTTPProtocol.self]
+        let session = URLSession(configuration: config)
+        defer { session.invalidateAndCancel() }
+        let backend = try SampleBackend(helperBaseUrl: URL(string: "http://localhost:3001")!,
+                                        deviceId: "device-a", session: session)
+        let discovered = try await backend.credentials()
+        let target = try XCTUnwrap(discovered)
+        XCTAssertNil(target.token)
+        XCTAssertEqual(target.url.absoluteString, "wss://stream.test/a")
+        let provider = try XCTUnwrap(target.tokenProvider)
+        SampleHTTPProtocol.status = 201
+        let first = try await provider()
+        let second = try await provider()
+        XCTAssertEqual(first, " key-a &+%=")
+        XCTAssertEqual(second, " key-a &+%=")
+        XCTAssertNil(target.token)
+        XCTAssertEqual(SampleHTTPProtocol.requests.map(\.httpMethod), ["GET", "POST", "POST"])
+        XCTAssertEqual(SampleHTTPProtocol.requests.map { $0.url!.path }, [
+            "/api/v1/devices/device-a", "/api/v1/devices/device-a/stream-key",
+            "/api/v1/devices/device-a/stream-key"
+        ])
+        XCTAssertTrue(SampleHTTPProtocol.requests.allSatisfy {
+            $0.value(forHTTPHeaderField: "Authorization") == nil &&
+                $0.value(forHTTPHeaderField: "Cache-Control") == "no-store"
+        })
+        SampleHTTPProtocol.status = 403
+        do {
+            _ = try await provider()
+            XCTFail("Expected refusal")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, "Sample backend request failed.")
+        }
+        XCTAssertEqual(SampleHTTPProtocol.requests.count, 4)
+    }
+}

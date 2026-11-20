@@ -53,6 +53,7 @@ enum FakeFailure: Error { case negotiation }
     var rejectRefresh = false
     var rejectOffer = false
     var offerGate: OfferGate?
+    var onOffer: (() -> Void)?
     var offerSDP = ""
     func configure(_ config: ServerMessage.RTCConfiguration, channels: [DataChannelSpec]) {
         configured = config
@@ -63,6 +64,7 @@ enum FakeFailure: Error { case negotiation }
         if rejectOffer { throw FakeFailure.negotiation }
         restarts.append(iceRestart)
         operations.append("offer")
+        onOffer?()
         try await offerGate?.wait()
         return offerSDP
     }
@@ -93,6 +95,7 @@ enum FakeFailure: Error { case negotiation }
     var peers: [FakePeer] = []
     var credentialCalls = 0
     var credentialCancellations = 0
+    var target: StreamCredentials?
     var returnNil = false
     var hangCredentials = false
     var throwCredentials = false
@@ -144,6 +147,7 @@ enum FakeFailure: Error { case negotiation }
                 }
             }
         }
+        if let target { return target }
         return returnNil
             ? nil
             : StreamCredentials(
@@ -192,4 +196,41 @@ private let drainYieldCount = 30
 }
 @MainActor func drain() async {
     for _ in 0..<drainYieldCount { await Task.yield() }
+}
+
+/// Dumb external provider: cancellation deliberately does not complete its requests.
+actor TokenGate {
+    var calls = 0
+    var pending: [Int: CheckedContinuation<String, Error>] = [:]
+    private var waiting: [Int: CheckedContinuation<Void, Never>] = [:]
+    func waitForCall(_ id: Int) async {
+        guard calls < id else { return }
+        await withCheckedContinuation { waiting[id] = $0 }
+    }
+    func acquire() async throws -> String {
+        calls += 1
+        let id = calls
+        waiting.removeValue(forKey: id)?.resume()
+        return try await withCheckedThrowingContinuation { pending[id] = $0 }
+    }
+    func complete(_ id: Int, _ result: Result<String, Error>) {
+        pending.removeValue(forKey: id)?.resume(with: result)
+    }
+}
+
+final class BlockingTokenGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var didStart = false
+    private let semaphore = DispatchSemaphore(value: 0)
+    var started: Bool { lock.withLock { didStart } }
+    func acquire() async -> String {
+        await withCheckedContinuation { continuation in
+            Thread.detachNewThread { [self] in
+                lock.withLock { didStart = true }
+                semaphore.wait()
+                continuation.resume(returning: "late-blocked-key")
+            }
+        }
+    }
+    func unblock() { semaphore.signal() }
 }

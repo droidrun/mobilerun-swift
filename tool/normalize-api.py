@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Mobilerun
+# SPDX-License-Identifier: Apache-2.0
 """Keep signatures, availability and relationships; discard docs and machine metadata."""
 import json
 import sys

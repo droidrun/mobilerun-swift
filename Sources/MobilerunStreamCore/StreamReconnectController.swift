@@ -81,8 +81,9 @@ package final class StreamReconnectController {
         StreamReconnectSnapshot(status: status, attempt: attempt)
     }
 
-    /// A connection started or restarted; arms its watchdog. Stale mounts during backoff are ignored.
-    package func attemptMounted() {
+    /// Prepares attempt accounting; pass false to defer the watchdog until socket allocation.
+    /// Stale mounts during backoff are ignored.
+    package func attemptMounted(startWatchdog: Bool = true) {
         guard !disposed else { return }
         enabled = true
         guard !recoveryIsScheduled else { return }
@@ -94,6 +95,7 @@ package final class StreamReconnectController {
             status = .connecting
             emit()
         }
+        guard startWatchdog else { return }
         watchdogTimer = scheduler.schedule(delayMs: ReconnectPolicy.connectTimeoutMs) { [weak self] in
             guard let self, self.enabled else { return }
             self.watchdogTimer = nil

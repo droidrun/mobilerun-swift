@@ -134,6 +134,7 @@ MobilerunStreamCore {"access": "public", "declaration": "enum ReconnectPolicy", 
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "path": "StreamError"}
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
+MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil, tokenProvider: StreamTokenProvider? = nil)", "path": "StreamCredentials.init(url:token:tokenProvider:)"}
 MobilerunStreamCore {"access": "public", "declaration": "let bitrateKbps: Double?", "path": "StreamStats.bitrateKbps"}
 MobilerunStreamCore {"access": "public", "declaration": "let codec: String?", "path": "StreamStats.codec"}
 MobilerunStreamCore {"access": "public", "declaration": "let decodeTimeMs: Double?", "path": "StreamStats.decodeTimeMs"}
@@ -150,6 +151,7 @@ MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "pa
 MobilerunStreamCore {"access": "public", "declaration": "let rttMs: Double?", "path": "StreamStats.rttMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let timeToFirstFrameMs: Double?", "path": "StreamStats.timeToFirstFrameMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let token: String?", "path": "StreamCredentials.token"}
+MobilerunStreamCore {"access": "public", "declaration": "let tokenProvider: StreamTokenProvider?", "path": "StreamCredentials.tokenProvider"}
 MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": "StreamCredentials.url"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int?", "path": "StreamStats.width"}
@@ -158,6 +160,7 @@ MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredential
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
+MobilerunStreamCore {"access": "public", "declaration": "typealias StreamTokenProvider = () async throws -> String", "path": "StreamTokenProvider"}
 MobilerunStreamCore {"access": "public", "declaration": "var customMirror: Mirror { get }", "path": "StreamCredentials.customMirror"}
 MobilerunStreamCore {"access": "public", "declaration": "var debugDescription: String { get }", "path": "StreamCredentials.debugDescription"}
 MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamCredentials.description"}
@@ -468,6 +471,7 @@ MobilerunStreamCore {"access": "public", "declaration": "enum ReconnectPolicy", 
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "path": "StreamError"}
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
+MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil, tokenProvider: StreamTokenProvider? = nil)", "path": "StreamCredentials.init(url:token:tokenProvider:)"}
 MobilerunStreamCore {"access": "public", "declaration": "let bitrateKbps: Double?", "path": "StreamStats.bitrateKbps"}
 MobilerunStreamCore {"access": "public", "declaration": "let codec: String?", "path": "StreamStats.codec"}
 MobilerunStreamCore {"access": "public", "declaration": "let decodeTimeMs: Double?", "path": "StreamStats.decodeTimeMs"}
@@ -484,6 +488,7 @@ MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "pa
 MobilerunStreamCore {"access": "public", "declaration": "let rttMs: Double?", "path": "StreamStats.rttMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let timeToFirstFrameMs: Double?", "path": "StreamStats.timeToFirstFrameMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let token: String?", "path": "StreamCredentials.token"}
+MobilerunStreamCore {"access": "public", "declaration": "let tokenProvider: StreamTokenProvider?", "path": "StreamCredentials.tokenProvider"}
 MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": "StreamCredentials.url"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int?", "path": "StreamStats.width"}
@@ -492,6 +497,7 @@ MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredential
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredentialsProvider = () async throws -> StreamCredentials?", "path": "StreamCredentialsProvider"}
+MobilerunStreamCore {"access": "public", "declaration": "typealias StreamTokenProvider = () async throws -> String", "path": "StreamTokenProvider"}
 MobilerunStreamCore {"access": "public", "declaration": "var customMirror: Mirror { get }", "path": "StreamCredentials.customMirror"}
 MobilerunStreamCore {"access": "public", "declaration": "var debugDescription: String { get }", "path": "StreamCredentials.debugDescription"}
 MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamCredentials.description"}
