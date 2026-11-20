@@ -1,6 +1,7 @@
 // Unauthenticated local development helper. Never expose it through a tunnel.
 // Production backends must authenticate callers and authorize the requested device.
 import { createServer } from 'node:http';
+import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { MobilerunSDK } from '@mobilerun/sdk';
 
@@ -41,7 +42,7 @@ export function createHelper(sdk) {
   });
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   if (!process.env.MOBILERUN_API_KEY) throw new Error('Set MOBILERUN_API_KEY in the helper environment');
   const upstream = (process.env.MOBILERUN_API_URL ?? 'https://api.mobilerun.ai/v1').replace(/\/+$/, '');
   const baseURL = upstream.endsWith('/v1') ? upstream : `${upstream}/v1`;

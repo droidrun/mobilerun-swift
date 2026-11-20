@@ -223,10 +223,14 @@ final class BlockingTokenGate: @unchecked Sendable {
     private var didStart = false
     private let semaphore = DispatchSemaphore(value: 0)
     var started: Bool { lock.withLock { didStart } }
-    func acquire() -> String {
-        lock.withLock { didStart = true }
-        semaphore.wait()
-        return "late-blocked-key"
+    func acquire() async -> String {
+        await withCheckedContinuation { continuation in
+            Thread.detachNewThread { [self] in
+                lock.withLock { didStart = true }
+                semaphore.wait()
+                continuation.resume(returning: "late-blocked-key")
+            }
+        }
     }
     func unblock() { semaphore.signal() }
 }

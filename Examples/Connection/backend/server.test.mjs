@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { request } from 'node:http';
 import { json } from 'node:stream/consumers';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createHelper } from './server.mjs';
 
 async function fixture(t, sdk) {
@@ -96,6 +101,28 @@ test('foreign Host is forbidden without invoking upstream', async t => {
   assert.equal(response.headers['cache-control'], 'no-store');
   assert.deepEqual(await json(response), { error: 'forbidden' });
   assert.deepEqual(calls, []);
+});
+
+test('does not listen when imported', () => {
+  const moduleURL = new URL('./server.mjs', import.meta.url).href;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e',
+    `await import(${JSON.stringify(moduleURL)})`], {
+    env: { ...process.env, MOBILERUN_API_KEY: '' }, encoding: 'utf8',
+  });
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, '');
+});
+
+test('symlink entry point runs startup validation', t => {
+  const directory = mkdtempSync(join(tmpdir(), 'mobilerun-helper-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const entry = join(directory, 'helper.mjs');
+  symlinkSync(fileURLToPath(new URL('./server.mjs', import.meta.url)), entry);
+  const result = spawnSync(process.execPath, [entry], {
+    env: { ...process.env, MOBILERUN_API_KEY: '' }, encoding: 'utf8',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Set MOBILERUN_API_KEY in the helper environment/);
 });
 
 test('Origin is forbidden without invoking upstream', async t => {

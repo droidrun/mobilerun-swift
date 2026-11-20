@@ -94,7 +94,7 @@ func sessionTokenProviderDeadline(rejectLate: Bool) async throws {
 func sessionTokenProviderBlockingDeadline() async throws {
     let gate = BlockingTokenGate()
     defer { gate.unblock() }
-    let h = try providerHarness { gate.acquire() }
+    let h = try providerHarness { await gate.acquire() }
     h.engine.start()
     await settle { gate.started }
     h.clock.advance(to: 10000)

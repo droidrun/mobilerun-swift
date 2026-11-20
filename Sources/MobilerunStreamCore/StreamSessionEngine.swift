@@ -226,7 +226,7 @@ import MobilerunProtocol
         activeTarget = target
         let next = Attempt(owner: self, scheduler: scheduler)
         attempt = next
-        controller?.attemptMounted(startWatchdog: false)
+        controller?.attemptMounted(startWatchdog: target.tokenProvider == nil)
         next.open(target)
     }
 
@@ -329,7 +329,9 @@ import MobilerunProtocol
 
         func allocateSocket(_ credentials: StreamCredentials) {
             guard current, let owner else { return }
-            owner.controller?.attemptMounted()
+            if owner.activeTarget?.tokenProvider != nil {
+                owner.controller?.attemptMounted()
+            }
             owner.onAttemptStarted?()
             guard current else { return }
             let socket = owner.signalling()
