@@ -72,6 +72,7 @@ import Testing
     }
 }
 
+@available(iOS 16.0, *)
 @Test("Real URLSession socket receives wire close 1001 and tears down the engine",
       .timeLimit(.minutes(1)), arguments: [false, true]) @MainActor
 func signallingGoingAwayOnWire(provider: Bool) async throws {
