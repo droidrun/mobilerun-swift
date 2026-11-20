@@ -1,3 +1,5 @@
+// Copyright 2026 Mobilerun
+// SPDX-License-Identifier: Apache-2.0
 // Unauthenticated local development helper. Never expose it through a tunnel.
 // Production backends must authenticate callers and authorize the requested device.
 import { createServer } from 'node:http';

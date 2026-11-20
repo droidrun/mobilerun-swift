@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2026 Mobilerun
+# SPDX-License-Identifier: Apache-2.0
 # Dump public declarations for the iOS product and macOS test destination with the selected Xcode.
 set -euo pipefail
 cd "$(dirname "$0")/.."

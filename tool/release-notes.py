@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Mobilerun
+# SPDX-License-Identifier: Apache-2.0
 """Validate a stable release tag and print its committed changelog entry."""
 import re
 import sys
