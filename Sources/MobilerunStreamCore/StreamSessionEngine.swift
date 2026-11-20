@@ -224,10 +224,9 @@ import MobilerunProtocol
         guard !closed, let target = latestTarget else { return }
         releaseAttempt()
         activeTarget = target
-        onAttemptStarted?()
         let next = Attempt(owner: self, scheduler: scheduler)
         attempt = next
-        controller?.attemptMounted()
+        controller?.attemptMounted(startWatchdog: false)
         next.open(target)
     }
 
@@ -260,6 +259,8 @@ import MobilerunProtocol
         var keepAlive: (any ScheduledTask)?
         var grace: (any ScheduledTask)?
         var frameRequests: [any ScheduledTask] = []
+        var tokenTask: Task<Void, Never>?
+        var tokenDeadline: (any ScheduledTask)?
         var processing: Task<Void, Never>?
         var messages: [ServerMessage] = []
         struct ScreenshotRequest {
@@ -284,7 +285,53 @@ import MobilerunProtocol
         }
 
         func open(_ credentials: StreamCredentials) {
-            guard let owner else { return }
+            guard let provider = credentials.tokenProvider else {
+                allocateSocket(credentials)
+                return
+            }
+            guard providerDestinationAllowed(credentials.url) else {
+                providerFailed("stream token destination rejected")
+                return
+            }
+            tokenDeadline = scheduler.schedule(delayMs: ReconnectPolicy.providerTimeoutMs) { [weak self] in
+                self?.providerFailed("stream token provider timeout")
+            }
+            // Never run user code on the engine actor or wait for cooperative cancellation.
+            tokenTask = Task.detached { [weak self] in
+                do {
+                    let token = try await provider()
+                    guard !Task.isCancelled else { return }
+                    await self?.finishToken(token, target: credentials)
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    await self?.providerFailed("stream token provider failed")
+                }
+            }
+        }
+
+        func finishToken(_ token: String, target: StreamCredentials) {
+            guard current else { return }
+            guard !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                providerFailed("stream token provider returned blank")
+                return
+            }
+            tokenDeadline?.cancel()
+            tokenDeadline = nil
+            tokenTask = nil
+            allocateSocket(StreamCredentials(url: target.url, token: token))
+        }
+
+        func providerFailed(_ diagnostic: String) {
+            guard current else { return }
+            owner?.diagnostic(diagnostic)
+            fail()
+        }
+
+        func allocateSocket(_ credentials: StreamCredentials) {
+            guard current, let owner else { return }
+            owner.controller?.attemptMounted()
+            owner.onAttemptStarted?()
+            guard current else { return }
             let socket = owner.signalling()
             self.socket = socket
             socket.onEvent = { [weak self] in self?.socketEvent($0) }
@@ -296,6 +343,10 @@ import MobilerunProtocol
         }
 
         func release() {
+            tokenDeadline?.cancel()
+            tokenDeadline = nil
+            tokenTask?.cancel()
+            tokenTask = nil
             socketOpen = false
             openChannels.removeAll()
             handshake?.cancel()
@@ -548,4 +599,13 @@ private func decodeDataURI(_ uri: String) throws -> Data {
         throw StreamError.screenshotFailed
     }
     return bytes
+}
+
+// Foundation parses the authority; only exact loopback hosts permit plaintext development sockets.
+private func providerDestinationAllowed(_ url: URL) -> Bool {
+    guard let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
+          let host = parts.host?.lowercased(), !host.isEmpty else { return false }
+    if parts.scheme?.lowercased() == "wss" { return true }
+    let loopback = ["localhost", "127.0.0.1", "[::1]", "::1"].contains(host)
+    return parts.scheme?.lowercased() == "ws" && loopback
 }

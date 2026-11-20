@@ -7,6 +7,8 @@ import Foundation
 public enum ReconnectPolicy {
     /// Maximum scheduled retries before a failure declares the stream unavailable.
     public static let maxAttempts = 6
+    /// Independent deadline for acquiring one socket key.
+    package static let providerTimeoutMs = 10_000
     /// Whole-attempt watchdog; exceeds the combined signalling phase budgets.
     package static let connectTimeoutMs = 45_000
     /// Continuous connection duration that refills the retry budget.

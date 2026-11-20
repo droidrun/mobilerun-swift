@@ -7,31 +7,51 @@ Liquid Glass requires iOS 26+. SwiftPM downloads the pinned WebRTC dependency.
 
 ## Credentials and launch
 
-Use a device in your Mobilerun account. Your backend fetches `streamUrl` and
-`streamToken` via `GET /devices/{id}` and supplies them to the app. Never ship an
-API key in an app. Create a JSON file outside the checkout; never commit it:
+Use an existing device in your Mobilerun account. The preferred launch file contains no credentials:
 
 ```json
-{"streamUrl":"wss://your-stream-endpoint","streamToken":"your-short-lived-token"}
+{"helperBaseUrl":"http://localhost:3001","deviceId":"DEVICE_UUID"}
 ```
+
+Start the unauthenticated **local-only** development helper in `Examples/Connection/backend`:
 
 ```sh
-tool/run-sample.sh /path/to/credentials.json
+npm ci
+# Set MOBILERUN_API_KEY securely in this process environment before starting.
+npm start
 ```
 
-The script selects the newest available iOS runtime and a compatible iPhone,
-builds the existing Connection example, boots a temporary simulator, installs the
-app, copies the JSON into private storage, and launches the tester screen.
-Simulator.app must be installed. Keep the script running while testing; Ctrl-C
-shuts down and deletes its simulator and removes its build output.
+Requires Node 22 or later. It binds 127.0.0.1:3001; never expose it through a tunnel.
+`MOBILERUN_API_URL` optionally selects your server-side API base (ending in `/v1`).
+Production backends must authenticate callers and authorize access to the requested device.
+No API key belongs in app launch JSON, app state, storage or logs.
 
-The app reads and deletes the copied file once, including invalid JSON. The original
-file remains on your machine; delete it when finished. Credentials then stay only
-in memory and disappear on process exit. The token field is obscured. You can also
-launch the Connection scheme in Xcode and paste both fields manually. Credentials
-opens the form; Connect applies changes. Reconnect creates a fresh session. This
-sample reuses the supplied token; enter fresh values when it expires. Your
-production backend should refresh credentials.
+```sh
+tool/run-sample.sh /path/to/launch.json
+```
+
+The runner builds the Connection example, boots an owned temporary simulator, copies the JSON
+into private app storage and launches it. Ctrl-C shuts down and deletes that simulator and
+its build output. The app reads and deletes the copied JSON once, including malformed JSON;
+the original file remains on your machine. The sample captures helper/device configuration
+immutably for each session. Reconnect creates a new session bound to the same target.
+
+Discovery GET `/api/v1/devices/:deviceId` returns only `{id,state,streamUrl}`. The target's
+`tokenProvider` POSTs `/api/v1/devices/:deviceId/stream-key` once per new socket. The helper uses
+`@mobilerun/sdk@6.2.1` to POST `/identity/stream-keys` on the `/v1` API base, with
+`{deviceId,ttlSeconds:120}` and `maxRetries:0`. Its response is only `{key,keyId,expiresAt}`;
+all responses disable caching. The app uses only the key transiently and stores none of these
+mint fields. The sample's local HTTP allowance does not relax provider-mode stream WSS policy.
+
+The existing manual form and file remain a **legacy diagnostic** path:
+
+```json
+{"streamUrl":"wss://your-stream-endpoint","streamToken":"your-static-token"}
+```
+
+The token field is obscured. Credentials opens the form; Connect applies its values.
+A pasted single-use key cannot reconnect; prefer the backend flow. When changing devices,
+launch a new helper/device configuration so a new session captures the new device.
 
 ## What to try
 
@@ -60,6 +80,7 @@ Reference ranges from the [benchmark runner](tool/benchmark.sh) on a simulator r
 ## Automated checks
 
 ```sh
+swift test --filter sessionTokenProvider
 swift test
 swift build -c release
 tool/api-dump.sh --check
@@ -70,6 +91,13 @@ xcodebuild -project Examples/Connection/Connection.xcodeproj -scheme Connection 
   -only-testing:SampleTests -only-testing:InputUITests/SampleUITests \
   -parallel-testing-enabled NO -derivedDataPath DerivedData test CODE_SIGNING_ALLOWED=NO
 ```
+
+Run `npm ci && node --test server.test.mjs` in `Examples/Connection/backend` for the
+actual local HTTP helper boundary. Provider tests cover the 9999/10000ms deadline,
+uncooperative/blocking callbacks, stale results, URL policy and full socket watchdog budget.
+A real loopback WebSocket test sends close 1001 through URLSession on Simulator.
+API baseline generation uses Xcode 26.2; newer Xcode can build and test, but its symbol graph
+must not replace that baseline. Conformance token-provider replay awaits an approved fixture tag.
 
 Choose an installed iPhone name for the last command. Sample tests cover credential
 validation, one-time deletion, token redaction and secure input, theme tokens and

@@ -27,6 +27,10 @@ struct SampleCredentials: Decodable, CustomStringConvertible, CustomDebugStringC
     private enum CodingKeys: String, CodingKey { case streamUrl, streamToken }
 
     static func consume(_ file: URL) throws -> Self? {
+        try consume(file, as: Self.self)
+    }
+
+    static func consume<T: Decodable>(_ file: URL, as type: T.Type) throws -> T? {
         guard FileManager.default.fileExists(atPath: file.path) else { return nil }
         // Remove even malformed files, before decoding or reporting a safe error.
         let data: Data
@@ -36,7 +40,7 @@ struct SampleCredentials: Decodable, CustomStringConvertible, CustomDebugStringC
             throw SampleError.invalidCredentials
         }
         try FileManager.default.removeItem(at: file)
-        do { return try JSONDecoder().decode(Self.self, from: data) }
+        do { return try JSONDecoder().decode(type, from: data) }
         catch { throw SampleError.invalidCredentials }
     }
 }
@@ -95,29 +99,42 @@ enum SampleAppearance: String, CaseIterable {
     @Published var url = ""
     @Published var token = ""
     @Published var error: String?
+    private var backend: SampleBackend?
     init() {
         let file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("sample-credentials.json")
         do {
-            if let credentials = try SampleCredentials.consume(file) {
-                url = credentials.streamUrl.absoluteString
-                token = credentials.streamToken
+            if let launch = try SampleCredentials.consume(file, as: SampleLaunchConfiguration.self) {
+                switch launch {
+                case .helper(let backend): self.backend = backend
+                case .legacy(let credentials):
+                    url = credentials.streamUrl.absoluteString
+                    token = credentials.streamToken
+                }
                 connect()
             }
         } catch { self.error = SampleError.invalidCredentials.localizedDescription }
     }
     isolated deinit { session?.close() }
     func connect() {
+        if let backend, url.isEmpty, token.isEmpty {
+            replaceSession(credentials: { try await backend.credentials() })
+            return
+        }
         do {
             let credentials = try SampleCredentials(url: url, token: token)
-            session?.close()
-            let next = DeviceStreamSession(credentials: {
+            replaceSession(credentials: {
                 StreamCredentials(url: credentials.streamUrl, token: credentials.streamToken)
             })
-            session = next
-            error = nil
-            next.start()
         } catch { self.error = SampleError.invalidCredentials.localizedDescription }
+    }
+
+    private func replaceSession(credentials: @escaping StreamCredentialsProvider) {
+        session?.close()
+        let next = DeviceStreamSession(credentials: credentials)
+        session = next
+        error = nil
+        next.start()
     }
 }
 

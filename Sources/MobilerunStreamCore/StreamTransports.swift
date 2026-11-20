@@ -4,14 +4,25 @@
 import Foundation
 import MobilerunProtocol
 
-/// Endpoint and short-lived stream token. Nil or empty tokens leave the URL unchanged.
-/// Obtain fresh values from your API when asked; descriptions redact both fields.
+/// Supplies a fresh, single-use key before every new signalling socket.
+public typealias StreamTokenProvider = @Sendable () async throws -> String
+
+/// A discovered stream target. Descriptions and mirrors redact its credentials.
+/// Prefer tokenProvider; the legacy static token path is deprecated for reconnecting streams.
 public struct StreamCredentials: Sendable, CustomStringConvertible, CustomDebugStringConvertible, CustomReflectable {
     public let url: URL
+    /// Legacy static token. Nil or empty leaves the URL unchanged when no provider is supplied.
     public let token: String?
+    /// Takes precedence over static and embedded tokens; failure never falls back.
+    public let tokenProvider: StreamTokenProvider?
+    /// Retains the original initializer, including references to init(url:token:).
     public init(url: URL, token: String? = nil) {
+        self.init(url: url, token: token, tokenProvider: nil)
+    }
+    public init(url: URL, token: String? = nil, tokenProvider: StreamTokenProvider? = nil) {
         self.url = url
         self.token = token
+        self.tokenProvider = tokenProvider
     }
     public var description: String { "StreamCredentials(<redacted>)" }
     public var debugDescription: String { description }

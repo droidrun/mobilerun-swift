@@ -17,7 +17,10 @@ view remounts, and closes it on owner teardown (not view disappearance):
 import MobilerunStream
 
 let session = DeviceStreamSession(credentials: {
-    try await backend.streamCredentials() // Your backend returns StreamCredentials?; nil means not ready.
+    guard let streamURL = try await backend.streamURL(deviceID) else { return nil }
+    return StreamCredentials(url: streamURL, tokenProvider: {
+        try await backend.mintStreamKey(deviceID)
+    })
 })
 session.start() // In the main-actor session owner.
 // In your SwiftUI view:
@@ -37,18 +40,41 @@ The session is an `@MainActor ObservableObject`. Native video tracks are interna
 It publishes `status` (`connecting`, `connected`,
 `reconnecting(attempt:)`, or `unavailable`) and `videoSize` (raw frame width,
 height and clockwise rotation). `start()` is idempotent; `close()` is permanent. After close, status is no longer updated and controls are disabled. Call `retry()` when
-unavailable to start a fresh retry budget and fetch fresh credentials. The credentials provider runs
+unavailable to start a fresh retry budget and fetch fresh credentials. The credentials-discovery callback runs
 at start, on recovery, and when a token is rejected. Nil means the device is not ready;
 the engine alone polls at 3,000 ms only until the first target is found (a thrown provider
-error also counts as not ready). Each provider call is bounded by the connection timeout.
+error also counts as not ready). Each discovery call is bounded by the 45-second connection timeout.
 Remounts reuse the newest cached target; a heal refreshes it in the background and survives
 remounts. Nil or failed refreshes preserve that cache, and connection failures still consume
 the retry budget until unavailable/Retry. Pass your integrator backend call directly as the
-provider; no separate credentials helper is needed. A token-only refresh while connected is
-stored for the next mount; a changed URL, or changed credentials while disconnected,
+provider; no separate credentials helper is needed. A legacy static-token refresh while connected is
+stored for the next mount; a changed URL, or changed static token while disconnected,
 remounts immediately once pending recovery permits it. A nil or empty token leaves the
 stream URL unchanged; supplied tokens are percent-encoded, including `+`.
 The API key must stay on your backend and must never ship inside an app. Credentials are never logged by the SDK.
+
+Prefer `StreamCredentials(url:tokenProvider:)`: the callback is bound to that target and supplies
+one fresh key before **every new signalling socket**, including retries in one recovery cycle,
+wake and manual retry. Target discovery above keeps its existing recovery semantics; it is not
+a per-socket mint callback. Callback-only updates do not restart healthy media and the next
+attempt uses the latest target's callback. Recreate a session when switching devices.
+
+Provider mode requires `wss` with a host; `ws` is allowed only for exact `localhost`, `127.0.0.1`
+or IPv6 loopback. Unsafe endpoints fail before the callback runs. Throwing, blank output or the
+independent **10-second** provider deadline counts one attempt failure, opens no socket and
+never falls back to a static or embedded URL token. Nonblank keys retain their original bytes.
+Stopping, dropping or replacing an attempt ignores late results without waiting for provider
+cancellation. The **45-second** connection watchdog starts at socket allocation; the existing
+15-second WebSocket-open and subsequent 15-second RTC-configuration budgets remain separate.
+ICE refresh and keepalive on an existing socket never mint another key.
+
+The static `token` path is deprecated for reconnecting streams but remains source compatible,
+including nil/empty behavior. Keys are single-use: a pasted key cannot support reconnect.
+Your backend mints via `POST /v1/identity/stream-keys` with `{deviceId,ttlSeconds:120}`;
+the API key stays on that backend. The optional TTL controls admission, while the stream
+session cap is 30 minutes. Close **1001** immediately releases the peer, channels, media,
+timers and pending screenshots, then schedules bounded reconnect in provider and static mode.
+Other closes retain the SDK's existing full-rebuild behavior.
 
 A closed signalling socket or failed/closed peer rebuilds both transports through the reconnect
 controller, with up to six retries and exponential backoff. Every connection requests fresh RTC
