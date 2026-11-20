@@ -22,6 +22,7 @@ npm start
 ```
 
 Requires Node 22 or later. It binds 127.0.0.1:3001; never expose it through a tunnel.
+The helper only answers loopback Host headers for its listening port and requests without Origin.
 `MOBILERUN_API_URL` optionally selects your server-side API base (ending in `/v1`).
 Production backends must authenticate callers and authorize access to the requested device.
 No API key belongs in app launch JSON, app state, storage or logs.

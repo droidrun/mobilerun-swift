@@ -389,6 +389,7 @@ import MobilerunProtocol
         }
 
         func tickKeepAlive() {
+            keepAlive?.cancel()
             guard owner?.hidden == false else { return }
             keepAlive = scheduler.schedule(delayMs: SignallingTiming.keepAliveIntervalMs) { [weak self] in
                 guard let self, self.current else { return }

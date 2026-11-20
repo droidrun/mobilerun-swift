@@ -11,7 +11,7 @@ struct SampleBackend: Decodable, Sendable {
     private let session: URLSession
 
     init(helperBaseUrl: URL, deviceId: String, session: URLSession? = nil) throws {
-        let loopback = ["localhost", "127.0.0.1", "[::1]"].contains(helperBaseUrl.host ?? "")
+        let loopback = ["localhost", "127.0.0.1", "[::1]", "::1"].contains(helperBaseUrl.host ?? "")
         let secure = helperBaseUrl.scheme == "https" && helperBaseUrl.host?.isEmpty == false
         let local = helperBaseUrl.scheme == "http" && loopback
         let validDevice = !deviceId.isEmpty && deviceId.allSatisfy {

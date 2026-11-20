@@ -130,6 +130,12 @@ final class SampleHTTPProtocol: URLProtocol, @unchecked Sendable {
 }
 
 final class SampleBackendTests: XCTestCase {
+    func testAcceptsIPv6LoopbackHelper() throws {
+        let backend = try SampleBackend(helperBaseUrl: XCTUnwrap(URL(string: "http://[::1]:3001")),
+                                        deviceId: "device-a")
+        XCTAssertEqual(backend.helperBaseUrl.absoluteString, "http://[::1]:3001")
+    }
+
     func testHelperLaunchConfigIsConsumedAndDeleted() throws {
         let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try Data(#"{"helperBaseUrl":"http://localhost:3001","deviceId":"device-a"}"#.utf8).write(to: file)

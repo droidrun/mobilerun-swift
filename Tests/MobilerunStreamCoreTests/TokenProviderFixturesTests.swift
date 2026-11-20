@@ -127,8 +127,25 @@ func sessionTokenProviderStaleCompletion(end: TokenStaleEnd) async throws {
     await gate.complete(1, .success("stale-a"))
     await drain()
     #expect(h.sockets.isEmpty)
-    #expect(h.sockets.first?.credentials?.token != "stale-a")
     engine?.close()
+}
+
+@Test("Visibility changes while minting leave exactly one keepalive chain") @MainActor
+func sessionTokenProviderVisibilityKeepsOneKeepAlive() async throws {
+    let gate = TokenGate()
+    let h = try providerHarness { try await gate.acquire() }
+    defer { h.engine.close() }
+    h.engine.start()
+    await gate.waitForCall(1)
+    h.engine.setVisible(false)
+    h.engine.setVisible(true)
+    await gate.complete(1, .success("key-a"))
+    await settle { h.sockets.count == 1 }
+    h.sockets[0].onEvent?(.opened)
+    try h.sockets[0].receive(h.object("server-rtc-configuration"))
+    await settle { h.peers.count == 1 }
+    h.clock.advance(to: 15000)
+    #expect(h.sockets[0].frames("keepAlive").count == 1)
 }
 
 @Test("9000ms acquisition leaves the entire 45000ms socket watchdog", arguments: [false, true]) @MainActor

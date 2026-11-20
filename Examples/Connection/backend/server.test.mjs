@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { request } from 'node:http';
+import { json } from 'node:stream/consumers';
 import { createHelper } from './server.mjs';
 
 async function fixture(t, sdk) {
@@ -79,4 +81,34 @@ test('invalid paths and methods do not invoke upstream', async t => {
   const invalid = await fetch(`${url}%2Fother/stream-key`, { method: 'POST' });
   assert.equal(invalid.status, 404);
   assert.equal(invalid.headers.get('cache-control'), 'no-store');
+});
+
+test('foreign Host is forbidden without invoking upstream', async t => {
+  const calls = [];
+  const url = await fixture(t, { devices: { get: async id => {
+    calls.push(id);
+    return {};
+  } } });
+  const response = await new Promise((resolve, reject) => {
+    request(url, { headers: { Host: 'foreign.test:3001' } }, resolve).on('error', reject).end();
+  });
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.headers['cache-control'], 'no-store');
+  assert.deepEqual(await json(response), { error: 'forbidden' });
+  assert.deepEqual(calls, []);
+});
+
+test('Origin is forbidden without invoking upstream', async t => {
+  const calls = [];
+  const url = await fixture(t, { api: { post: async (...args) => {
+    calls.push(args);
+    return {};
+  } } });
+  const response = await fetch(`${url}/stream-key`, {
+    method: 'POST', headers: { Origin: 'http://localhost:3001' },
+  });
+  assert.equal(response.status, 403);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await response.json(), { error: 'forbidden' });
+  assert.deepEqual(calls, []);
 });
