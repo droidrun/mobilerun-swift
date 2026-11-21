@@ -114,9 +114,11 @@ A stream key works for one connection. The SDK calls `tokenProvider` before ever
 attempt, including each reconnect, and never reuses a key. If the provider throws or takes
 longer than 10 seconds, the attempt fails with `credentials_unavailable` and the normal backoff applies.
 
-The static `StreamCredentials(url:token:)` form is **deprecated**: its key is consumed by the
-first connect, so a reconnect fails. It still works, and the SDK logs one warning per session.
-If both are given, `tokenProvider` wins.
+`tokenProvider` is the recommended form. The static `StreamCredentials(url:token:)` form is
+**legacy and deprecated** until the legacy token hard cut, and is an explicit exception to the
+no-reuse rule: it keeps working and **a reconnect reuses the same token**. That only suits tokens
+that stay valid; single-use stream keys need the provider. The SDK logs one warning per session
+that uses a static token. If both are given, `tokenProvider` wins.
 
 ### Errors
 

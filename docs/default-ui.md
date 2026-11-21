@@ -31,7 +31,9 @@ Defaults convert the React CSS OKLCH values once using CSS Color 4's OKLab-to-li
 matrix and sRGB transfer function, clamping out-of-gamut channels to [0, 1]. The dark
 border preserves the source's 10% white alpha. Colors are stored as gamma-encoded sRGB.
 
-`StreamLabels` contains stream/navigation labels; `TaskApprovalLabels` independently
+`StreamLabels` contains stream/navigation labels, including `disconnected`, shown while reconnecting
+after an open session dropped (`StreamOverlayState.error` carries the latest `StreamConnectionError`
+for custom slots); `TaskApprovalLabels` independently
 contains approval labels via `.taskApprovalLabels(_:)`. `connecting` replaces React's
 `placeholderLabel`; reconnect attempts accept `{attempt}` and `{max}` (`ReconnectPolicy.maxAttempts` is 6); countdown accepts
 `{time}`. Theme, both label types and slots support `with { ... }` copies. SDK-created values have no public constructors or copy helpers. The default `.subheadline` font

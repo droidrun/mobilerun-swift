@@ -259,7 +259,7 @@ import MobilerunProtocol
         guard !warnedStaticToken, target.tokenProvider == nil,
               target.token?.isEmpty == false || target.url.query?.contains("token=") == true else { return }
         warnedStaticToken = true
-        onWarning("Static stream tokens are deprecated: a key works for one connection, so reconnects fail. Pass StreamCredentials(url:tokenProvider:) instead.")
+        onWarning("Static stream tokens are deprecated: reconnects reuse the same token, which fails for single-use keys. Pass StreamCredentials(url:tokenProvider:) instead.")
     }
 
     private func fail(_ source: Attempt, reason: StreamErrorReason, rejectedToken: Bool = false) {

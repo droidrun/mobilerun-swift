@@ -28,6 +28,24 @@ After release, use `.package(url: "https://github.com/droidrun/mobilerun-swift",
 Run the interactive sample and follow the checklist in [TESTING.md](../TESTING.md).
 See [RELEASING.md](../RELEASING.md) for the API contract and release process.
 
+## Connection errors
+
+`DeviceStreamSession.onError` is called on the main actor for every failed attempt, and
+`lastError` holds the latest one until the stream connects again. A `StreamConnectionError` has
+`reason`, `message` (fixed text, never endpoints or credentials), `attempt` (one-based) and
+`final` (true when retries stopped; `retry()` then starts a fresh cycle and reports nothing itself).
+
+| `reason` (`rawValue`) | Raised when |
+| --- | --- |
+| `credentials_unavailable` | The provider threw, timed out (10 s), returned a blank key or targeted a rejected host. |
+| `connection_refused` | The socket closed or failed before opening: wrong device, refused origin (403), 404, other statuses, network. |
+| `token_rejected` | The upgrade answered 401: a used, expired or revoked key. |
+| `disconnected` | An open session dropped, including the 30-minute session cap, or its peer failed after connecting. |
+| `device_unavailable` | Reserved for an explicit server indication that the device is offline or not ready; never inferred from timeouts or statuses. |
+| `unknown` | Anything else, including the 45-second watchdog and no configuration after the socket opened. |
+
+Retries follow the budget above: failures 1–6 are non-final, failure 7 is final.
+
 ## Connection
 
 The session is an `@MainActor ObservableObject`. Native video tracks are internal to the package.
@@ -62,8 +80,11 @@ cancellation. The **45-second** connection watchdog starts at socket allocation;
 15-second WebSocket-open and subsequent 15-second RTC-configuration budgets remain separate.
 ICE refresh and keepalive on an existing socket never mint another key.
 
-The static `token` path is deprecated for reconnecting streams but remains source compatible,
-including nil/empty behavior. Keys are single-use: a pasted key cannot support reconnect.
+`tokenProvider` is the recommended form. The static `token` path is legacy and deprecated until
+the legacy token hard cut, and remains source compatible, including nil/empty behavior. It is an
+explicit exception to the no-reuse rule: every reconnect reuses the same static token and the SDK
+logs one warning per session. Stream keys are single-use, so a pasted key cannot support reconnect;
+single-use keys need the provider.
 Your backend mints via `POST /v1/identity/stream-keys` with `{deviceId,ttlSeconds:120}`;
 the API key stays on that backend. The optional TTL controls admission, while the stream
 session cap is 30 minutes. Close **1001** immediately releases the peer, channels, media,
