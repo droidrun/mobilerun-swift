@@ -53,6 +53,17 @@ import MobilerunStreamCore
         #expect(environment.streamLabels.connecting == "Loading")
         #expect(environment.taskApprovalLabels.approve == "Allow")
     }
+    @Test func statusLabelsComeFromLabels() {
+        let labels = StreamLabels(connecting: "C", reconnecting: "R", reconnectingAttempt: "R {attempt}/{max}",
+                                  disconnected: "D")
+        let dropped = StreamConnectionError(reason: .disconnected, message: "", attempt: 1, final: false)
+        let refused = StreamConnectionError(reason: .connectionRefused, message: "", attempt: 1, final: false)
+        #expect(labels.statusLabel(.connecting) == "C")
+        #expect(labels.statusLabel(.reconnecting(attempt: 1)) == "R")
+        #expect(labels.statusLabel(.reconnecting(attempt: 1), error: dropped) == "D")
+        #expect(labels.statusLabel(.reconnecting(attempt: 1), error: refused) == "R")
+        #expect(labels.statusLabel(.reconnecting(attempt: 3), error: dropped) == "R 3/\(ReconnectPolicy.maxAttempts)")
+    }
     @Test func lifecycleRebindUsesCurrentSession() async {
         let first = LifecycleRequests(), second = LifecycleRequests()
         let a = DeviceStreamSession(credentials: { await first.fetch() })

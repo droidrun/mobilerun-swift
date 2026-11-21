@@ -110,6 +110,44 @@ DeviceStream(session: session) // In your SwiftUI view.
 Keep the session across view remounts and call `session.close()` on owner teardown.
 Keep your API key on the server; recreate the session when switching devices.
 
+A stream key works for one connection. The SDK calls `tokenProvider` before every connect
+attempt, including each reconnect, and never reuses a key. If the provider throws or takes
+longer than 10 seconds, the attempt fails with `credentials_unavailable` and the normal backoff applies.
+
+The static `StreamCredentials(url:token:)` form is **deprecated**: its key is consumed by the
+first connect, so a reconnect fails. It still works, and the SDK logs one warning per session.
+If both are given, `tokenProvider` wins.
+
+### Errors
+
+```swift
+session.onError = { error in
+    // error.reason, error.message, error.attempt, error.final
+}
+// Or read session.lastError from SwiftUI; it clears once the stream connects.
+```
+
+| `reason` | Meaning |
+| --- | --- |
+| `credentials_unavailable` | The provider threw, timed out or returned a blank key. |
+| `connection_refused` | The socket closed or failed before opening: wrong device, refused origin, network. |
+| `token_rejected` | The upgrade answered 401 or 403: a used, expired or revoked key. |
+| `disconnected` | An open session dropped, including the server's 30-minute session cap. |
+| `device_unavailable` | The device is missing (404) or never sent its configuration. |
+| `unknown` | Anything else. |
+
+`final` is `true` when the SDK stops retrying; the default UI then shows its Retry button.
+
+### Labels
+
+Every string the default UI renders comes from `StreamLabels`, with English defaults:
+
+```swift
+DeviceStream(session: session)
+    .streamLabels(StreamLabels(connecting: "Verbinde…", disconnected: "Getrennt",
+                               unavailable: "Gerät nicht erreichbar", retry: "Erneut versuchen"))
+```
+
 ## Guides
 
 | Guide | Covers |

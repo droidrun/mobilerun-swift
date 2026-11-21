@@ -14,6 +14,10 @@
         @Published public private(set) var status: StreamStatus = .connecting
         @Published private(set) var isClosed = false
         @Published public private(set) var videoSize: VideoSize?
+        /// Latest failed attempt; cleared once the stream connects again.
+        @Published public private(set) var lastError: StreamConnectionError?
+        /// Called on the main actor for every failed attempt with its reason; `final` means retries stopped.
+        public var onError: (@MainActor (StreamConnectionError) -> Void)?
         /// Latest inbound-video sample; nil unless connected, visible and subscribed.
         public var stats: StreamStats? { statistics.value }
         /// Samples native reports once per second. Completes when the session closes.
@@ -92,9 +96,14 @@
                 self?.peerConnected = connected
                 self?.updateSampling()
             }
+            engine.onError = { [weak self] error in
+                self?.lastError = error
+                self?.onError?(error)
+            }
             engine.onStatus = { [weak self] status in
                 guard let self else { return }
                 self.status = status
+                if status == .connected { self.lastError = nil }
                 self.updateSampling()
             }
         }

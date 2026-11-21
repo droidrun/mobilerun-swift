@@ -8,10 +8,11 @@ import MobilerunProtocol
 public typealias StreamTokenProvider = @Sendable () async throws -> String
 
 /// A discovered stream target. Descriptions and mirrors redact its credentials.
-/// Prefer tokenProvider; the legacy static token path is deprecated for reconnecting streams.
+/// Prefer tokenProvider: a key works for one connection, so a static token cannot survive a reconnect.
+/// The static token stays supported but is deprecated; the SDK logs one warning per session that uses it.
 public struct StreamCredentials: Sendable, CustomStringConvertible, CustomDebugStringConvertible, CustomReflectable {
     public let url: URL
-    /// Legacy static token. Nil or empty leaves the URL unchanged when no provider is supplied.
+    /// Deprecated static token. Nil or empty leaves the URL unchanged when no provider is supplied.
     public let token: String?
     /// Takes precedence over static and embedded tokens; failure never falls back.
     public let tokenProvider: StreamTokenProvider?
