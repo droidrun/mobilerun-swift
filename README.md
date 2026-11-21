@@ -130,11 +130,11 @@ session.onError = { error in
 | `reason` | Meaning |
 | --- | --- |
 | `credentials_unavailable` | The provider threw, timed out or returned a blank key. |
-| `connection_refused` | The socket closed or failed before opening: wrong device, refused origin, network. |
-| `token_rejected` | The upgrade answered 401 or 403: a used, expired or revoked key. |
+| `connection_refused` | The socket closed or failed before opening: wrong device, refused origin (403), 404, network. |
+| `token_rejected` | The upgrade answered 401: a used, expired or revoked key. |
 | `disconnected` | An open session dropped, including the server's 30-minute session cap. |
-| `device_unavailable` | The device is missing (404) or never sent its configuration. |
-| `unknown` | Anything else. |
+| `device_unavailable` | The server explicitly reported the device offline or not ready; not inferred from timeouts or statuses. |
+| `unknown` | Anything else, including a missing configuration after the socket opened. |
 
 `final` is `true` when the SDK stops retrying; the default UI then shows its Retry button.
 

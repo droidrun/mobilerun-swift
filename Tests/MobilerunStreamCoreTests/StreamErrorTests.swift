@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
+import MobilerunProtocol
 import MobilerunStreamCore
 import Testing
 
@@ -30,9 +31,8 @@ enum ErrorDrop: CaseIterable, Sendable, CustomTestStringConvertible {
     }
     var reason: StreamErrorReason {
         switch self {
-        case .closedBeforeOpen, .failedWithoutStatus, .serverError: .connectionRefused
-        case .unauthorized, .forbidden: .tokenRejected
-        case .notFound: .deviceUnavailable
+        case .closedBeforeOpen, .failedWithoutStatus, .serverError, .forbidden, .notFound: .connectionRefused
+        case .unauthorized: .tokenRejected
         }
     }
 }
@@ -46,6 +46,17 @@ func errorReasonBeforeOpen(drop: ErrorDrop) async throws {
     await drain()
     #expect(log.errors == [StreamConnectionError(
         reason: drop.reason, message: drop.reason.defaultMessage, attempt: 1, final: false)])
+}
+
+@Test("A socket that opens but never delivers its configuration reports unknown, not device_unavailable") @MainActor
+func errorReasonConfigurationTimeout() async throws {
+    let h = try SessionHarness(); defer { h.engine.close() }
+    let log = collect(h)
+    await h.start()
+    h.sockets[0].onEvent?(.opened)
+    h.clock.advance(to: h.clock.now + SignallingTiming.rtcConfigTimeoutMs)
+    await drain()
+    #expect(log.errors.map(\.reason) == [.unknown])
 }
 
 @Test("An open session that drops reports disconnected, from the socket or the peer",

@@ -5,13 +5,14 @@
 public enum StreamErrorReason: String, Sendable, Equatable, CaseIterable {
     /// The token provider threw, timed out, returned a blank key or targeted a rejected host.
     case credentialsUnavailable = "credentials_unavailable"
-    /// The socket closed or failed before opening: wrong device, refused origin or network failure.
+    /// The socket closed or failed before opening: wrong device, refused origin (403), 404 or network failure.
     case connectionRefused = "connection_refused"
-    /// The upgrade was answered with 401 or 403: a used, expired or revoked key.
+    /// The upgrade was answered with 401: a used, expired or revoked key.
     case tokenRejected = "token_rejected"
     /// An open session dropped, including the server's session cap.
     case disconnected
-    /// The server reported the device as missing (404).
+    /// The server reported the device as offline or not ready. Reserved for an explicit server indication;
+    /// silence, timeouts and generic upgrade statuses never produce it.
     case deviceUnavailable = "device_unavailable"
     case unknown
 }

@@ -440,7 +440,7 @@ import MobilerunProtocol
                 socketOpen = true
                 handshake?.cancel()
                 handshake = scheduler.schedule(delayMs: SignallingTiming.rtcConfigTimeoutMs) { [weak self] in
-                    self?.fail(.deviceUnavailable)
+                    self?.fail(.unknown)
                 }
                 sendMessage(.requestRTCConfiguration(sessionID: sessionID))
             case .closed:
@@ -523,8 +523,7 @@ import MobilerunProtocol
 
         func reason(forFailure status: Int?) -> StreamErrorReason {
             switch status {
-            case 401, 403: .tokenRejected
-            case 404: .deviceUnavailable
+            case 401: .tokenRejected
             case .some: .connectionRefused
             case nil: socketOpen ? .disconnected : .connectionRefused
             }
