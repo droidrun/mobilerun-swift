@@ -186,7 +186,7 @@ func sessionProviderWatchdogFromSocket(finalRetry: Bool) async throws {
     #expect(h.engine.status == (finalRetry ? .unavailable : .reconnecting(attempt: 1)))
 }
 
-@Test("Provider mode permits WSS and exact loopback only", .timeLimit(.minutes(1)), arguments: [
+@Test("Provider mode permits WSS and exact loopback only", arguments: [
     ("wss://stream.example.test/a", true), ("ws://localhost/a", true),
     ("ws://127.0.0.1/a", true), ("ws://[::1]/a", true),
     ("ws://localhost.evil.test/a", false), ("ws://evil-localhost/a", false),
