@@ -11,9 +11,11 @@ import MobilerunStreamCore
     public var hasVideo: Bool
     public var labels: StreamLabels
     public var retry: () -> Void
+    /// Latest failed attempt, for slots that explain why the stream is not live.
+    public var error: StreamConnectionError?
     public init(status: StreamStatus = .connecting, labels: StreamLabels,
-                hasVideo: Bool = false, retry: @escaping () -> Void) {
-        self.status = status; self.labels = labels; self.hasVideo = hasVideo; self.retry = retry
+                hasVideo: Bool = false, error: StreamConnectionError? = nil, retry: @escaping () -> Void) {
+        self.status = status; self.labels = labels; self.hasVideo = hasVideo; self.error = error; self.retry = retry
     }
 }
 @MainActor public struct StreamNavigationState {
@@ -59,7 +61,7 @@ import MobilerunStreamCore
         let handle = suppliedHandle ?? defaultHandle
         let presentation = StreamPresentation(status: session.status, hasControl: hasControl, isClosed: session.isClosed)
         VStack(spacing: 0) {
-            let context = StreamOverlayState(status: session.status, labels: labels, hasVideo: session.videoSize != nil, retry: session.retry)
+            let context = StreamOverlayState(status: session.status, labels: labels, hasVideo: session.videoSize != nil, error: session.lastError, retry: session.retry)
             ZStack {
                 theme.background
                 DeviceStreamView(session: session, hasControl: presentation.canControl, handle: handle)
@@ -105,7 +107,7 @@ import MobilerunStreamCore
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .accessibilityIdentifier("stream-phone-placeholder")
             }
-            StreamStatusPill(label: state.labels.statusLabel(state.status)).padding(16)
+            StreamStatusPill(label: state.labels.statusLabel(state.status, error: state.error)).padding(16)
         }
         // An opaque backing prevents native glass from sampling retained reconnecting video.
         .frame(maxWidth: .infinity, maxHeight: .infinity)

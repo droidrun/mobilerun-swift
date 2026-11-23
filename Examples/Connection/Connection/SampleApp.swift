@@ -210,6 +210,11 @@ enum SampleAppearance: String, CaseIterable {
     var body: some View {
         VStack(spacing: 4) {
             if showStats { SampleStatsView(session: session) }
+            if let error = session.lastError {
+                // Reasons are for your own UI and logging; the SDK's default UI shows only its labels.
+                Text("\(error.reason.rawValue) · attempt \(error.attempt)\(error.final ? " · final" : "")")
+                    .font(.caption.monospaced()).accessibilityIdentifier("sample-error")
+            }
             HStack {
                 Button("Keyboard") { handle.showKeyboard() }
                 Button("Hide keyboard") { handle.hideKeyboard() }

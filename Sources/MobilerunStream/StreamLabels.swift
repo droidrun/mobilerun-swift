@@ -14,6 +14,8 @@ public struct StreamLabels: Sendable, Equatable, StreamCustomizable {
     public var connecting: String
     public var reconnecting: String
     public var reconnectingAttempt: String
+    /// Shown while reconnecting after an open session dropped.
+    public var disconnected: String
     public var unavailable: String
     public var retry: String
     public var back: String
@@ -21,15 +23,18 @@ public struct StreamLabels: Sendable, Equatable, StreamCustomizable {
     public var recent: String
     public init(connecting: String = "connecting", reconnecting: String = "reconnecting",
                 reconnectingAttempt: String = "reconnecting ({attempt}/{max})",
+                disconnected: String = "disconnected",
                 unavailable: String = "device stream unavailable", retry: String = "Retry",
                 back: String = "Back", home: String = "Home", recent: String = "Recent") {
         self.connecting = connecting; self.reconnecting = reconnecting
-        self.reconnectingAttempt = reconnectingAttempt; self.unavailable = unavailable
+        self.reconnectingAttempt = reconnectingAttempt; self.disconnected = disconnected
+        self.unavailable = unavailable
         self.retry = retry; self.back = back; self.home = home; self.recent = recent
     }
-    func statusLabel(_ status: StreamStatus) -> String {
+    func statusLabel(_ status: StreamStatus, error: StreamConnectionError? = nil) -> String {
         switch status {
         case .reconnecting(let attempt):
+            if attempt <= 1, error?.reason == .disconnected { return disconnected }
             return attempt > 1 ? reconnectingAttempt
                 .replacingOccurrences(of: "{attempt}", with: String(attempt))
                 .replacingOccurrences(of: "{max}", with: String(ReconnectPolicy.maxAttempts)) : reconnecting

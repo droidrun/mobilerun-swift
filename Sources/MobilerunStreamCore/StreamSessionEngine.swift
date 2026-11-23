@@ -13,6 +13,12 @@ import MobilerunProtocol
     }
     package var onStatus: (@MainActor (StreamStatus) -> Void)?
     package var onAttemptStarted: (@MainActor () -> Void)?
+    /// Reports every counted failure; `final` marks the one that exhausts the retry budget.
+    package var onError: (@MainActor (StreamConnectionError) -> Void)?
+    /// Receives the one-per-session deprecation notice for static tokens.
+    package var onWarning: @MainActor (String) -> Void = { StreamLog.warn($0) }
+    private var warnedStaticToken = false
+    private var pendingReason: StreamErrorReason?
     /// Raw peer connectivity, including dips hidden by the public ICE-refresh grace period.
     package var onPeerConnectivity: (@MainActor (Bool) -> Void)?
     #if DEBUG
@@ -142,6 +148,7 @@ import MobilerunProtocol
 
     private func apply(_ snapshot: StreamReconnectSnapshot) {
         guard !closed else { return }
+        reportError(snapshot)
         switch snapshot.status {
         case .connecting:
             status = .connecting
@@ -160,6 +167,23 @@ import MobilerunProtocol
         }
         // Defer credential application until the controller has finished emitting its transition.
         Task { @MainActor [weak self] in self?.applyPendingTarget() }
+    }
+
+    /// Failures are the only transitions that raise the attempt count; retries and wakes restart it at zero.
+    private func reportError(_ snapshot: StreamReconnectSnapshot) {
+        guard snapshot.attempt >= 1,
+              snapshot.status == .reconnecting || snapshot.status == .unavailable else { return }
+        let reason = pendingReason ?? .unknown
+        onError?(StreamConnectionError(
+            reason: reason, message: reason.defaultMessage,
+            attempt: snapshot.attempt, final: snapshot.status == .unavailable))
+    }
+
+    /// Counts one failure and attributes it to the reason that caused it.
+    private func countFailure(_ reason: StreamErrorReason, disconnect: Bool = false) {
+        pendingReason = reason
+        defer { pendingReason = nil }
+        if disconnect { controller?.handleDisconnected() } else { controller?.handleFailure() }
     }
 
     /// Refreshes survive remounts; only disposal or this call's deadline cancels the provider.
@@ -224,16 +248,24 @@ import MobilerunProtocol
         guard !closed, let target = latestTarget else { return }
         releaseAttempt()
         activeTarget = target
+        warnIfStatic(target)
         let next = Attempt(owner: self, scheduler: scheduler)
         attempt = next
         controller?.attemptMounted(startWatchdog: target.tokenProvider == nil)
         next.open(target)
     }
 
-    private func fail(_ source: Attempt, rejectedToken: Bool = false) {
+    private func warnIfStatic(_ target: StreamCredentials) {
+        guard !warnedStaticToken, target.tokenProvider == nil,
+              target.token?.isEmpty == false || target.url.query?.contains("token=") == true else { return }
+        warnedStaticToken = true
+        onWarning("Static stream tokens are deprecated: reconnects reuse the same token, which fails for single-use keys. Pass StreamCredentials(url:tokenProvider:) instead.")
+    }
+
+    private func fail(_ source: Attempt, reason: StreamErrorReason, rejectedToken: Bool = false) {
         guard attempt === source, !closed else { return }
         releaseAttempt()
-        controller?.handleFailure()
+        countFailure(reason)
         if rejectedToken { prefetchCredentials() }
     }
 
@@ -250,6 +282,7 @@ import MobilerunProtocol
         var socket: (any SignallingTransport)?
         var peer: (any PeerTransport)?
         var socketOpen = false
+        var wasConnected = false
         var openChannels: Set<Int> = []
         var phase: SignallingPhase = .awaitingRTCConfiguration
         var answered = false
@@ -324,7 +357,7 @@ import MobilerunProtocol
         func providerFailed(_ diagnostic: String) {
             guard current else { return }
             owner?.diagnostic(diagnostic)
-            fail()
+            fail(.credentialsUnavailable)
         }
 
         func allocateSocket(_ credentials: StreamCredentials) {
@@ -338,10 +371,10 @@ import MobilerunProtocol
             self.socket = socket
             socket.onEvent = { [weak self] in self?.socketEvent($0) }
             handshake = scheduler.schedule(delayMs: SignallingTiming.wsOpenTimeoutMs) { [weak self] in
-                self?.fail()
+                self?.fail(.connectionRefused)
             }
             tickKeepAlive()
-            do { try socket.open(credentials) } catch { fail() }
+            do { try socket.open(credentials) } catch { fail(.connectionRefused) }
         }
 
         func release() {
@@ -371,9 +404,9 @@ import MobilerunProtocol
             peer = nil
         }
 
-        func fail(rejectedToken: Bool = false) {
+        func fail(_ reason: StreamErrorReason, rejectedToken: Bool = false) {
             guard current else { return }
-            owner?.fail(self, rejectedToken: rejectedToken)
+            owner?.fail(self, reason: reason, rejectedToken: rejectedToken)
         }
 
         @discardableResult func sendMessage(_ message: ClientMessage) -> Bool {
@@ -407,22 +440,22 @@ import MobilerunProtocol
                 socketOpen = true
                 handshake?.cancel()
                 handshake = scheduler.schedule(delayMs: SignallingTiming.rtcConfigTimeoutMs) { [weak self] in
-                    self?.fail()
+                    self?.fail(.unknown)
                 }
                 sendMessage(.requestRTCConfiguration(sessionID: sessionID))
             case .closed:
-                fail()
+                fail(socketOpen ? .disconnected : .connectionRefused)
             case .failed(let status):
                 if let status, HTTPStatus.isDeviceUnavailable(status) {
                     owner?.diagnostic("device unavailable http=\(status)")
                 }
-                fail(rejectedToken: status.map(HTTPStatus.isTokenRejected) ?? false)
+                fail(reason(forFailure: status), rejectedToken: status.map(HTTPStatus.isTokenRejected) ?? false)
             case .message(let text):
                 switch ServerMessage.parse(text, phase: phase) {
                 case .ignored:
                     break
                 case .startupFailure:
-                    fail()
+                    fail(.unknown)
                 case .message(let message):
                     if case .rtcConfiguration = message, phase == .awaitingRTCConfiguration {
                         phase = .established
@@ -485,7 +518,15 @@ import MobilerunProtocol
                 let sdp = try await peer.createOffer(iceRestart: false)
                 guard current else { return }
                 sendMessage(.offer(sdp: sdp, sessionID: sessionID))
-            } catch { fail() }
+            } catch { fail(.unknown) }
+        }
+
+        func reason(forFailure status: Int?) -> StreamErrorReason {
+            switch status {
+            case 401: .tokenRejected
+            case .some: .connectionRefused
+            case nil: socketOpen ? .disconnected : .connectionRefused
+            }
         }
 
         func restartIce(_ config: ServerMessage.RTCConfiguration, peer: any PeerTransport) async {
@@ -495,7 +536,7 @@ import MobilerunProtocol
             grace = scheduler.schedule(delayMs: SignallingTiming.iceRestartGraceMs) { [weak self] in
                 guard let self, self.current else { return }
                 self.endGrace()
-                if self.state != .connected { self.owner?.controller?.handleDisconnected() }
+                if self.state != .connected { self.owner?.countFailure(.disconnected, disconnect: true) }
             }
             do {
                 let sdp = try await peer.createOffer(iceRestart: true)
@@ -506,7 +547,7 @@ import MobilerunProtocol
                 owner?.diagnostic("restart offer sent")
             } catch {
                 endGrace()
-                if current, state != .connected { owner?.controller?.handleDisconnected() }
+                if current, state != .connected { owner?.countFailure(.disconnected, disconnect: true) }
             }
         }
 
@@ -525,12 +566,13 @@ import MobilerunProtocol
                 owner?.onPeerConnectivity?(state == .connected)
                 self.state = state
                 if state == .failed || state == .closed {
-                    fail()
+                    fail(wasConnected ? .disconnected : .unknown)
                 } else if state == .connected {
+                    wasConnected = true
                     endGrace()
                     owner?.controller?.handleConnected()
                 } else if grace == nil {
-                    owner?.controller?.handleDisconnected()
+                    owner?.countFailure(.disconnected, disconnect: true)
                 }
             case .channel(let id, let open):
                 let wasOpen = openChannels.contains(id)

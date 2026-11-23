@@ -110,6 +110,46 @@ DeviceStream(session: session) // In your SwiftUI view.
 Keep the session across view remounts and call `session.close()` on owner teardown.
 Keep your API key on the server; recreate the session when switching devices.
 
+A stream key works for one connection. The SDK calls `tokenProvider` before every connect
+attempt, including each reconnect, and never reuses a key. If the provider throws or takes
+longer than 10 seconds, the attempt fails with `credentials_unavailable` and the normal backoff applies.
+
+`tokenProvider` is the recommended form. The static `StreamCredentials(url:token:)` form is
+**legacy and deprecated** until the legacy token hard cut, and is an explicit exception to the
+no-reuse rule: it keeps working and **a reconnect reuses the same token**. That only suits tokens
+that stay valid; single-use stream keys need the provider. The SDK logs one warning per session
+that uses a static token. If both are given, `tokenProvider` wins.
+
+### Errors
+
+```swift
+session.onError = { error in
+    // error.reason, error.message, error.attempt, error.final
+}
+// Or read session.lastError from SwiftUI; it clears once the stream connects.
+```
+
+| `reason` | Meaning |
+| --- | --- |
+| `credentials_unavailable` | The provider threw, timed out or returned a blank key. |
+| `connection_refused` | The socket closed or failed before opening: wrong device, refused origin (403), 404, network. |
+| `token_rejected` | The upgrade answered 401: a used, expired or revoked key. |
+| `disconnected` | An open session dropped, including the server's 30-minute session cap. |
+| `device_unavailable` | The server explicitly reported the device offline or not ready; not inferred from timeouts or statuses. |
+| `unknown` | Anything else, including a missing configuration after the socket opened. |
+
+`final` is `true` when the SDK stops retrying; the default UI then shows its Retry button.
+
+### Labels
+
+Every string the default UI renders comes from `StreamLabels`, with English defaults:
+
+```swift
+DeviceStream(session: session)
+    .streamLabels(StreamLabels(connecting: "Verbinde…", disconnected: "Getrennt",
+                               unavailable: "Gerät nicht erreichbar", retry: "Erneut versuchen"))
+```
+
 ## Guides
 
 | Guide | Covers |

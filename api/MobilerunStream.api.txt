@@ -56,7 +56,7 @@ MobilerunStream {"access": "public", "declaration": "enum VideoCodec", "path": "
 MobilerunStream {"access": "public", "declaration": "func paymentCardDetails() -> PaymentCardDetails?", "path": "PendingApproval.paymentCardDetails()"}
 MobilerunStream {"access": "public", "declaration": "func with(_ update: (inout Self) -> Void) -> Self", "path": "StreamCustomizable.with(_:)"}
 MobilerunStream {"access": "public", "declaration": "init(approvalId: String, kind: String, details: [String : JSONValue] = [:], expiresAt: String, deviceId: String? = nil)", "path": "PendingApproval.init(approvalId:kind:details:expiresAt:deviceId:)"}
-MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:unavailable:retry:back:home:recent:)"}
+MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", disconnected: String = \"disconnected\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:disconnected:unavailable:retry:back:home:recent:)"}
 MobilerunStream {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "PendingApproval.init(from:)"}
 MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: StreamConfig.VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
 MobilerunStream {"access": "public", "declaration": "init(paymentCardTitle: String = \"Approve payment\", waiting: String = \"Waiting for approval\", card: String = \"Card\", app: String = \"App\", domain: String = \"Domain\", timeLeft: String = \"{time} left\", expired: String = \"Approval expired\", approve: String = \"Approve\", deny: String = \"Deny\", viewSwitch: String = \"Approval view\", details: String = \"Details\", device: String = \"Device\")", "path": "TaskApprovalLabels.init(paymentCardTitle:waiting:card:app:domain:timeLeft:expired:approve:deny:viewSwitch:details:device:)"}
@@ -88,6 +88,7 @@ MobilerunStream {"access": "public", "declaration": "var details: String", "path
 MobilerunStream {"access": "public", "declaration": "var details: [String : JSONValue]", "path": "PendingApproval.details"}
 MobilerunStream {"access": "public", "declaration": "var device: String", "path": "TaskApprovalLabels.device"}
 MobilerunStream {"access": "public", "declaration": "var deviceId: String?", "path": "PendingApproval.deviceId"}
+MobilerunStream {"access": "public", "declaration": "var disconnected: String", "path": "StreamLabels.disconnected"}
 MobilerunStream {"access": "public", "declaration": "var domain: String", "path": "TaskApprovalLabels.domain"}
 MobilerunStream {"access": "public", "declaration": "var error: String? { get }", "path": "TaskApprovalState.error"}
 MobilerunStream {"access": "public", "declaration": "var expired: String", "path": "TaskApprovalLabels.expired"}
@@ -111,6 +112,15 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s23CustomStringConvertibleP", "targetFallback": "Swift.CustomStringConvertible"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s28CustomDebugStringConvertibleP", "targetFallback": "Swift.CustomDebugStringConvertible"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:SY", "targetFallback": "Swift.RawRepresentable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:s12CaseIterableP", "targetFallback": "Swift.CaseIterable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:s23CustomStringConvertibleP", "targetFallback": "Swift.CustomStringConvertible"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:10Foundation14LocalizedErrorP", "targetFallback": "Foundation.LocalizedError"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
@@ -124,20 +134,31 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore {"access": "public", "declaration": "case connected", "path": "StreamStatus.connected"}
 MobilerunStreamCore {"access": "public", "declaration": "case connecting", "path": "StreamStatus.connecting"}
+MobilerunStreamCore {"access": "public", "declaration": "case connectionRefused", "path": "StreamErrorReason.connectionRefused"}
+MobilerunStreamCore {"access": "public", "declaration": "case credentialsUnavailable", "path": "StreamErrorReason.credentialsUnavailable"}
+MobilerunStreamCore {"access": "public", "declaration": "case deviceUnavailable", "path": "StreamErrorReason.deviceUnavailable"}
 MobilerunStreamCore {"access": "public", "declaration": "case disconnected", "path": "StreamError.disconnected"}
+MobilerunStreamCore {"access": "public", "declaration": "case disconnected", "path": "StreamErrorReason.disconnected"}
 MobilerunStreamCore {"access": "public", "declaration": "case notConnected", "path": "StreamError.notConnected"}
 MobilerunStreamCore {"access": "public", "declaration": "case reconnecting(attempt: Int)", "path": "StreamStatus.reconnecting(attempt:)"}
 MobilerunStreamCore {"access": "public", "declaration": "case screenshotFailed", "path": "StreamError.screenshotFailed"}
 MobilerunStreamCore {"access": "public", "declaration": "case screenshotTimeout", "path": "StreamError.screenshotTimeout"}
+MobilerunStreamCore {"access": "public", "declaration": "case tokenRejected", "path": "StreamErrorReason.tokenRejected"}
 MobilerunStreamCore {"access": "public", "declaration": "case unavailable", "path": "StreamStatus.unavailable"}
+MobilerunStreamCore {"access": "public", "declaration": "case unknown", "path": "StreamErrorReason.unknown"}
 MobilerunStreamCore {"access": "public", "declaration": "enum ReconnectPolicy", "path": "ReconnectPolicy"}
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "path": "StreamError"}
+MobilerunStreamCore {"access": "public", "declaration": "enum StreamErrorReason", "path": "StreamErrorReason"}
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
+MobilerunStreamCore {"access": "public", "declaration": "init(reason: StreamErrorReason, message: String, attempt: Int, final: Bool)", "path": "StreamConnectionError.init(reason:message:attempt:final:)"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil, tokenProvider: StreamTokenProvider? = nil)", "path": "StreamCredentials.init(url:token:tokenProvider:)"}
+MobilerunStreamCore {"access": "public", "declaration": "init?(rawValue: String)", "path": "StreamErrorReason.init(rawValue:)"}
+MobilerunStreamCore {"access": "public", "declaration": "let attempt: Int", "path": "StreamConnectionError.attempt"}
 MobilerunStreamCore {"access": "public", "declaration": "let bitrateKbps: Double?", "path": "StreamStats.bitrateKbps"}
 MobilerunStreamCore {"access": "public", "declaration": "let codec: String?", "path": "StreamStats.codec"}
 MobilerunStreamCore {"access": "public", "declaration": "let decodeTimeMs: Double?", "path": "StreamStats.decodeTimeMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let final: Bool", "path": "StreamConnectionError.final"}
 MobilerunStreamCore {"access": "public", "declaration": "let fps: Double?", "path": "StreamStats.fps"}
 MobilerunStreamCore {"access": "public", "declaration": "let framesDropped: Int64?", "path": "StreamStats.framesDropped"}
 MobilerunStreamCore {"access": "public", "declaration": "let freezeCount: Int64?", "path": "StreamStats.freezeCount"}
@@ -145,7 +166,9 @@ MobilerunStreamCore {"access": "public", "declaration": "let height: Int", "path
 MobilerunStreamCore {"access": "public", "declaration": "let height: Int?", "path": "StreamStats.height"}
 MobilerunStreamCore {"access": "public", "declaration": "let jitterBufferDelayMs: Double?", "path": "StreamStats.jitterBufferDelayMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let localCandidateType: String?", "path": "StreamStats.localCandidateType"}
+MobilerunStreamCore {"access": "public", "declaration": "let message: String", "path": "StreamConnectionError.message"}
 MobilerunStreamCore {"access": "public", "declaration": "let packetsLost: Int64?", "path": "StreamStats.packetsLost"}
+MobilerunStreamCore {"access": "public", "declaration": "let reason: StreamErrorReason", "path": "StreamConnectionError.reason"}
 MobilerunStreamCore {"access": "public", "declaration": "let remoteCandidateType: String?", "path": "StreamStats.remoteCandidateType"}
 MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "path": "VideoSize.rotation"}
 MobilerunStreamCore {"access": "public", "declaration": "let rttMs: Double?", "path": "StreamStats.rttMs"}
@@ -156,6 +179,7 @@ MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": 
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int?", "path": "StreamStats.width"}
 MobilerunStreamCore {"access": "public", "declaration": "static let maxAttempts: Int", "path": "ReconnectPolicy.maxAttempts"}
+MobilerunStreamCore {"access": "public", "declaration": "struct StreamConnectionError", "path": "StreamConnectionError"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
@@ -163,6 +187,7 @@ MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredent
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamTokenProvider = () async throws -> String", "path": "StreamTokenProvider"}
 MobilerunStreamCore {"access": "public", "declaration": "var customMirror: Mirror { get }", "path": "StreamCredentials.customMirror"}
 MobilerunStreamCore {"access": "public", "declaration": "var debugDescription: String { get }", "path": "StreamCredentials.debugDescription"}
+MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamConnectionError.description"}
 MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamCredentials.description"}
 MobilerunStreamCore {"access": "public", "declaration": "var errorDescription: String? { get }", "path": "StreamError.errorDescription"}
 # iOS
@@ -296,7 +321,7 @@ MobilerunStream {"access": "public", "declaration": "@MainActor init(state: Stre
 MobilerunStream {"access": "public", "declaration": "@MainActor init(state: TaskApprovalActionsState)", "path": "StreamApprovalActions.init(state:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor init(state: TaskApprovalState, onDecide: @escaping (ApprovalDecision) -> Void, actions: @escaping (TaskApprovalActionsState) -> AnyView = { AnyView(StreamApprovalActions(state: $0)) })", "path": "TaskApprovalCard.init(state:onDecide:actions:)", "swiftGenerics": {"constraints": [{"kind": "sameType", "lhs": "Device", "rhs": "EmptyView", "rhsPrecise": "s:7SwiftUI9EmptyViewV"}], "parameters": [{"depth": 0, "index": 0, "name": "Device"}]}}
 MobilerunStream {"access": "public", "declaration": "@MainActor init(state: TaskApprovalState, onDecide: @escaping (ApprovalDecision) -> Void, actions: @escaping (TaskApprovalActionsState) -> AnyView = { AnyView(StreamApprovalActions(state: $0)) }, @ViewBuilder device: () -> Device)", "path": "TaskApprovalCard.init(state:onDecide:actions:device:)", "swiftGenerics": {"constraints": [{"kind": "conformance", "lhs": "Device", "rhs": "View", "rhsPrecise": "s:7SwiftUI4ViewP"}], "parameters": [{"depth": 0, "index": 0, "name": "Device"}]}}
-MobilerunStream {"access": "public", "declaration": "@MainActor init(status: StreamStatus = .connecting, labels: StreamLabels, hasVideo: Bool = false, retry: @escaping () -> Void)", "path": "StreamOverlayState.init(status:labels:hasVideo:retry:)"}
+MobilerunStream {"access": "public", "declaration": "@MainActor init(status: StreamStatus = .connecting, labels: StreamLabels, hasVideo: Bool = false, error: StreamConnectionError? = nil, retry: @escaping () -> Void)", "path": "StreamOverlayState.init(status:labels:hasVideo:error:retry:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor override func didMoveToWindow()", "path": "DeviceStreamUIView.didMoveToWindow()"}
 MobilerunStream {"access": "public", "declaration": "@MainActor override func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool", "path": "DeviceStreamUIView.gestureRecognizerShouldBegin(_:)"}
 MobilerunStream {"access": "public", "declaration": "@MainActor override func layoutSubviews()", "path": "DeviceStreamUIView.layoutSubviews()"}
@@ -332,6 +357,7 @@ MobilerunStream {"access": "public", "declaration": "@MainActor var body: some V
 MobilerunStream {"access": "public", "declaration": "@MainActor var canControl: Bool", "path": "StreamNavigationState.canControl"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var decision: ApprovalDecision?", "path": "TaskApprovalActionsState.decision"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var error: (any Error)? { get }", "path": "TaskApprovalModel.error"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var error: StreamConnectionError?", "path": "StreamOverlayState.error"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var hasControl: Bool { get set }", "path": "DeviceStreamUIView.hasControl"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var hasVideo: Bool", "path": "StreamOverlayState.hasVideo"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var isPending: Bool", "path": "TaskApprovalActionsState.isPending"}
@@ -340,6 +366,7 @@ MobilerunStream {"access": "public", "declaration": "@MainActor var labels: Stre
 MobilerunStream {"access": "public", "declaration": "@MainActor var navigation: (StreamNavigationState) -> AnyView", "path": "StreamSlots.navigation"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var onAction: (SystemKey) -> Void", "path": "StreamNavigationState.onAction"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var onDecide: (ApprovalDecision) -> Void", "path": "TaskApprovalActionsState.onDecide"}
+MobilerunStream {"access": "public", "declaration": "@MainActor var onError: (@MainActor (StreamConnectionError) -> Void)?", "path": "DeviceStreamSession.onError"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var placeholder: (StreamOverlayState) -> AnyView", "path": "StreamSlots.placeholder"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var retry: () -> Void", "path": "StreamOverlayState.retry"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var state: StreamNavigationState", "path": "StreamNavigationBar.state"}
@@ -351,6 +378,7 @@ MobilerunStream {"access": "public", "declaration": "@MainActor var statsPublish
 MobilerunStream {"access": "public", "declaration": "@MainActor var status: StreamStatus", "path": "StreamOverlayState.status"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var taskId: String { get }", "path": "TaskApprovalModel.taskId"}
 MobilerunStream {"access": "public", "declaration": "@MainActor var unavailable: (StreamOverlayState) -> AnyView", "path": "StreamSlots.unavailable"}
+MobilerunStream {"access": "public", "declaration": "@Published @MainActor var lastError: StreamConnectionError? { get set }", "path": "DeviceStreamSession.lastError"}
 MobilerunStream {"access": "public", "declaration": "@Published @MainActor var state: TaskApprovalState { get set }", "path": "TaskApprovalModel.state"}
 MobilerunStream {"access": "public", "declaration": "@Published @MainActor var status: StreamStatus { get set }", "path": "DeviceStreamSession.status"}
 MobilerunStream {"access": "public", "declaration": "@Published @MainActor var videoSize: VideoSize? { get set }", "path": "DeviceStreamSession.videoSize"}
@@ -371,7 +399,7 @@ MobilerunStream {"access": "public", "declaration": "func paymentCardDetails() -
 MobilerunStream {"access": "public", "declaration": "func with(_ update: (inout Self) -> Void) -> Self", "path": "StreamCustomizable.with(_:)"}
 MobilerunStream {"access": "public", "declaration": "init(approvalId: String, kind: String, details: [String : JSONValue] = [:], expiresAt: String, deviceId: String? = nil)", "path": "PendingApproval.init(approvalId:kind:details:expiresAt:deviceId:)"}
 MobilerunStream {"access": "public", "declaration": "init(background: Color = Color(.sRGB, red: 1.00000000, green: 1.00000000, blue: 1.00000000, opacity: 1), foreground: Color = Color(.sRGB, red: 0.03938824, green: 0.03938823, blue: 0.03938823, opacity: 1), card: Color = Color(.sRGB, red: 1.00000000, green: 1.00000000, blue: 1.00000000, opacity: 1), cardForeground: Color = Color(.sRGB, red: 0.03938824, green: 0.03938823, blue: 0.03938823, opacity: 1), muted: Color = Color(.sRGB, red: 0.96058699, green: 0.96058699, blue: 0.96058699, opacity: 1), mutedForeground: Color = Color(.sRGB, red: 0.45151924, green: 0.45151924, blue: 0.45151924, opacity: 1), border: Color = Color(.sRGB, red: 0.89816066, green: 0.89816066, blue: 0.89816066, opacity: 1), ring: Color = Color(.sRGB, red: 0.63016320, green: 0.63016320, blue: 0.63016320, opacity: 1), primary: Color = Color(.sRGB, red: 0.09052741, green: 0.09052741, blue: 0.09052741, opacity: 1), primaryForeground: Color = Color(.sRGB, red: 0.98025598, green: 0.98025598, blue: 0.98025598, opacity: 1), accent: Color = Color(.sRGB, red: 0.96058699, green: 0.96058699, blue: 0.96058699, opacity: 1), accentForeground: Color = Color(.sRGB, red: 0.09052741, green: 0.09052741, blue: 0.09052741, opacity: 1), destructive: Color = Color(.sRGB, red: 0.90645756, green: 0.00000000, blue: 0.04221455, opacity: 1), radius: CGFloat = 8, typography: Font = .subheadline, surfaceStyle: StreamSurfaceStyle = .glass)", "path": "StreamTheme.init(background:foreground:card:cardForeground:muted:mutedForeground:border:ring:primary:primaryForeground:accent:accentForeground:destructive:radius:typography:surfaceStyle:)"}
-MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:unavailable:retry:back:home:recent:)"}
+MobilerunStream {"access": "public", "declaration": "init(connecting: String = \"connecting\", reconnecting: String = \"reconnecting\", reconnectingAttempt: String = \"reconnecting ({attempt}/{max})\", disconnected: String = \"disconnected\", unavailable: String = \"device stream unavailable\", retry: String = \"Retry\", back: String = \"Back\", home: String = \"Home\", recent: String = \"Recent\")", "path": "StreamLabels.init(connecting:reconnecting:reconnectingAttempt:disconnected:unavailable:retry:back:home:recent:)"}
 MobilerunStream {"access": "public", "declaration": "init(from decoder: any Decoder) throws", "path": "PendingApproval.init(from:)"}
 MobilerunStream {"access": "public", "declaration": "init(muted: Bool = true, videoCodec: StreamConfig.VideoCodec = .automatic)", "path": "StreamConfig.init(muted:videoCodec:)"}
 MobilerunStream {"access": "public", "declaration": "init(paymentCardTitle: String = \"Approve payment\", waiting: String = \"Waiting for approval\", card: String = \"Card\", app: String = \"App\", domain: String = \"Domain\", timeLeft: String = \"{time} left\", expired: String = \"Approval expired\", approve: String = \"Approve\", deny: String = \"Deny\", viewSwitch: String = \"Approval view\", details: String = \"Details\", device: String = \"Device\")", "path": "TaskApprovalLabels.init(paymentCardTitle:waiting:card:app:domain:timeLeft:expired:approve:deny:viewSwitch:details:device:)"}
@@ -413,6 +441,7 @@ MobilerunStream {"access": "public", "declaration": "var details: String", "path
 MobilerunStream {"access": "public", "declaration": "var details: [String : JSONValue]", "path": "PendingApproval.details"}
 MobilerunStream {"access": "public", "declaration": "var device: String", "path": "TaskApprovalLabels.device"}
 MobilerunStream {"access": "public", "declaration": "var deviceId: String?", "path": "PendingApproval.deviceId"}
+MobilerunStream {"access": "public", "declaration": "var disconnected: String", "path": "StreamLabels.disconnected"}
 MobilerunStream {"access": "public", "declaration": "var domain: String", "path": "TaskApprovalLabels.domain"}
 MobilerunStream {"access": "public", "declaration": "var error: String? { get }", "path": "TaskApprovalState.error"}
 MobilerunStream {"access": "public", "declaration": "var expired: String", "path": "TaskApprovalLabels.expired"}
@@ -448,6 +477,15 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s23CustomStringConvertibleP", "targetFallback": "Swift.CustomStringConvertible"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s28CustomDebugStringConvertibleP", "targetFallback": "Swift.CustomDebugStringConvertible"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11CredentialsV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:SY", "targetFallback": "Swift.RawRepresentable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:s12CaseIterableP", "targetFallback": "Swift.CaseIterable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B11ErrorReasonO", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:s23CustomStringConvertibleP", "targetFallback": "Swift.CustomStringConvertible"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:s5ErrorP", "targetFallback": "Swift.Error"}
+MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B15ConnectionErrorV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:10Foundation14LocalizedErrorP", "targetFallback": "Foundation.LocalizedError"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SH", "targetFallback": "Swift.Hashable"}
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore0B5ErrorO", "target": "s:SQ", "targetFallback": "Swift.Equatable"}
@@ -461,20 +499,31 @@ MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19Mobilerun
 MobilerunStreamCore relationship {"kind": "conformsTo", "source": "s:19MobilerunStreamCore9VideoSizeV", "target": "s:s8SendableP", "targetFallback": "Swift.Sendable"}
 MobilerunStreamCore {"access": "public", "declaration": "case connected", "path": "StreamStatus.connected"}
 MobilerunStreamCore {"access": "public", "declaration": "case connecting", "path": "StreamStatus.connecting"}
+MobilerunStreamCore {"access": "public", "declaration": "case connectionRefused", "path": "StreamErrorReason.connectionRefused"}
+MobilerunStreamCore {"access": "public", "declaration": "case credentialsUnavailable", "path": "StreamErrorReason.credentialsUnavailable"}
+MobilerunStreamCore {"access": "public", "declaration": "case deviceUnavailable", "path": "StreamErrorReason.deviceUnavailable"}
 MobilerunStreamCore {"access": "public", "declaration": "case disconnected", "path": "StreamError.disconnected"}
+MobilerunStreamCore {"access": "public", "declaration": "case disconnected", "path": "StreamErrorReason.disconnected"}
 MobilerunStreamCore {"access": "public", "declaration": "case notConnected", "path": "StreamError.notConnected"}
 MobilerunStreamCore {"access": "public", "declaration": "case reconnecting(attempt: Int)", "path": "StreamStatus.reconnecting(attempt:)"}
 MobilerunStreamCore {"access": "public", "declaration": "case screenshotFailed", "path": "StreamError.screenshotFailed"}
 MobilerunStreamCore {"access": "public", "declaration": "case screenshotTimeout", "path": "StreamError.screenshotTimeout"}
+MobilerunStreamCore {"access": "public", "declaration": "case tokenRejected", "path": "StreamErrorReason.tokenRejected"}
 MobilerunStreamCore {"access": "public", "declaration": "case unavailable", "path": "StreamStatus.unavailable"}
+MobilerunStreamCore {"access": "public", "declaration": "case unknown", "path": "StreamErrorReason.unknown"}
 MobilerunStreamCore {"access": "public", "declaration": "enum ReconnectPolicy", "path": "ReconnectPolicy"}
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamError", "path": "StreamError"}
+MobilerunStreamCore {"access": "public", "declaration": "enum StreamErrorReason", "path": "StreamErrorReason"}
 MobilerunStreamCore {"access": "public", "declaration": "enum StreamStatus", "path": "StreamStatus"}
+MobilerunStreamCore {"access": "public", "declaration": "init(reason: StreamErrorReason, message: String, attempt: Int, final: Bool)", "path": "StreamConnectionError.init(reason:message:attempt:final:)"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil)", "path": "StreamCredentials.init(url:token:)"}
 MobilerunStreamCore {"access": "public", "declaration": "init(url: URL, token: String? = nil, tokenProvider: StreamTokenProvider? = nil)", "path": "StreamCredentials.init(url:token:tokenProvider:)"}
+MobilerunStreamCore {"access": "public", "declaration": "init?(rawValue: String)", "path": "StreamErrorReason.init(rawValue:)"}
+MobilerunStreamCore {"access": "public", "declaration": "let attempt: Int", "path": "StreamConnectionError.attempt"}
 MobilerunStreamCore {"access": "public", "declaration": "let bitrateKbps: Double?", "path": "StreamStats.bitrateKbps"}
 MobilerunStreamCore {"access": "public", "declaration": "let codec: String?", "path": "StreamStats.codec"}
 MobilerunStreamCore {"access": "public", "declaration": "let decodeTimeMs: Double?", "path": "StreamStats.decodeTimeMs"}
+MobilerunStreamCore {"access": "public", "declaration": "let final: Bool", "path": "StreamConnectionError.final"}
 MobilerunStreamCore {"access": "public", "declaration": "let fps: Double?", "path": "StreamStats.fps"}
 MobilerunStreamCore {"access": "public", "declaration": "let framesDropped: Int64?", "path": "StreamStats.framesDropped"}
 MobilerunStreamCore {"access": "public", "declaration": "let freezeCount: Int64?", "path": "StreamStats.freezeCount"}
@@ -482,7 +531,9 @@ MobilerunStreamCore {"access": "public", "declaration": "let height: Int", "path
 MobilerunStreamCore {"access": "public", "declaration": "let height: Int?", "path": "StreamStats.height"}
 MobilerunStreamCore {"access": "public", "declaration": "let jitterBufferDelayMs: Double?", "path": "StreamStats.jitterBufferDelayMs"}
 MobilerunStreamCore {"access": "public", "declaration": "let localCandidateType: String?", "path": "StreamStats.localCandidateType"}
+MobilerunStreamCore {"access": "public", "declaration": "let message: String", "path": "StreamConnectionError.message"}
 MobilerunStreamCore {"access": "public", "declaration": "let packetsLost: Int64?", "path": "StreamStats.packetsLost"}
+MobilerunStreamCore {"access": "public", "declaration": "let reason: StreamErrorReason", "path": "StreamConnectionError.reason"}
 MobilerunStreamCore {"access": "public", "declaration": "let remoteCandidateType: String?", "path": "StreamStats.remoteCandidateType"}
 MobilerunStreamCore {"access": "public", "declaration": "let rotation: Int", "path": "VideoSize.rotation"}
 MobilerunStreamCore {"access": "public", "declaration": "let rttMs: Double?", "path": "StreamStats.rttMs"}
@@ -493,6 +544,7 @@ MobilerunStreamCore {"access": "public", "declaration": "let url: URL", "path": 
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int", "path": "VideoSize.width"}
 MobilerunStreamCore {"access": "public", "declaration": "let width: Int?", "path": "StreamStats.width"}
 MobilerunStreamCore {"access": "public", "declaration": "static let maxAttempts: Int", "path": "ReconnectPolicy.maxAttempts"}
+MobilerunStreamCore {"access": "public", "declaration": "struct StreamConnectionError", "path": "StreamConnectionError"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamCredentials", "path": "StreamCredentials"}
 MobilerunStreamCore {"access": "public", "declaration": "struct StreamStats", "path": "StreamStats"}
 MobilerunStreamCore {"access": "public", "declaration": "struct VideoSize", "path": "VideoSize"}
@@ -500,5 +552,6 @@ MobilerunStreamCore {"access": "public", "declaration": "typealias StreamCredent
 MobilerunStreamCore {"access": "public", "declaration": "typealias StreamTokenProvider = () async throws -> String", "path": "StreamTokenProvider"}
 MobilerunStreamCore {"access": "public", "declaration": "var customMirror: Mirror { get }", "path": "StreamCredentials.customMirror"}
 MobilerunStreamCore {"access": "public", "declaration": "var debugDescription: String { get }", "path": "StreamCredentials.debugDescription"}
+MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamConnectionError.description"}
 MobilerunStreamCore {"access": "public", "declaration": "var description: String { get }", "path": "StreamCredentials.description"}
 MobilerunStreamCore {"access": "public", "declaration": "var errorDescription: String? { get }", "path": "StreamError.errorDescription"}
