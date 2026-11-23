@@ -152,6 +152,8 @@ DeviceStream(session: session)
 
 ## Guides
 
+Coding agents: use the [device stream integration skill](skills/mobilerun-device-stream/SKILL.md).
+
 | Guide | Covers |
 | --- | --- |
 | [Stream keys and connection](docs/stream-keys.md) | Credentials, retries, timeouts, transport, audio and WebRTC compatibility. |
