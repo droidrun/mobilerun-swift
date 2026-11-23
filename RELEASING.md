@@ -1,6 +1,8 @@
 # Releasing with SwiftPM
 
-Nothing has been tagged or published. SwiftPM resolves semantic version git tags;
+The first release is `v0.1.0`, consumed through the repository’s git URL.
+This preparation does not create the tag or make the repository public.
+SwiftPM resolves semantic version git tags;
 there is no package registry upload or separate version field. The tag is the
 version source. `vX.Y.Z` tags must reference a commit reachable from `main` and
 have a matching nonempty `CHANGELOG.md` entry. Prereleases are not supported yet.
@@ -10,7 +12,9 @@ as pull requests, then requests approval through the `release` environment.
 Only the final step receives the GitHub token and creates a **draft** GitHub
 Release using that changelog entry. All releases remain drafts until an owner
 publishes them manually. Workflow checks prevent mistakes; environment protection
-and tag rules are required controls.
+and tag rules are required controls. **Creating a public tag is the decisive
+release gate:** SwiftPM can consume it immediately, even while the workflow is
+running or the GitHub Release is still a draft. No registry upload runs on a tag.
 
 ## One-time owner setup
 
@@ -54,13 +58,11 @@ and tag rules are required controls.
 
 ## Each release
 
-1. Update the changelog with the intended stable `X.Y.Z` version. Refresh the
-   README installation example for the first release. At the first tag, update every
-   pre-release sentence: README's "Pre-release Swift SDK", "Until publishing, add this
-   repository's `main` branch" and "After release, use …"; TESTING's "Publishing has
-   not happened; install from source"; and this document's "Nothing has been tagged
-   or published." Replace them with the tagged installation and release state.
-   Change the changelog's "Unreleased" label to the release date.
+1. Update the changelog with the intended stable `X.Y.Z` version and release date.
+   Keep the bracketed version heading used by `tool/release-notes.py`.
+   Update README and the connection guide to the exact version being released.
+   Review [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the selected
+   LiveKit WebRTC archive’s license on dependency upgrades.
    There is no version to bump in `Package.swift`.
 2. Select the same Xcode as CI. Run `swift build`, `swift build -c release`, `swift test`, and the Debug/Release simulator
    library/example builds and simulator tests in `.github/workflows/ci.yml`.
@@ -81,7 +83,18 @@ and tag rules are required controls.
    git push origin v0.1.0
    ```
 
-5. Inspect the successful verification run, tag and commit before approving the
+5. Once the repository is public and the tag exists, verify a fresh consumer
+   resolves it with the README manifest snippets:
+
+   ```swift
+   .package(url: "https://github.com/droidrun/mobilerun-swift.git", exact: "0.1.0")
+   // In the app target’s dependencies:
+   .product(name: "MobilerunStream", package: "mobilerun-swift")
+   ```
+
+   In Xcode choose **Exact Version 0.1.0** and the `MobilerunStream` product.
+   For later releases, substitute the intended exact version.
+6. Inspect the successful verification run, tag and commit before approving the
    `release` environment. Review the draft's changelog notes and manually publish
    it when ready. Verify SwiftPM resolves the tag before announcing the release.
    Do not move a published version tag; diagnose failures before retrying a run.

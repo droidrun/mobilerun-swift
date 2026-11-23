@@ -186,7 +186,7 @@ func sessionProviderWatchdogFromSocket(finalRetry: Bool) async throws {
     #expect(h.engine.status == (finalRetry ? .unavailable : .reconnecting(attempt: 1)))
 }
 
-@Test("Provider mode permits WSS and exact loopback only", arguments: [
+@Test("Provider mode permits WSS and exact loopback only", .timeLimit(.minutes(1)), arguments: [
     ("wss://stream.example.test/a", true), ("ws://localhost/a", true),
     ("ws://127.0.0.1/a", true), ("ws://[::1]/a", true),
     ("ws://localhost.evil.test/a", false), ("ws://evil-localhost/a", false),
@@ -196,10 +196,19 @@ func sessionProviderWatchdogFromSocket(finalRetry: Bool) async throws {
 func sessionProviderURLPolicy(url: String, allowed: Bool) async throws {
     let gate = TokenGate()
     let h = try SessionHarness()
+    let (outcomes, outcome) = AsyncStream<Void>.makeStream()
+    defer { outcome.finish() }
     defer { h.engine.close() }
-    h.target = StreamCredentials(url: URL(string: url)!, tokenProvider: { try await gate.acquire() })
+    h.engine.onStatus = { status in
+        if status == .reconnecting(attempt: 1) { outcome.yield(()) }
+    }
+    h.target = StreamCredentials(url: URL(string: url)!, tokenProvider: {
+        try await gate.acquire(onCall: { outcome.yield(()) })
+    })
     h.engine.start()
-    await settle { h.credentialCalls == 1 }
+    // Observe either provider entry or rejection; a wrong policy still completes and fails below.
+    var iterator = outcomes.makeAsyncIterator()
+    await iterator.next()
     await drain()
     #expect(await gate.calls == (allowed ? 1 : 0))
     #expect(h.sockets.isEmpty)
