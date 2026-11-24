@@ -30,6 +30,28 @@
 
 </div>
 
+## Install
+
+Install version 0.1.0 with Swift Package Manager. Add it to your manifest’s dependencies:
+
+```swift
+.package(url: "https://github.com/droidrun/mobilerun-swift", exact: "0.1.0")
+```
+
+Add the library product to your app target’s dependencies:
+
+```swift
+.product(name: "MobilerunStream", package: "mobilerun-swift")
+```
+
+In Xcode, add `https://github.com/droidrun/mobilerun-swift` in Package
+Dependencies, choose **Exact Version 0.1.0**, and select `MobilerunStream`.
+Then `import MobilerunStream`.
+
+Swift Package Manager resolves exact version `0.1.0` from the `v0.1.0` release tag.
+The tag must exist before installing this version.
+See the [connection guide](docs/stream-keys.md) for credentials and lifecycle setup.
+
 > **Building Mobilerun phones into your platform?** Start with the [Partner guide](https://docs.mobilerun.ai/partners). It walks through the API key, one phone per user, stream keys and live viewing step by step.
 
 <table>
@@ -69,28 +91,6 @@ microphone/camera pill. Use `session.startPublish(PublishOptions(audio: true, vi
 `await session.stopPublish()` and `session.$publishState` for custom controls. Add the required iOS
 privacy usage descriptions; capture begins only after the device accepts an explicit start. The server authorizes every
 request. See [publishing](docs/publishing.md) for setup, errors and lifecycle behavior.
-
-## Install
-
-Install version 0.1.0 with Swift Package Manager. Add it to your manifest’s dependencies:
-
-```swift
-.package(url: "https://github.com/droidrun/mobilerun-swift", exact: "0.1.0")
-```
-
-Add the library product to your app target’s dependencies:
-
-```swift
-.product(name: "MobilerunStream", package: "mobilerun-swift")
-```
-
-In Xcode, add `https://github.com/droidrun/mobilerun-swift` in Package
-Dependencies, choose **Exact Version 0.1.0**, and select `MobilerunStream`.
-Then `import MobilerunStream`.
-
-Swift Package Manager resolves exact version `0.1.0` from the `v0.1.0` release tag.
-The tag must exist before installing this version.
-See the [connection guide](docs/stream-keys.md) for credentials and lifecycle setup.
 
 ## Quick start
 
