@@ -223,9 +223,10 @@ actor TokenGate {
         guard calls < id else { return }
         await withCheckedContinuation { waiting[id] = $0 }
     }
-    func acquire() async throws -> String {
+    func acquire(onCall: @Sendable () -> Void = {}) async throws -> String {
         calls += 1
         let id = calls
+        onCall()
         waiting.removeValue(forKey: id)?.resume()
         return try await withCheckedThrowingContinuation { pending[id] = $0 }
     }

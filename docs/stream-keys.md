@@ -2,7 +2,8 @@
 
 # Stream keys and connection
 
-Until publishing, add this repository's `main` branch in Xcode's Package Dependencies
+In Xcode’s Package Dependencies, add
+`https://github.com/droidrun/mobilerun-swift.git`, choose **Exact Version 0.1.0**,
 and select `MobilerunStream`. Keep your API key on your backend; fetch fresh stream
 credentials there. The session owner creates and starts the session, keeps it across
 view remounts, and closes it on owner teardown (not view disappearance):
@@ -23,7 +24,9 @@ DeviceStream(session: session)
 session.close()
 ```
 
-After release, use `.package(url: "https://github.com/droidrun/mobilerun-swift", .upToNextMinor(from: "0.1.0"))`.
+For a SwiftPM manifest, use `.package(url: "https://github.com/droidrun/mobilerun-swift.git", exact: "0.1.0")`
+and add `.product(name: "MobilerunStream", package: "mobilerun-swift")` to the app target.
+This resolves the `v0.1.0` git tag once it exists and the repository is public.
 
 Run the interactive sample and follow the checklist in [TESTING.md](../TESTING.md).
 See [RELEASING.md](../RELEASING.md) for the API contract and release process.

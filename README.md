@@ -21,7 +21,7 @@
 ·
 <a href="https://cloud.mobilerun.ai">☁️ Mobilerun Cloud</a>
 
-![Status](https://img.shields.io/badge/status-pre--release-grey.svg)
+![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
 ![iOS](https://img.shields.io/badge/iOS-15%2B-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Discord](https://img.shields.io/discord/1360219330318696488?color=white&label=Discord&logo=discord&logoColor=white)](https://discord.gg/ZZbKEZZkwK)
@@ -72,14 +72,25 @@ request. See [publishing](docs/publishing.md) for setup, errors and lifecycle be
 
 ## Install
 
-Pre-release Swift SDK: nothing is published yet; install from source with SwiftPM:
+Install version 0.1.0 with Swift Package Manager. Add it to your manifest’s dependencies:
 
 ```swift
-.package(url: "https://github.com/droidrun/mobilerun-swift", branch: "main")
+.package(url: "https://github.com/droidrun/mobilerun-swift", exact: "0.1.0")
 ```
 
-In Xcode, add the repository's `main` branch in Package Dependencies and select
-`MobilerunStream`. See the [connection guide](docs/stream-keys.md) for the future tagged form.
+Add the library product to your app target’s dependencies:
+
+```swift
+.product(name: "MobilerunStream", package: "mobilerun-swift")
+```
+
+In Xcode, add `https://github.com/droidrun/mobilerun-swift` in Package
+Dependencies, choose **Exact Version 0.1.0**, and select `MobilerunStream`.
+Then `import MobilerunStream`.
+
+Swift Package Manager resolves exact version `0.1.0` from the `v0.1.0` release tag.
+The tag must exist before installing this version.
+See the [connection guide](docs/stream-keys.md) for credentials and lifecycle setup.
 
 ## Quick start
 
@@ -193,4 +204,5 @@ Report vulnerabilities privately using [SECURITY.md](SECURITY.md).
 
 ## License
 
-Apache-2.0; see [LICENSE](LICENSE).
+Apache-2.0; see [LICENSE](LICENSE). The LiveKit WebRTC binary has separate
+upstream licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
