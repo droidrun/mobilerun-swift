@@ -16,14 +16,33 @@ Embed live device video and remote input in an iOS 15+ app using the
 
 Keep `MOBILERUN_API_KEY` in the server environment. Authenticate your app's user
 and authorize access to the requested device before minting on their behalf.
-Using that API key on the server only, send:
+Use Node.js with `@mobilerun/sdk` 6.3.0 on that server:
 
-```http
-POST https://api.mobilerun.ai/v1/identity/stream-keys
-Content-Type: application/json
-
-{"deviceId":"DEVICE_ID","ttlSeconds":120,"allowedOrigins":["https://partner.example"]}
+```sh
+npm install @mobilerun/sdk@6.3.0
 ```
+
+```js
+import { MobilerunSDK } from '@mobilerun/sdk';
+
+const client = new MobilerunSDK({
+  apiKey: process.env.MOBILERUN_API_KEY,
+  logLevel: 'off',
+});
+// iOS: omit origins. For browsers, use a server-approved array of exact origins.
+const allowedOrigins = undefined;
+// Authenticate your user and authorize access to deviceId before minting.
+const result = await client.streamTokens.create(
+  { deviceId, ttlSeconds: 120, allowedOrigins },
+  { maxRetries: 0 },
+);
+// result is { key, keyId, expiresAt }. Return result.key through your authenticated endpoint.
+// Never log or cache the key. Keep MOBILERUN_API_KEY on the server.
+```
+
+To revoke a token on the server, call `await client.streamTokens.delete(result.keyId)`.
+
+Raw REST fallback: `POST /v1/identity/stream-keys` accepts the same request fields.
 
 The response is `{key, keyId, expiresAt}`. Return `key` from your authenticated
 backend endpoint without logging or caching it; use `Cache-Control: no-store`.
@@ -35,7 +54,7 @@ lifetime. An established session has a 30-minute server cap.
 a substitute for user/device authorization. Choose it for browser consumers;
 do not assume a native iOS connection sends a browser Origin header.
 The repository's [backend helper](../../Examples/Connection/backend/server.mjs)
-shows minting through the JavaScript API SDK; its unauthenticated loopback server
+shows local development setup; its unauthenticated loopback server
 is for local development only.
 
 ## Client: provide a fresh token for every attempt
