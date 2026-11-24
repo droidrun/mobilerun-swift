@@ -12,7 +12,7 @@ private enum ExampleFailure: LocalizedError {
 
 /// Local approvals use fake backend callbacks. Stream credentials are read only by ConnectionProbe.
 @MainActor final class DefaultUIProbe: ObservableObject {
-    let connection = ConnectionProbe()
+    let connection: ConnectionProbe
     let approval: TaskApprovalModel
     let mode: String
     @Published var receivedDecision = ""
@@ -25,6 +25,8 @@ private enum ExampleFailure: LocalizedError {
         let arguments = ProcessInfo.processInfo.arguments
         let index = arguments.firstIndex(of: "--ui-state")
         mode = index.flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "connecting"
+        connection = ConnectionProbe(publishCapabilities: mode.hasPrefix("publish") ?
+            DevicePublishCapabilities(microphoneInjection: true, cameraInjection: true, mediaInjectionTransport: "direct") : nil)
         let expiresAt = ISO8601DateFormatter().string(from: Date().addingTimeInterval(mode == "approval-expired" ? -1 : 65))
         let pending = PendingApproval(approvalId: "example", kind: "payment_card", details: [
             "label": .string("Visa 4242"), "targetPackage": .string(mode == "approval-long" ? String(repeating: "com.example.long.package.", count: 12) : "com.example.shop"),
@@ -44,7 +46,15 @@ private enum ExampleFailure: LocalizedError {
         })
     }
     func start() {
-        if mode.hasPrefix("live") { connection.session.start() }
+        if mode.hasPrefix("publish") {
+            connection.session.presentForTesting(.connected)
+            if mode == "publish-interaction" { connection.session.presentVideoForTesting() }
+            if mode == "publish-active" || mode.hasSuffix("-after") { connection.session.presentPublishForTesting(.active, video: true) }
+            if mode == "publish-starting" { connection.session.presentPublishForTesting(.starting) }
+            if mode == "publish-permission" { connection.session.presentPublishForTesting(.error, reason: .permissionDenied) }
+            if mode == "publish-forbidden" { connection.session.presentPublishForTesting(.error, reason: .publishNotAllowed) }
+        }
+        else if mode.hasPrefix("live") { connection.session.start() }
         else if mode.contains("unavailable") { connection.session.presentForTesting(.unavailable) }
         else if mode == "reconnecting" { connection.session.presentForTesting(.reconnecting(attempt: 3)) }
         approval.start()
@@ -78,6 +88,7 @@ private enum ExampleFailure: LocalizedError {
                 SurfacePolicyProbe()
             }
             content
+            if probe.mode == "publish-interaction" { PublishInputCount(connection: probe.connection) }
         }
             .environment(\.sizeCategory, probe.mode == "approval-long" ? .accessibilityExtraExtraExtraLarge : .large)
             .streamTheme(theme)
@@ -100,7 +111,11 @@ private enum ExampleFailure: LocalizedError {
         } else if probe.mode.hasPrefix("approval") {
             ApprovalExample(probe: probe, model: probe.approval)
         } else {
-            DeviceStream(session: probe.connection.session, hasControl: probe.mode != "display-only")
+            DeviceStream(session: probe.connection.session, hasControl: probe.mode != "display-only",
+                         showsNavigation: !probe.mode.contains("narrow") && !probe.mode.contains("wide"),
+                         showsPublishControls: probe.mode != "publish-hidden" && !probe.mode.hasSuffix("-before"))
+                .frame(width: probe.mode.contains("narrow") ? 375 : probe.mode.contains("wide") ? 1280 : nil,
+                       height: probe.mode.contains("narrow") || probe.mode.contains("wide") ? 720 : nil)
                 .onReceive(probe.connection.session.$status) { probe.connection.mark("status \($0)") }
                 .onReceive(probe.connection.session.$videoSize) { size in
                     if size != nil {
@@ -164,5 +179,14 @@ private struct MountProbe: UIViewRepresentable {
         return UIView()
     }
     func updateUIView(_ uiView: UIView, context: Context) {}
+}
+#endif
+
+#if DEBUG
+@MainActor private struct PublishInputCount: View {
+    @ObservedObject var connection: ConnectionProbe
+    var body: some View {
+        Text("Stream taps: \(connection.publishStreamTaps)").accessibilityIdentifier("publish-stream-taps")
+    }
 }
 #endif

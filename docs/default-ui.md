@@ -75,3 +75,16 @@ or apply the same override to `.dark`. Theme tokens still supply tint and text c
 The deployment target remains iOS 15; earlier systems use solid styling.
 Reduce Transparency and Increase Contrast dynamically select the opaque token-based
 fallback for readable controls, including when preferences change while mounted.
+
+## Publish controls
+
+With a supported `StreamConfig.publishCapabilities` snapshot, `DeviceStream` overlays a capsule
+at the bottom centre of the video with microphone and supported-camera toggles. It takes no layout
+space, uses the stream surface theme, shows live inputs in the destructive/red color, and disables
+its toggles during setup. Permission and authorization refusals use overridable `StreamLabels`.
+Set `showsPublishControls: false` to hide it. This does not gate headless publish methods, and
+`hasControl` does not determine publish authorization. See [publishing](publishing.md).
+
+The publish pill fades to 50% opacity after three idle seconds and restores on nearby touch/pointer
+activity. Its background and the separate status text above it pass input through; only the buttons
+receive hits. Capture starts after device acceptance, with a 30-second permission/activation window.

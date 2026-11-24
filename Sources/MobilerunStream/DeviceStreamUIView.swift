@@ -127,6 +127,7 @@
 
         func update(session: DeviceStreamSession, hasControl: Bool) {
             if self.session !== session {
+                self.session.disconnectPublishForView()
                 stopLocalInput()
                 subscriptions.removeAll()
                 setTrack(nil)
@@ -145,6 +146,7 @@
         }
 
         func detach() {
+            session.disconnectPublishForView()
             stopLocalInput()
             subscriptions.removeAll()
             setTrack(nil)

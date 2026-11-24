@@ -9,15 +9,24 @@ import Testing
 @MainActor final class FakeSignalling: SignallingTransport {
     var onEvent: (@MainActor (SignallingEvent) -> Void)?
     var closed = false
+    var publishWriteFailures: [String: @MainActor () -> Void] = [:]
+    var throwFrameType: String?
     var credentials: StreamCredentials?
     var sent: [(Int, [String: JSONValue])] = []
     let clock: FakeClock
     init(_ clock: FakeClock) { self.clock = clock }
     func open(_ credentials: StreamCredentials) { self.credentials = credentials }
-    func send(_ text: String) -> Bool {
+    func send(_ text: String) throws -> Bool {
         guard !closed, let object = try? jsonObject(text) else { return false }
+        if object["type"] == throwFrameType.map(JSONValue.string) { throw FakeFailure.negotiation }
         sent.append((clock.now, object))
         return true
+    }
+    func sendPublish(_ text: String, onFailure: @escaping @MainActor () -> Void) throws -> Bool {
+        let result = try send(text)
+        let object = try jsonObject(text)
+        publishWriteFailures[object["type"]!.stringValue!] = onFailure
+        return result
     }
     func close() { closed = true }
     func receive(_ object: [String: JSONValue]) throws {
@@ -41,7 +50,13 @@ import Testing
 
 enum FakeFailure: Error { case negotiation }
 
-@MainActor final class FakePeer: PeerTransport {
+@MainActor final class FakePeer: PeerTransport, PublishMediaTransport {
+    let publishMedia = FakePublishMedia()
+    var supportsPublishCamera: Bool { publishMedia.supportsPublishCamera }
+    var supportsPublishReservations: Bool { publishMedia.supportsPublishReservations }
+    func makePublishCapture(_ options: PublishOptions) throws -> any PublishCapture {
+        try publishMedia.makePublishCapture(options)
+    }
     var onEvent: (@MainActor (PeerEvent) -> Void)?
     var configured: ServerMessage.RTCConfiguration?
     var channels: [DataChannelSpec] = []
@@ -93,6 +108,7 @@ enum FakeFailure: Error { case negotiation }
     let clock = FakeClock()
     var sockets: [FakeSignalling] = []
     var peers: [FakePeer] = []
+    var publishCapabilities: DevicePublishCapabilities?
     var credentialCalls = 0
     var credentialCancellations = 0
     var target: StreamCredentials?
@@ -110,7 +126,7 @@ enum FakeFailure: Error { case negotiation }
         if let storedEngine { return storedEngine }
         let engine = StreamSessionEngine(
             credentials: { [weak self] in try await self?.credentials() }, scheduler: clock,
-            random: { 0.5 },
+            random: { 0.5 }, publishCapabilities: publishCapabilities,
             signalling: { [unowned self] in
                 let socket = FakeSignalling(clock)
                 sockets.append(socket)

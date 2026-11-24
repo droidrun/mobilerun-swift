@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import XCTest
+import UIKit
 
 @MainActor final class InputUITests: XCTestCase {
     func testNativeTapAndHardwareKey() throws {
@@ -41,6 +42,101 @@ import XCTest
         app.launchArguments = ["--default-ui", "--ui-state", mode]
         app.launch()
         return app
+    }
+    private func captureSurface(_ app: XCUIApplication, name: String, width: CGFloat) {
+        let surface = app.otherElements["device-stream-surface"]
+        XCTAssertTrue(surface.waitForExistence(timeout: 10))
+        XCTAssertEqual(surface.frame.width, width, accuracy: 1)
+        XCTAssertEqual(surface.frame.height, 720, accuracy: 1)
+        let attachment = XCTAttachment(screenshot: surface.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+    func testPublishLayoutNarrow() {
+        let before = launch("publish-narrow-before")
+        captureSurface(before, name: "publish-before-375", width: 375)
+        XCTAssertFalse(before.buttons["stream-publish-microphone"].exists)
+        before.terminate()
+        let after = launch("publish-narrow-after")
+        XCTAssertTrue(after.buttons["Stop microphone"].waitForExistence(timeout: 10))
+        captureSurface(after, name: "publish-after-375", width: 375)
+        after.terminate()
+    }
+    func testPublishLayoutWide() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "1280-point viewport requires iPad")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let before = launch("publish-wide-before")
+        captureSurface(before, name: "publish-before-1280", width: 1280)
+        XCTAssertFalse(before.buttons["stream-publish-microphone"].exists)
+        before.terminate()
+        let after = launch("publish-wide-after")
+        XCTAssertTrue(after.buttons["Stop microphone"].waitForExistence(timeout: 10))
+        captureSurface(after, name: "publish-after-1280", width: 1280)
+        after.terminate()
+    }
+    func testPublishPillBackgroundPassesThroughAndStatusDoesNotBlockVideo() {
+        let app = launch("publish-interaction")
+        let mic = app.buttons["stream-publish-microphone"]
+        let camera = app.buttons["stream-publish-camera"]
+        XCTAssertTrue(mic.waitForExistence(timeout: 10))
+        XCTAssertTrue(camera.exists)
+        XCTAssertTrue(app.staticTexts["Stream taps: 0"].waitForExistence(timeout: 10))
+        // The gap is capsule background, outside both 44-point button hit areas.
+        let gap = CGPoint(x: (mic.frame.maxX + camera.frame.minX) / 2, y: mic.frame.midY)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: gap.x, dy: gap.y)).tap()
+        XCTAssertTrue(app.staticTexts["Stream taps: 1"].waitForExistence(timeout: 5))
+        mic.tap()
+        XCTAssertTrue(app.staticTexts["Could not publish inputs"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Stream taps: 1"].exists)
+        let status = app.staticTexts["stream-publish-message"]
+        XCTAssertLessThan(status.frame.maxY, mic.frame.minY)
+        status.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.staticTexts["Stream taps: 2"].waitForExistence(timeout: 5))
+        capture("publish-hit-areas-status-above")
+        app.terminate()
+    }
+    func testPublishPillVisibilityAndClickThrough() {
+        let absent = launch("connecting")
+        XCTAssertTrue(absent.otherElements["device-stream-surface"].waitForExistence(timeout: 10))
+        XCTAssertFalse(absent.buttons["stream-publish-microphone"].exists)
+        capture("publish-before")
+        absent.terminate()
+        let hidden = launch("publish-hidden")
+        XCTAssertTrue(hidden.otherElements["device-stream-surface"].waitForExistence(timeout: 10))
+        XCTAssertFalse(hidden.buttons["stream-publish-microphone"].exists)
+        hidden.terminate()
+        let app = launch("publish-idle")
+        XCTAssertTrue(app.buttons["stream-publish-microphone"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["stream-publish-camera"].exists)
+        capture("publish-after")
+        app.buttons["stream-publish-microphone"].tap()
+        // Offline demo has no connected transport: readiness fails before any protected capture API.
+        XCTAssertTrue(app.staticTexts["Could not publish inputs"].waitForExistence(timeout: 5))
+        app.buttons["stream-publish-camera"].tap()
+        XCTAssertTrue(app.staticTexts["Could not publish inputs"].exists)
+        app.terminate()
+    }
+    func testPublishPillStartingAndFailureLabels() {
+        let starting = launch("publish-starting")
+        XCTAssertTrue(starting.buttons["stream-publish-microphone"].waitForExistence(timeout: 10))
+        XCTAssertFalse(starting.buttons["stream-publish-microphone"].isEnabled)
+        XCTAssertFalse(starting.buttons["stream-publish-camera"].isEnabled)
+        starting.terminate()
+        let permission = launch("publish-permission")
+        XCTAssertTrue(permission.staticTexts["Microphone or camera permission denied"].waitForExistence(timeout: 10))
+        capture("publish-permission")
+        permission.terminate()
+        let forbidden = launch("publish-forbidden")
+        XCTAssertTrue(forbidden.staticTexts["Publishing is not allowed"].waitForExistence(timeout: 10))
+        capture("publish-forbidden")
+        forbidden.terminate()
+        let active = launch("publish-active")
+        XCTAssertTrue(active.buttons["Stop microphone"].waitForExistence(timeout: 10))
+        XCTAssertTrue(active.buttons["Stop camera"].exists)
+        capture("publish-active")
+        active.terminate()
     }
     func testGlassSolidSwitchAndAccessibility() {
         let app = launch("approval-glass-switch")

@@ -4,13 +4,17 @@
 #if os(iOS)
     import Foundation
     import Combine
+    import UIKit
     import MobilerunProtocol
     import MobilerunStreamCore
     @preconcurrency import LiveKitWebRTC
 
-    /// A live stream with automatic recovery and no app lifecycle observers.
+    /// A live stream with automatic recovery. App backgrounding stops publication.
     /// All sessions share one process-wide peer factory. close releases the session's resources.
     @MainActor public final class DeviceStreamSession: ObservableObject {
+        @Published public private(set) var publishState = PublishState()
+        public let publishCapabilities: DevicePublishCapabilities?
+        public var supportsPublishCamera: Bool { peer?.supportsPublishCamera ?? WebRTCPeer.cameraEncoderSupported }
         @Published public private(set) var status: StreamStatus = .connecting
         @Published private(set) var isClosed = false
         @Published public private(set) var videoSize: VideoSize?
@@ -31,6 +35,7 @@
         private var hidden = false
         private var peerConnected = false
         private var attemptStartedAt = ProcessInfo.processInfo.systemUptime
+        private var backgroundObserver: AnyCancellable?
         private var sampler: StreamStatsSampler?
         private var engine: StreamSessionEngine!
 
@@ -42,10 +47,12 @@
         #endif
 
         public init(credentials: @escaping StreamCredentialsProvider, config: StreamConfig = StreamConfig()) {
+            publishCapabilities = config.publishCapabilities
             muted = config.muted
             engine = StreamSessionEngine(
                 credentials: credentials,
                 scheduler: MainActorScheduler(),
+                publishCapabilities: config.publishCapabilities,
                 signalling: { [weak self] in
                     let socket = URLSessionSignalling()
                     #if DEBUG
@@ -82,6 +89,9 @@
             scheduler: any ReconnectScheduler,
             request: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void
         ) {
+            backgroundObserver = NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+                .sink { [weak self] _ in Task { @MainActor [weak self] in self?.engine.publisher.stop() } }
+            engine.publisher.onState = { [weak self] in self?.publishState = $0 }
             sampler = StreamStatsSampler(scheduler: scheduler, request: { [weak self] completion in
                 guard self?.canSampleStats == true else { completion([], nil); return }
                 request(completion)
@@ -97,7 +107,7 @@
                 self?.updateSampling()
             }
             engine.onError = { [weak self] error in
-                self?.lastError = error
+                if error.operation == nil { self?.lastError = error }
                 self?.onError?(error)
             }
             engine.onStatus = { [weak self] status in
@@ -125,10 +135,19 @@
 
         /// Idempotent. A closed session cannot be restarted.
         public func start() { engine.start() }
+        /// Waits for device acceptance, then captures local inputs and waits for active injection.
+        public func startPublish(_ options: PublishOptions) async throws -> PublishState {
+            do { return try await engine.startPublish(options) }
+            catch { await engine.publisher.waitForCleanup(); throw error }
+        }
+        /// Stops capture locally without closing the viewer or awaiting acknowledgement.
+        public func stopPublish() async { engine.publisher.stop(); await engine.publisher.waitForCleanup() }
+        package func disconnectPublishForView() { engine.publisher.disconnect() }
         /// Starts a fresh cycle after the retry budget is exhausted.
         public func retry() { engine.retry() }
         public func close() {
             guard !isClosed else { return }
+            backgroundObserver?.cancel(); backgroundObserver = nil
             engine.close()
             isClosed = true
             updateSampling()
@@ -142,7 +161,7 @@
         }
         /// Foreground/network recovery skips backoff or restarts an unavailable session.
         public func handleWake() { engine.handleWake() }
-        /// Updates received audio and the shared manual-audio gate. Muted sessions never activate audio.
+        /// Updates received audio. Publication retains its independent shared-audio lease.
         public func setMuted(_ muted: Bool) {
             self.muted = muted
             peer?.setMuted(muted)
@@ -163,13 +182,19 @@
             init(engine: StreamSessionEngine, videoSize: VideoSize,
                  statsScheduler: any ReconnectScheduler = MainActorScheduler(),
                  statistics: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void = { $0([], nil) }) {
+                publishCapabilities = nil
                 muted = true
                 self.engine = engine
                 self.videoSize = videoSize
                 bindSession(scheduler: statsScheduler, request: statistics)
             }
 
+            func presentPublishForTesting(_ phase: PublishPhase, video: Bool = false, reason: PublishFailureReason? = nil) {
+                publishState = PublishState(phase: phase, kinds: video ? [.audio, .video] : [.audio], reason: reason?.rawValue)
+            }
+
             func presentForTesting(_ status: StreamStatus) { self.status = status }
+            func presentVideoForTesting() { videoSize = VideoSize(width: 640, height: 1280) }
 
             var transportsReleasedForTesting: Bool { peer == nil && signalling == nil }
 

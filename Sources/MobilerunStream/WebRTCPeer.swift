@@ -10,7 +10,7 @@
     @MainActor final class WebRTCPeer: NSObject, PeerTransport {
         // Factory creation and all session operations are main-actor serialized. Delegate callbacks
         // cross back explicitly; native objects never escape through the pure transport boundary.
-        private static let factory = LKRTCPeerConnectionFactory(
+        static let factory = LKRTCPeerConnectionFactory(
             encoderFactory: LKRTCDefaultVideoEncoderFactory(),
             decoderFactory: LKRTCDefaultVideoDecoderFactory())
         var onEvent: (@MainActor (PeerEvent) -> Void)?
@@ -19,6 +19,19 @@
         private let onSize: @MainActor (VideoSize) -> Void
         private var peer: LKRTCPeerConnection?
         private var channels: [Int: LKRTCDataChannel] = [:]
+        private var publishAudio: LKRTCRtpTransceiver?
+        private var publishVideo: LKRTCRtpTransceiver?
+        private(set) var supportsPublishReservations = false
+        private var offeredCamera = false
+        static var cameraEncoderSupported: Bool { !publishVideoCodecs.isEmpty }
+        var supportsPublishCamera: Bool { offeredCamera }
+        private static var publishVideoCodecs: [LKRTCRtpCodecCapability] {
+            factory.rtpSenderCapabilities(forKind: "video").codecs.filter {
+                $0.name.lowercased() == "h264" && $0.parameters["packetization-mode"] == "1"
+                    && CodecPreferences.supportsPublishH264Profile($0.parameters["profile-level-id"])
+            }.sorted { ($0.parameters["profile-level-id"]?.hasPrefix("42") == true ? 0 : 1)
+                < ($1.parameters["profile-level-id"]?.hasPrefix("42") == true ? 0 : 1) }
+        }
         private var audio: LKRTCAudioTrack?
         private var muted: Bool
         private let audioID = UUID()
@@ -73,6 +86,27 @@
             ) {
                 try video.setCodecPreferences(preferred, error: ())
             }
+            if config.publishCapabilities?.supportsMicrophone == true {
+                let send = LKRTCRtpTransceiverInit()
+                send.direction = .sendOnly
+                if config.publishCapabilities?.cameraInjection == true, Self.cameraEncoderSupported {
+                    publishVideo = peer.addTransceiver(of: .video, init: send)
+                    if let publishVideo {
+                        do { try publishVideo.setCodecPreferences(Self.publishVideoCodecs, error: ()) }
+                        catch { publishVideo.stopInternal(); self.publishVideo = nil }
+                    }
+                }
+                publishAudio = peer.addTransceiver(of: .audio, init: send)
+                let opus = Self.factory.rtpSenderCapabilities(forKind: "audio").codecs.filter {
+                    $0.name.lowercased() == "opus" && $0.clockRate?.intValue == 48_000 && $0.numChannels?.intValue == 2
+                }
+                if let publishAudio {
+                    do {
+                        guard !opus.isEmpty else { throw PublishFailure(reason: .publishUnsupported) }
+                        try publishAudio.setCodecPreferences(opus, error: ())
+                    } catch { publishAudio.stopInternal(); self.publishAudio = nil }
+                }
+            }
             // Automatic follows the shared VP9/H.265/H.264 preference; the server selects the codec.
             // This framework exposes no receiver playoutDelayHint/jitterBufferTarget API.
             for spec in channels {
@@ -122,6 +156,11 @@
                     onDiagnostic?("local ice-ufrag restart=\(iceRestart) value=\(line.dropFirst(12))")
                 }
             #endif
+            if !iceRestart {
+                // Inspect generated SDP only. Never manufacture SSRCs or acquire dummy input tracks.
+                supportsPublishReservations = publishAudio != nil && PublishSDP.hasReservation(description.sdp, kind: .audio)
+                offeredCamera = publishVideo != nil && PublishSDP.hasReservation(description.sdp, kind: .video)
+            }
             return description.sdp
         }
         func setRemoteAnswer(_ sdp: String) async throws {
@@ -195,6 +234,11 @@
             }
         }
 
+        func makePublishCapture(_ options: PublishOptions) throws -> any PublishCapture {
+            guard !closed else { throw PublishFailure(reason: .disconnected) }
+            return NativePublishCapture(options: options, audio: publishAudio, video: publishVideo)
+        }
+
         func setMuted(_ muted: Bool) {
             guard !closed else { return }
             self.muted = muted
@@ -259,6 +303,8 @@
             onTrack(track)
         }
     }
+
+    extension WebRTCPeer: PublishMediaTransport {}
 
     extension WebRTCPeer: LKRTCPeerConnectionDelegate {
         nonisolated func peerConnection(
@@ -365,9 +411,9 @@
         }
     }
 
-    /// The manual audio gate is process-wide, like the native audio device. One unmuted session
-    /// may play audio while other sessions remain muted; the last unmuted session closes the gate.
-    @MainActor private enum StreamAudio {
+    /// The native audio gate is process-wide. Received-audio playback and publication hold
+    /// independent leases; the last viewer/publisher release closes the gate.
+    @MainActor enum StreamAudio {
         private static var enabledSessions: Set<UUID> = []
         static func setEnabled(_ enabled: Bool, id: UUID) {
             if enabled { enabledSessions.insert(id) } else { enabledSessions.remove(id) }

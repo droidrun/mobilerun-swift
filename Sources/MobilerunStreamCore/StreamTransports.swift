@@ -78,8 +78,15 @@ package enum SignallingEvent: Sendable {
 @MainActor package protocol SignallingTransport: AnyObject, Sendable {
     var onEvent: (@MainActor (SignallingEvent) -> Void)? { get set }
     func open(_ credentials: StreamCredentials) throws
-    @discardableResult func send(_ text: String) -> Bool
+    @discardableResult func send(_ text: String) throws -> Bool
+    @discardableResult func sendPublish(_ text: String, onFailure: @escaping @MainActor () -> Void) throws -> Bool
     func close()
+}
+
+extension SignallingTransport {
+    package func sendPublish(_ text: String, onFailure: @escaping @MainActor () -> Void) throws -> Bool {
+        try send(text)
+    }
 }
 
 package enum PeerConnectionState: Sendable { case new, connecting, connected, disconnected, failed, closed }

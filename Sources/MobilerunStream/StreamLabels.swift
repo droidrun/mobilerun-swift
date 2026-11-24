@@ -21,15 +21,53 @@ public struct StreamLabels: Sendable, Equatable, StreamCustomizable {
     public var back: String
     public var home: String
     public var recent: String
+    public var microphone: String
+    public var camera: String
+    public var stopMicrophone: String
+    public var stopCamera: String
+    public var publishStarting: String
+    public var publishPermissionDenied: String
+    public var publishNotAllowed: String
+    public var publishFailed: String
+    public init(connecting: String = "connecting", reconnecting: String = "reconnecting",
+                reconnectingAttempt: String = "reconnecting ({attempt}/{max})", disconnected: String = "disconnected",
+                unavailable: String = "device stream unavailable", retry: String = "Retry",
+                back: String = "Back", home: String = "Home", recent: String = "Recent") {
+        self.init(connecting: connecting, reconnecting: reconnecting, reconnectingAttempt: reconnectingAttempt,
+                  disconnected: disconnected, unavailable: unavailable, retry: retry,
+                  back: back, home: home, recent: recent, microphone: "Microphone")
+    }
     public init(connecting: String = "connecting", reconnecting: String = "reconnecting",
                 reconnectingAttempt: String = "reconnecting ({attempt}/{max})",
                 disconnected: String = "disconnected",
                 unavailable: String = "device stream unavailable", retry: String = "Retry",
-                back: String = "Back", home: String = "Home", recent: String = "Recent") {
+                back: String = "Back", home: String = "Home", recent: String = "Recent",
+                microphone: String = "Microphone", camera: String = "Camera",
+                stopMicrophone: String = "Stop microphone", stopCamera: String = "Stop camera",
+                publishStarting: String = "Starting inputs",
+                publishPermissionDenied: String = "Microphone or camera permission denied",
+                publishNotAllowed: String = "Publishing is not allowed",
+                publishFailed: String = "Could not publish inputs") {
         self.connecting = connecting; self.reconnecting = reconnecting
         self.reconnectingAttempt = reconnectingAttempt; self.disconnected = disconnected
         self.unavailable = unavailable
+        self.microphone = microphone; self.camera = camera
+        self.stopMicrophone = stopMicrophone; self.stopCamera = stopCamera
+        self.publishStarting = publishStarting; self.publishPermissionDenied = publishPermissionDenied
+        self.publishNotAllowed = publishNotAllowed; self.publishFailed = publishFailed
         self.retry = retry; self.back = back; self.home = home; self.recent = recent
+    }
+    package func publishLabel(_ state: PublishState) -> String? {
+        switch state.phase {
+        case .capturing, .starting, .accepted: return publishStarting
+        case .error:
+            switch state.reason {
+            case "permission_denied": return publishPermissionDenied
+            case "publish_not_allowed": return publishNotAllowed
+            default: return publishFailed
+            }
+        default: return nil
+        }
     }
     func statusLabel(_ status: StreamStatus, error: StreamConnectionError? = nil) -> String {
         switch status {

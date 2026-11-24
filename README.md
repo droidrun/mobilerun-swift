@@ -62,6 +62,14 @@
 macOS supports transport-independent tests only. `MobilerunStream` is the only library
 product; the protocol target is an implementation detail.
 
+## Microphone and camera
+
+Pass the device's backend-provided `publishCapabilities` in `StreamConfig` to enable the floating
+microphone/camera pill. Use `session.startPublish(PublishOptions(audio: true, video: true))`,
+`await session.stopPublish()` and `session.$publishState` for custom controls. Add the required iOS
+privacy usage descriptions; capture begins only after the device accepts an explicit start. The server authorizes every
+request. See [publishing](docs/publishing.md) for setup, errors and lifecycle behavior.
+
 ## Install
 
 Pre-release Swift SDK: nothing is published yet; install from source with SwiftPM:

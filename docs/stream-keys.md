@@ -123,9 +123,8 @@ Other closes retain the SDK's existing full-rebuild behavior.
 A closed signalling socket or failed/closed peer rebuilds both transports through the reconnect
 controller, with up to six retries and exponential backoff. Every connection requests fresh RTC
 configuration. Live configuration updates replace ICE servers and send an ICE-restart offer;
-non-terminal state dips are suppressed for up to 15 seconds, with a deadline recheck. The host
-owns app lifecycle decisions; the session installs no app lifecycle observers. The optional
-default UI installs an adapter for its visible lifetime (see the default UI guide).
+non-terminal state dips are suppressed for up to 15 seconds, with a deadline recheck. The session stops publication on app backgrounding, including headless use. The optional
+default UI installs a wake/visibility adapter for its visible lifetime (see the default UI guide).
 
 The view sends input only when its channel is open. Raw transport methods are package-only.
 Hover uses channel 2 only, including its pressed-button mask; it never falls back to control
@@ -137,8 +136,8 @@ hours.
 Raw control bytes are not input/view coordinate mapping.
 
 Audio is muted by default. Use `setMuted(_:)` to update received audio; unmuted sessions enable the
-shared native audio gate. Muted sessions use manual audio and do not activate the WebRTC audio
-session, allowing the embedding app to keep playing its own audio. Automatic codec
+shared native audio gate. A muted viewer does not request playback; publication holds a separate
+audio lease so muting received audio never disables the microphone. Automatic codec
 preferences are VP9, H.265, H.264, then the rest; the server selects from the offer. If the receiver
 has no H.265 decoder, only H.264 is offered. `StreamConfig(videoCodec: .h264Only)` explicitly forces
 that fallback while preserving retransmission and redundancy codecs. The pinned framework exposes

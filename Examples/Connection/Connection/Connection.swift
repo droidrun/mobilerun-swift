@@ -16,6 +16,7 @@ import SwiftUI
         let handle = DeviceStreamHandle()
         @Published var landscape = false
         @Published var lastNativeInput = "none"
+        @Published var publishStreamTaps = 0
         private let fingers = [NSObject(), NSObject()]
         private var timer: Timer?
         private var observingInput = false
@@ -29,7 +30,7 @@ import SwiftUI
             let h264Only: Bool?
         }
 
-        init() {
+        init(publishCapabilities: DevicePublishCapabilities? = nil) {
             let configURL = documents.appendingPathComponent("credentials.json")
             let initial = try? JSONDecoder().decode(Credentials.self, from: Data(contentsOf: configURL))
             session = DeviceStreamSession(
@@ -39,7 +40,7 @@ import SwiftUI
                             Credentials.self, from: Data(contentsOf: configURL))
                         return StreamCredentials(url: value.streamUrl, token: value.streamToken)
                     } catch { return nil }
-                }, config: StreamConfig(videoCodec: initial?.h264Only == true ? .h264Only : .automatic))
+                }, config: StreamConfig(videoCodec: initial?.h264Only == true ? .h264Only : .automatic, publishCapabilities: publishCapabilities))
             startHostAudio()
             session.onDiagnostic = { [weak self] event in
                 self?.mark(event)
@@ -90,8 +91,12 @@ import SwiftUI
                 view.isAccessibilityElement = true
                 view.accessibilityIdentifier = "device-stream-surface"
                 view.onInput = { [weak self, weak view] data, sent in
-                    guard sent, let type = data.first else { return }
+                    guard let type = data.first else { return }
                     let action = type == 0 || type == 2 ? Int(data[1]) : -1
+                    if ProcessInfo.processInfo.arguments.contains("publish-interaction"), type == 2, action == 1 {
+                        self?.publishStreamTaps += 1
+                    }
+                    guard sent else { return }
                     let pointer = type == 2 ? Int(data[9]) : -1
                     let source = view?.inputEventSource ?? "driver"
                     if source != "driver" { self?.lastNativeInput = source }
