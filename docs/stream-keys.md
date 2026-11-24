@@ -85,8 +85,37 @@ the legacy token hard cut, and remains source compatible, including nil/empty be
 explicit exception to the no-reuse rule: every reconnect reuses the same static token and the SDK
 logs one warning per session. Stream keys are single-use, so a pasted key cannot support reconnect;
 single-use keys need the provider.
-Your backend mints via `POST /v1/identity/stream-keys` with `{deviceId,ttlSeconds:120}`;
-the API key stays on that backend. The optional TTL controls admission, while the stream
+Your Node.js backend mints with `@mobilerun/sdk` 6.3.0. Keep `MOBILERUN_API_KEY` in its server environment:
+
+```sh
+npm install @mobilerun/sdk@6.3.0
+```
+
+```js
+import { MobilerunSDK } from '@mobilerun/sdk';
+
+const client = new MobilerunSDK({
+  apiKey: process.env.MOBILERUN_API_KEY,
+  logLevel: 'off',
+});
+// iOS: omit origins. For browsers, use a server-approved array of exact origins.
+const allowedOrigins = undefined;
+// Authenticate your user and authorize access to deviceId before minting.
+const result = await client.streamTokens.create(
+  { deviceId, ttlSeconds: 120, allowedOrigins },
+  { maxRetries: 0 },
+);
+// result is { key, keyId, expiresAt }. Return result.key through your authenticated endpoint.
+// Never log or cache the key. Keep MOBILERUN_API_KEY on the server.
+```
+
+To revoke a token on the server, call `await client.streamTokens.delete(result.keyId)`.
+
+Raw REST fallback: `POST /v1/identity/stream-keys` accepts the same request fields.
+
+For browser consumers, `allowedOrigins` can be a server-approved array such as
+`['https://partner.example']`; omit it for native iOS consumers.
+The optional TTL controls admission, while the stream
 session cap is 30 minutes. Close **1001** immediately releases the peer, channels, media,
 timers and pending screenshots, then schedules bounded reconnect in provider and static mode.
 Other closes retain the SDK's existing full-rebuild behavior.
