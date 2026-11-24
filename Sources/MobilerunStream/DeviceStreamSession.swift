@@ -11,6 +11,9 @@
     /// A live stream with automatic recovery and no app lifecycle observers.
     /// All sessions share one process-wide peer factory. close releases the session's resources.
     @MainActor public final class DeviceStreamSession: ObservableObject {
+        @Published public private(set) var publishState = PublishState()
+        public let publishCapabilities: DevicePublishCapabilities?
+        public var supportsPublishCamera: Bool { peer?.supportsPublishCamera ?? WebRTCPeer.cameraEncoderSupported }
         @Published public private(set) var status: StreamStatus = .connecting
         @Published private(set) var isClosed = false
         @Published public private(set) var videoSize: VideoSize?
@@ -42,10 +45,12 @@
         #endif
 
         public init(credentials: @escaping StreamCredentialsProvider, config: StreamConfig = StreamConfig()) {
+            publishCapabilities = config.publishCapabilities
             muted = config.muted
             engine = StreamSessionEngine(
                 credentials: credentials,
                 scheduler: MainActorScheduler(),
+                publishCapabilities: config.publishCapabilities,
                 signalling: { [weak self] in
                     let socket = URLSessionSignalling()
                     #if DEBUG
@@ -82,6 +87,7 @@
             scheduler: any ReconnectScheduler,
             request: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void
         ) {
+            engine.publisher.onState = { [weak self] in self?.publishState = $0 }
             sampler = StreamStatsSampler(scheduler: scheduler, request: { [weak self] completion in
                 guard self?.canSampleStats == true else { completion([], nil); return }
                 request(completion)
@@ -97,7 +103,7 @@
                 self?.updateSampling()
             }
             engine.onError = { [weak self] error in
-                self?.lastError = error
+                if error.operation == nil { self?.lastError = error }
                 self?.onError?(error)
             }
             engine.onStatus = { [weak self] status in
@@ -125,6 +131,14 @@
 
         /// Idempotent. A closed session cannot be restarted.
         public func start() { engine.start() }
+        /// Captures local inputs, then waits for server authorization and active injection.
+        public func startPublish(_ options: PublishOptions) async throws -> PublishState {
+            do { return try await engine.startPublish(options) }
+            catch { await engine.publisher.waitForCleanup(); throw error }
+        }
+        /// Stops capture locally without closing the viewer or awaiting acknowledgement.
+        public func stopPublish() async { engine.publisher.stop(); await engine.publisher.waitForCleanup() }
+        package func stopPublishForView() { engine.publisher.stop() }
         /// Starts a fresh cycle after the retry budget is exhausted.
         public func retry() { engine.retry() }
         public func close() {
@@ -163,10 +177,15 @@
             init(engine: StreamSessionEngine, videoSize: VideoSize,
                  statsScheduler: any ReconnectScheduler = MainActorScheduler(),
                  statistics: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void = { $0([], nil) }) {
+                publishCapabilities = nil
                 muted = true
                 self.engine = engine
                 self.videoSize = videoSize
                 bindSession(scheduler: statsScheduler, request: statistics)
+            }
+
+            func presentPublishForTesting(_ phase: PublishPhase, video: Bool = false, reason: PublishFailureReason? = nil) {
+                publishState = PublishState(phase: phase, kinds: video ? [.audio, .video] : [.audio], reason: reason?.rawValue)
             }
 
             func presentForTesting(_ status: StreamStatus) { self.status = status }

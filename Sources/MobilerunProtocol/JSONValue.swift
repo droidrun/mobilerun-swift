@@ -42,7 +42,7 @@ public enum JSONValue: Sendable, Equatable, Codable {
         }
     }
 
-    var string: String? { if case .string(let value) = self { value } else { nil } }
+    package var string: String? { if case .string(let value) = self { value } else { nil } }
     var object: [String: JSONValue]? { if case .object(let value) = self { value } else { nil } }
 }
 

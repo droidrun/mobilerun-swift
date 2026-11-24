@@ -48,12 +48,20 @@ import MobilerunStreamCore
     @Environment(\.streamTheme) private var theme
     @Environment(\.streamLabels) private var labels
     private let hasControl: Bool
+    private let showsPublishControls: Bool
     private let showsNavigation: Bool
     private let slots: StreamSlots
     public init(session: DeviceStreamSession, hasControl: Bool = true,
                 showsNavigation: Bool = true, slots: StreamSlots = StreamSlots(),
                 handle: DeviceStreamHandle? = nil) {
+        self.init(session: session, hasControl: hasControl, showsNavigation: showsNavigation,
+                  slots: slots, handle: handle, showsPublishControls: true)
+    }
+    public init(session: DeviceStreamSession, hasControl: Bool = true,
+                showsNavigation: Bool = true, slots: StreamSlots = StreamSlots(),
+                handle: DeviceStreamHandle? = nil, showsPublishControls: Bool = true) {
         self.session = session; self.hasControl = hasControl
+        self.showsPublishControls = showsPublishControls
         self.showsNavigation = showsNavigation; self.slots = slots; self.suppliedHandle = handle
         _lifecycle = StateObject(wrappedValue: StreamLifecycleAdapter(session: session))
     }
@@ -67,6 +75,14 @@ import MobilerunStreamCore
                 DeviceStreamView(session: session, hasControl: presentation.canControl, handle: handle)
                 if presentation.showsPlaceholder { slots.placeholder(context).allowsHitTesting(false) }
                 if presentation.showsUnavailable { slots.unavailable(context) }
+            }
+            .overlay(alignment: .bottom) {
+                let publish = PublishPresentation(capabilities: session.publishCapabilities,
+                    cameraSupported: session.supportsPublishCamera, shown: showsPublishControls,
+                    phase: session.publishState.phase)
+                if publish.visible {
+                    StreamPublishPill(session: session, presentation: publish).padding(16)
+                }
             }.clipped()
             if showsNavigation {
                 slots.navigation(StreamNavigationState(canControl: presentation.canControl,
@@ -76,7 +92,10 @@ import MobilerunStreamCore
         .font(theme.typography).foregroundColor(theme.foreground)
         .onAppear { lifecycle.rebind(session: session); lifecycle.start() }
         .onChange(of: ObjectIdentifier(session)) { _ in lifecycle.rebind(session: session) }
-        .onDisappear { lifecycle.stop() }
+        .onDisappear {
+            lifecycle.stop()
+            Task { await session.stopPublish() }
+        }
     }
 }
 

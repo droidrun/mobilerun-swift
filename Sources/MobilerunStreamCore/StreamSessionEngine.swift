@@ -24,6 +24,7 @@ import MobilerunProtocol
     #if DEBUG
         package var onDiagnostic: (@MainActor (String) -> Void)?
     #endif
+    package let publisher: PublishController
     private let credentials: StreamCredentialsProvider
     private let signalling: @MainActor () -> any SignallingTransport
     private let peers: @MainActor () -> any PeerTransport
@@ -47,23 +48,34 @@ import MobilerunProtocol
         credentials: @escaping StreamCredentialsProvider,
         scheduler: any ReconnectScheduler,
         random: @escaping () -> Double = { Double.random(in: 0..<1) },
+        publishCapabilities: DevicePublishCapabilities? = nil,
         signalling: @escaping @MainActor () -> any SignallingTransport,
         peers: @escaping @MainActor () -> any PeerTransport
     ) {
+        self.publisher = PublishController(capabilities: publishCapabilities, scheduler: scheduler)
         self.credentials = credentials
         self.scheduler = scheduler
         self.random = random
         self.signalling = signalling
         self.peers = peers
+        publisher.onError = { [weak self] failure, id in
+            guard let self, !self.closed else { return }
+            self.onError?(StreamConnectionError(
+                reason: StreamErrorReason(rawValue: failure.reason.rawValue) ?? .publishFailed,
+                message: failure.message, attempt: self.controller?.snapshot.attempt ?? 0, final: true,
+                operation: "publish", mediaSessionId: id, detail: failure.detail, serverReason: failure.serverReason))
+        }
     }
 
     deinit {
         credentialTask?.cancel()
+        let publisher = publisher
         let attempt = attempt
         let controller = controller
         let credentialPoll = credentialPoll
         let credentialDeadline = credentialDeadline
         Task { @MainActor in
+            publisher.close()
             controller?.dispose()
             credentialPoll?.cancel()
             credentialDeadline?.cancel()
@@ -108,6 +120,7 @@ import MobilerunProtocol
 
     package func close() {
         guard !closed else { return }
+        publisher.close()
         closed = true
         controller?.dispose()
         releaseAttempt()
@@ -137,6 +150,17 @@ import MobilerunProtocol
     ) async throws -> Data {
         guard let attempt, attempt.socketOpen else { throw StreamError.notConnected }
         return try await attempt.screenshot(timeout: timeout)
+    }
+
+    package func startPublish(_ options: PublishOptions) async throws -> PublishState {
+        let original = attempt
+        return try await publisher.start(options, media: original?.peer as? any PublishMediaTransport,
+            ready: original?.socketOpen == true && original?.state == .connected,
+            send: { [weak original] object in
+                guard let original, original.current, original.socketOpen,
+                      let data = try? JSONEncoder().encode(object) else { return false }
+                return original.socket?.send(String(decoding: data, as: UTF8.self)) ?? false
+            })
     }
 
     #if DEBUG
@@ -238,6 +262,7 @@ import MobilerunProtocol
     }
 
     private func releaseAttempt() {
+        publisher.disconnect()
         onPeerConnectivity?(false)
         let previous = attempt
         attempt = nil
@@ -451,6 +476,7 @@ import MobilerunProtocol
                 }
                 fail(reason(forFailure: status), rejectedToken: status.map(HTTPStatus.isTokenRejected) ?? false)
             case .message(let text):
+                owner?.publisher.receive(text)
                 switch ServerMessage.parse(text, phase: phase) {
                 case .ignored:
                     break
@@ -536,7 +562,10 @@ import MobilerunProtocol
             grace = scheduler.schedule(delayMs: SignallingTiming.iceRestartGraceMs) { [weak self] in
                 guard let self, self.current else { return }
                 self.endGrace()
-                if self.state != .connected { self.owner?.countFailure(.disconnected, disconnect: true) }
+                if self.state != .connected {
+                    self.owner?.publisher.disconnect()
+                    self.owner?.countFailure(.disconnected, disconnect: true)
+                }
             }
             do {
                 let sdp = try await peer.createOffer(iceRestart: true)
@@ -547,7 +576,10 @@ import MobilerunProtocol
                 owner?.diagnostic("restart offer sent")
             } catch {
                 endGrace()
-                if current, state != .connected { owner?.countFailure(.disconnected, disconnect: true) }
+                if current, state != .connected {
+                    owner?.publisher.disconnect()
+                    owner?.countFailure(.disconnected, disconnect: true)
+                }
             }
         }
 
@@ -564,6 +596,7 @@ import MobilerunProtocol
                     .candidate(candidate: sdp, sdpMid: mid, sdpMLineIndex: index, sessionID: sessionID))
             case .state(let state):
                 owner?.onPeerConnectivity?(state == .connected)
+                if state == .disconnected && grace == nil { owner?.publisher.disconnect() }
                 self.state = state
                 if state == .failed || state == .closed {
                     fail(wasConnected ? .disconnected : .unknown)

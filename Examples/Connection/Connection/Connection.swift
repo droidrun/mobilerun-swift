@@ -29,7 +29,7 @@ import SwiftUI
             let h264Only: Bool?
         }
 
-        init() {
+        init(publishCapabilities: DevicePublishCapabilities? = nil) {
             let configURL = documents.appendingPathComponent("credentials.json")
             let initial = try? JSONDecoder().decode(Credentials.self, from: Data(contentsOf: configURL))
             session = DeviceStreamSession(
@@ -39,7 +39,7 @@ import SwiftUI
                             Credentials.self, from: Data(contentsOf: configURL))
                         return StreamCredentials(url: value.streamUrl, token: value.streamToken)
                     } catch { return nil }
-                }, config: StreamConfig(videoCodec: initial?.h264Only == true ? .h264Only : .automatic))
+                }, config: StreamConfig(videoCodec: initial?.h264Only == true ? .h264Only : .automatic, publishCapabilities: publishCapabilities))
             startHostAudio()
             session.onDiagnostic = { [weak self] event in
                 self?.mark(event)

@@ -41,7 +41,13 @@ import Testing
 
 enum FakeFailure: Error { case negotiation }
 
-@MainActor final class FakePeer: PeerTransport {
+@MainActor final class FakePeer: PeerTransport, PublishMediaTransport {
+    let publishMedia = FakePublishMedia()
+    var supportsPublishCamera: Bool { publishMedia.supportsPublishCamera }
+    var supportsPublishReservations: Bool { publishMedia.supportsPublishReservations }
+    func makePublishCapture(_ options: PublishOptions) throws -> any PublishCapture {
+        try publishMedia.makePublishCapture(options)
+    }
     var onEvent: (@MainActor (PeerEvent) -> Void)?
     var configured: ServerMessage.RTCConfiguration?
     var channels: [DataChannelSpec] = []
@@ -93,6 +99,7 @@ enum FakeFailure: Error { case negotiation }
     let clock = FakeClock()
     var sockets: [FakeSignalling] = []
     var peers: [FakePeer] = []
+    var publishCapabilities: DevicePublishCapabilities?
     var credentialCalls = 0
     var credentialCancellations = 0
     var target: StreamCredentials?
@@ -110,7 +117,7 @@ enum FakeFailure: Error { case negotiation }
         if let storedEngine { return storedEngine }
         let engine = StreamSessionEngine(
             credentials: { [weak self] in try await self?.credentials() }, scheduler: clock,
-            random: { 0.5 },
+            random: { 0.5 }, publishCapabilities: publishCapabilities,
             signalling: { [unowned self] in
                 let socket = FakeSignalling(clock)
                 sockets.append(socket)

@@ -71,6 +71,7 @@ import MobilerunStreamCore
     deinit { monitor?.cancel() }
     private func foreground(_ value: Bool, epoch: Int) {
         guard self.epoch == epoch, monitor != nil else { return }
+        if !value { session?.stopPublishForView() }
         session?.setVisible(value)
         if transitions.setForeground(value) { session?.handleWake() }
     }
