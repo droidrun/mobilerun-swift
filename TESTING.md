@@ -39,8 +39,9 @@ immutably for each session. Reconnect creates a new session bound to the same ta
 
 Discovery GET `/api/v1/devices/:deviceId` returns only `{id,state,streamUrl}`. The target's
 `tokenProvider` POSTs `/api/v1/devices/:deviceId/stream-key` once per new socket. The helper uses
-`@mobilerun/sdk@6.2.1` to POST `/identity/stream-keys` on the `/v1` API base, with
-`{deviceId,ttlSeconds:120}` and `maxRetries:0`. Its response is only `{key,keyId,expiresAt}`;
+`@mobilerun/sdk@6.3.0` to call `sdk.streamTokens.create({deviceId,ttlSeconds:120},{maxRetries:0})`.
+The upstream wire endpoint is POST `/identity/stream-keys` on the `/v1` API base.
+Its response is only `{key,keyId,expiresAt}`;
 all responses disable caching. The app uses only the key transiently and stores none of these
 mint fields. The sample's local HTTP allowance does not relax provider-mode stream WSS policy.
 
