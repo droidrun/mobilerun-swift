@@ -25,10 +25,7 @@ export function createHelper(sdk) {
     if (req.method !== allowedMethod) return reply(405, { error: 'method_not_allowed' });
     try {
       if (mint) {
-        const result = await sdk.api.post('/identity/stream-keys', {
-          body: { deviceId, ttlSeconds: 120 },
-          maxRetries: 0,
-        });
+        const result = await sdk.streamTokens.create({ deviceId, ttlSeconds: 120 }, { maxRetries: 0 });
         return reply(201, { key: result.key, keyId: result.keyId, expiresAt: result.expiresAt });
       }
       const device = await sdk.devices.get(deviceId);

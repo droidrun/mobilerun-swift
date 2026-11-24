@@ -4,5 +4,5 @@
   "type": "module",
   "engines": { "node": ">=22" },
   "scripts": { "start": "node server.mjs", "test": "node --test server.test.mjs" },
-  "dependencies": { "@mobilerun/sdk": "6.2.1" }
+  "dependencies": { "@mobilerun/sdk": "6.3.0" }
 }

@@ -45,7 +45,7 @@ test('missing discovery fields are null', async t => {
 
 test('mint uses the official operation once, no retries, and a narrow DTO', async t => {
   const calls = [];
-  const url = await fixture(t, { api: { post: async (...args) => {
+  const url = await fixture(t, { streamTokens: { create: async (...args) => {
     calls.push(args);
     return { key: 'key-a', keyId: 'id-a', expiresAt: '2026-11-19T12:02:00Z',
       apiKey: 'private-parent', streamToken: 'private-static' };
@@ -56,9 +56,7 @@ test('mint uses the official operation once, no retries, and a narrow DTO', asyn
   assert.deepEqual(await response.json(), {
     key: 'key-a', keyId: 'id-a', expiresAt: '2026-11-19T12:02:00Z',
   });
-  assert.deepEqual(calls, [['/identity/stream-keys', {
-    body: { deviceId: 'device-a', ttlSeconds: 120 }, maxRetries: 0,
-  }]]);
+  assert.deepEqual(calls, [[{ deviceId: 'device-a', ttlSeconds: 120 }, { maxRetries: 0 }]]);
 });
 
 for (const status of [401, 403, 404, 409, 429, 503, undefined]) {
@@ -70,7 +68,7 @@ for (const status of [401, 403, 404, 409, 429, 503, undefined]) {
         calls++;
         throw Object.assign(new Error('private-parent private-static private-key'), { status });
       };
-      const url = await fixture(t, { api: { post: fail }, devices: { get: fail } });
+      const url = await fixture(t, { streamTokens: { create: fail }, devices: { get: fail } });
       const response = await fetch(url + (mint ? '/stream-key' : ''), { method: mint ? 'POST' : 'GET' });
       assert.equal(response.status, status ?? 502);
       assert.equal(response.headers.get('cache-control'), 'no-store');
@@ -129,7 +127,7 @@ test('symlink entry point runs startup validation', t => {
 
 test('Origin is forbidden without invoking upstream', async t => {
   const calls = [];
-  const url = await fixture(t, { api: { post: async (...args) => {
+  const url = await fixture(t, { streamTokens: { create: async (...args) => {
     calls.push(args);
     return {};
   } } });
