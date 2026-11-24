@@ -1,20 +1,19 @@
-# Releasing with SwiftPM
+# Releasing with Swift Package Manager
 
-The first release is `v0.1.0`, consumed through the repository’s git URL.
-This preparation does not create the tag or make the repository public.
-SwiftPM resolves semantic version git tags;
-there is no package registry upload or separate version field. The tag is the
-version source. `vX.Y.Z` tags must reference a commit reachable from `main` and
+Release version `0.1.0` through Swift Package Manager from
+`https://github.com/droidrun/mobilerun-swift`, using the `v0.1.0` tag.
+Consumers select exact version `0.1.0` in their package manifest or Xcode.
+The semantic version tag is the version source; `Package.swift` has no separate
+version field. Release tags must reference a commit reachable from `main` and
 have a matching nonempty `CHANGELOG.md` entry. Prereleases are not supported yet.
 
-The tag workflow checks these rules, runs the same complete build/test/API matrix
-as pull requests, then requests approval through the `release` environment.
-Only the final step receives the GitHub token and creates a **draft** GitHub
-Release using that changelog entry. All releases remain drafts until an owner
-publishes them manually. Workflow checks prevent mistakes; environment protection
-and tag rules are required controls. **Creating a public tag is the decisive
-release gate:** SwiftPM can consume it immediately, even while the workflow is
-running or the GitHub Release is still a draft. No registry upload runs on a tag.
+The original tag-triggered workflow validates the version and changelog, runs the
+complete build/test/API matrix, and requests approval through the `release`
+environment. Its final step creates a draft GitHub Release with the changelog
+entry. Inspect that result and publish the release after approval. Swift Package
+Manager resolves the version from its tag, so tag creation requires explicit
+release authorization for the validated commit. Environment protection and tag
+rules remain required controls.
 
 ## One-time owner setup
 
@@ -87,7 +86,7 @@ running or the GitHub Release is still a draft. No registry upload runs on a tag
    resolves it with the README manifest snippets:
 
    ```swift
-   .package(url: "https://github.com/droidrun/mobilerun-swift.git", exact: "0.1.0")
+   .package(url: "https://github.com/droidrun/mobilerun-swift", exact: "0.1.0")
    // In the app target’s dependencies:
    .product(name: "MobilerunStream", package: "mobilerun-swift")
    ```

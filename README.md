@@ -64,10 +64,10 @@ product; the protocol target is an implementation detail.
 
 ## Install
 
-Add the git package to your SwiftPM manifest’s dependencies:
+Install version 0.1.0 with Swift Package Manager. Add it to your manifest’s dependencies:
 
 ```swift
-.package(url: "https://github.com/droidrun/mobilerun-swift.git", exact: "0.1.0")
+.package(url: "https://github.com/droidrun/mobilerun-swift", exact: "0.1.0")
 ```
 
 Add the library product to your app target’s dependencies:
@@ -76,12 +76,12 @@ Add the library product to your app target’s dependencies:
 .product(name: "MobilerunStream", package: "mobilerun-swift")
 ```
 
-In Xcode, add `https://github.com/droidrun/mobilerun-swift.git` in Package
+In Xcode, add `https://github.com/droidrun/mobilerun-swift` in Package
 Dependencies, choose **Exact Version 0.1.0**, and select `MobilerunStream`.
 Then `import MobilerunStream`.
 
-SwiftPM resolves the `v0.1.0` git tag; a published GitHub Release is not required.
-Public installation requires the repository to be public and that tag to exist.
+Swift Package Manager resolves exact version `0.1.0` from the `v0.1.0` release tag.
+The tag must exist before installing this version.
 See the [connection guide](docs/stream-keys.md) for credentials and lifecycle setup.
 
 ## Quick start
