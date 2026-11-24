@@ -419,8 +419,8 @@
         }
     }
 
-    /// The manual audio gate is process-wide, like the native audio device. One unmuted session
-    /// may play audio while other sessions remain muted; the last unmuted session closes the gate.
+    /// The native audio gate is process-wide. Received-audio playback and publication hold
+    /// independent leases; the last viewer/publisher release closes the gate.
     @MainActor enum StreamAudio {
         private static var enabledSessions: Set<UUID> = []
         static func setEnabled(_ enabled: Bool, id: UUID) {

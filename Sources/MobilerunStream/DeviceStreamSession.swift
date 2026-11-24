@@ -156,7 +156,7 @@
         }
         /// Foreground/network recovery skips backoff or restarts an unavailable session.
         public func handleWake() { engine.handleWake() }
-        /// Updates received audio and the shared manual-audio gate. Muted sessions never activate audio.
+        /// Updates received audio. Publication retains its independent shared-audio lease.
         public func setMuted(_ muted: Bool) {
             self.muted = muted
             peer?.setMuted(muted)
