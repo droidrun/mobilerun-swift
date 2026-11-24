@@ -83,23 +83,38 @@ In Xcode, add the repository's `main` branch in Package Dependencies and select
 
 ## Quick start
 
-1. Your server mints a short-lived stream key for one device with your API key
-   (`POST /v1/identity/stream-keys`); follow the [Partner guide](https://docs.mobilerun.ai/partners).
+1. Your Node.js server mints a short-lived stream key for one device with
+   `client.streamTokens.create`; follow the [Partner guide](https://docs.mobilerun.ai/partners).
 2. Your app's `tokenProvider` asks your server for a key before each connection.
 3. The SDK opens the stream with that key, one key per connection, and reconnects with a fresh one.
 
-On your server, use the same mint request as the [example helper](Examples/Connection/backend/server.mjs):
+On your server, use `@mobilerun/sdk` 6.3.0 with `MOBILERUN_API_KEY` in the server environment:
+
+```sh
+npm install @mobilerun/sdk@6.3.0
+```
 
 ```js
 import { MobilerunSDK } from '@mobilerun/sdk';
-const sdk = new MobilerunSDK({ apiKey: process.env.MOBILERUN_API_KEY, logLevel: 'off' });
-// Authenticate your user and check they own the device before minting.
-const result = await sdk.api.post('/identity/stream-keys', {
-  body: { deviceId, ttlSeconds: 120 },
-  maxRetries: 0,
+
+const client = new MobilerunSDK({
+  apiKey: process.env.MOBILERUN_API_KEY,
+  logLevel: 'off',
 });
-// Return result.key to your authenticated app; never log or store it.
+// iOS: omit origins. For browsers, use a server-approved array of exact origins.
+const allowedOrigins = undefined;
+// Authenticate your user and authorize access to deviceId before minting.
+const result = await client.streamTokens.create(
+  { deviceId, ttlSeconds: 120, allowedOrigins },
+  { maxRetries: 0 },
+);
+// result is { key, keyId, expiresAt }. Return result.key through your authenticated endpoint.
+// Never log or cache the key. Keep MOBILERUN_API_KEY on the server.
 ```
+
+To revoke a token on the server, call `await client.streamTokens.delete(result.keyId)`.
+
+Raw REST fallback: `POST /v1/identity/stream-keys` accepts the same request fields.
 
 In your app, supply your backend's stream URL and key calls:
 
