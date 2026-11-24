@@ -16,6 +16,7 @@ import SwiftUI
         let handle = DeviceStreamHandle()
         @Published var landscape = false
         @Published var lastNativeInput = "none"
+        @Published var publishStreamTaps = 0
         private let fingers = [NSObject(), NSObject()]
         private var timer: Timer?
         private var observingInput = false
@@ -90,8 +91,12 @@ import SwiftUI
                 view.isAccessibilityElement = true
                 view.accessibilityIdentifier = "device-stream-surface"
                 view.onInput = { [weak self, weak view] data, sent in
-                    guard sent, let type = data.first else { return }
+                    guard let type = data.first else { return }
                     let action = type == 0 || type == 2 ? Int(data[1]) : -1
+                    if ProcessInfo.processInfo.arguments.contains("publish-interaction"), type == 2, action == 1 {
+                        self?.publishStreamTaps += 1
+                    }
+                    guard sent else { return }
                     let pointer = type == 2 ? Int(data[9]) : -1
                     let source = view?.inputEventSource ?? "driver"
                     if source != "driver" { self?.lastNativeInput = source }

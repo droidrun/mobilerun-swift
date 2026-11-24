@@ -48,6 +48,7 @@ private enum ExampleFailure: LocalizedError {
     func start() {
         if mode.hasPrefix("publish") {
             connection.session.presentForTesting(.connected)
+            if mode == "publish-interaction" { connection.session.presentVideoForTesting() }
             if mode == "publish-active" || mode.hasSuffix("-after") { connection.session.presentPublishForTesting(.active, video: true) }
             if mode == "publish-starting" { connection.session.presentPublishForTesting(.starting) }
             if mode == "publish-permission" { connection.session.presentPublishForTesting(.error, reason: .permissionDenied) }
@@ -87,6 +88,7 @@ private enum ExampleFailure: LocalizedError {
                 SurfacePolicyProbe()
             }
             content
+            if probe.mode == "publish-interaction" { PublishInputCount(connection: probe.connection) }
         }
             .environment(\.sizeCategory, probe.mode == "approval-long" ? .accessibilityExtraExtraExtraLarge : .large)
             .streamTheme(theme)
@@ -177,5 +179,14 @@ private struct MountProbe: UIViewRepresentable {
         return UIView()
     }
     func updateUIView(_ uiView: UIView, context: Context) {}
+}
+#endif
+
+#if DEBUG
+@MainActor private struct PublishInputCount: View {
+    @ObservedObject var connection: ConnectionProbe
+    var body: some View {
+        Text("Stream taps: \(connection.publishStreamTaps)").accessibilityIdentifier("publish-stream-taps")
+    }
 }
 #endif

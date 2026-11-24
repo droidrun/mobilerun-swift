@@ -44,10 +44,10 @@ public struct StreamLabels: Sendable, Equatable, StreamCustomizable {
                 back: String = "Back", home: String = "Home", recent: String = "Recent",
                 microphone: String = "Microphone", camera: String = "Camera",
                 stopMicrophone: String = "Stop microphone", stopCamera: String = "Stop camera",
-                publishStarting: String = "Starting media",
-                publishPermissionDenied: String = "Allow microphone and camera access in Settings.",
-                publishNotAllowed: String = "Media publication is not allowed.",
-                publishFailed: String = "Media publication could not start.") {
+                publishStarting: String = "Starting inputs",
+                publishPermissionDenied: String = "Microphone or camera permission denied",
+                publishNotAllowed: String = "Publishing is not allowed",
+                publishFailed: String = "Could not publish inputs") {
         self.connecting = connecting; self.reconnecting = reconnecting
         self.reconnectingAttempt = reconnectingAttempt; self.disconnected = disconnected
         self.unavailable = unavailable

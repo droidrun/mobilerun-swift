@@ -9,15 +9,24 @@ import Testing
 @MainActor final class FakeSignalling: SignallingTransport {
     var onEvent: (@MainActor (SignallingEvent) -> Void)?
     var closed = false
+    var publishWriteFailures: [String: @MainActor () -> Void] = [:]
+    var throwFrameType: String?
     var credentials: StreamCredentials?
     var sent: [(Int, [String: JSONValue])] = []
     let clock: FakeClock
     init(_ clock: FakeClock) { self.clock = clock }
     func open(_ credentials: StreamCredentials) { self.credentials = credentials }
-    func send(_ text: String) -> Bool {
+    func send(_ text: String) throws -> Bool {
         guard !closed, let object = try? jsonObject(text) else { return false }
+        if object["type"] == throwFrameType.map(JSONValue.string) { throw FakeFailure.negotiation }
         sent.append((clock.now, object))
         return true
+    }
+    func sendPublish(_ text: String, onFailure: @escaping @MainActor () -> Void) throws -> Bool {
+        let result = try send(text)
+        let object = try jsonObject(text)
+        publishWriteFailures[object["type"]!.stringValue!] = onFailure
+        return result
     }
     func close() { closed = true }
     func receive(_ object: [String: JSONValue]) throws {

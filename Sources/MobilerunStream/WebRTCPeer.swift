@@ -28,17 +28,9 @@
         private static var publishVideoCodecs: [LKRTCRtpCodecCapability] {
             factory.rtpSenderCapabilities(forKind: "video").codecs.filter {
                 $0.name.lowercased() == "h264" && $0.parameters["packetization-mode"] == "1"
-                    && Self.supportsPublishProfile($0.parameters["profile-level-id"])
+                    && CodecPreferences.supportsPublishH264Profile($0.parameters["profile-level-id"])
             }.sorted { ($0.parameters["profile-level-id"]?.hasPrefix("42") == true ? 0 : 1)
                 < ($1.parameters["profile-level-id"]?.hasPrefix("42") == true ? 0 : 1) }
-        }
-        // RFC 6184 §8.2.2: profile and packetization mode match symmetrically, level does not.
-        // The native factory advertises its maximum level (e.g. 42e034), which can encode 42e01f.
-        private static func supportsPublishProfile(_ value: String?) -> Bool {
-            guard let profile = value?.lowercased(), profile.count == 6,
-                  ["42e0", "42c0", "4d00", "640c"].contains(String(profile.prefix(4))),
-                  let maximumLevel = Int(profile.suffix(2), radix: 16) else { return false }
-            return maximumLevel >= 31
         }
         private var audio: LKRTCAudioTrack?
         private var muted: Bool

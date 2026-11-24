@@ -156,10 +156,14 @@ import MobilerunProtocol
         let original = attempt
         return try await publisher.start(options, media: original?.peer as? any PublishMediaTransport,
             ready: original?.socketOpen == true && original?.state == .connected,
-            send: { [weak original] object in
+            send: { [weak self, weak original] object in
                 guard let original, original.current, original.socketOpen,
                       let data = try? JSONEncoder().encode(object) else { return false }
-                return original.socket?.send(String(decoding: data, as: UTF8.self)) ?? false
+                return try original.socket?.sendPublish(String(decoding: data, as: UTF8.self), onFailure: { [weak self, weak original] in
+                    guard let self, let original, self.attempt === original, !self.closed,
+                          let id = object["mediaSessionId"]?.string else { return }
+                    self.publisher.sendFailed(mediaSessionId: id)
+                }) ?? false
             })
     }
 
@@ -436,7 +440,7 @@ import MobilerunProtocol
 
         @discardableResult func sendMessage(_ message: ClientMessage) -> Bool {
             guard current, socketOpen, let text = try? message.toJSON() else { return false }
-            return socket?.send(text) ?? false
+            return (try? socket?.send(text)) ?? false
         }
 
         func send(_ data: Data, channelID: Int) -> Bool {

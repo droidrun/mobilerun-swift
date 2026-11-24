@@ -4,11 +4,12 @@
 #if os(iOS)
     import Foundation
     import Combine
+    import UIKit
     import MobilerunProtocol
     import MobilerunStreamCore
     @preconcurrency import LiveKitWebRTC
 
-    /// A live stream with automatic recovery and no app lifecycle observers.
+    /// A live stream with automatic recovery. App backgrounding stops publication.
     /// All sessions share one process-wide peer factory. close releases the session's resources.
     @MainActor public final class DeviceStreamSession: ObservableObject {
         @Published public private(set) var publishState = PublishState()
@@ -34,6 +35,7 @@
         private var hidden = false
         private var peerConnected = false
         private var attemptStartedAt = ProcessInfo.processInfo.systemUptime
+        private var backgroundObserver: AnyCancellable?
         private var sampler: StreamStatsSampler?
         private var engine: StreamSessionEngine!
 
@@ -87,6 +89,8 @@
             scheduler: any ReconnectScheduler,
             request: @escaping @MainActor (@escaping StreamStatsSampler.Completion) -> Void
         ) {
+            backgroundObserver = NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+                .sink { [weak self] _ in Task { @MainActor [weak self] in self?.engine.publisher.stop() } }
             engine.publisher.onState = { [weak self] in self?.publishState = $0 }
             sampler = StreamStatsSampler(scheduler: scheduler, request: { [weak self] completion in
                 guard self?.canSampleStats == true else { completion([], nil); return }
@@ -131,18 +135,19 @@
 
         /// Idempotent. A closed session cannot be restarted.
         public func start() { engine.start() }
-        /// Captures local inputs, then waits for server authorization and active injection.
+        /// Waits for device acceptance, then captures local inputs and waits for active injection.
         public func startPublish(_ options: PublishOptions) async throws -> PublishState {
             do { return try await engine.startPublish(options) }
             catch { await engine.publisher.waitForCleanup(); throw error }
         }
         /// Stops capture locally without closing the viewer or awaiting acknowledgement.
         public func stopPublish() async { engine.publisher.stop(); await engine.publisher.waitForCleanup() }
-        package func stopPublishForView() { engine.publisher.stop() }
+        package func disconnectPublishForView() { engine.publisher.disconnect() }
         /// Starts a fresh cycle after the retry budget is exhausted.
         public func retry() { engine.retry() }
         public func close() {
             guard !isClosed else { return }
+            backgroundObserver?.cancel(); backgroundObserver = nil
             engine.close()
             isClosed = true
             updateSampling()
@@ -189,6 +194,7 @@
             }
 
             func presentForTesting(_ status: StreamStatus) { self.status = status }
+            func presentVideoForTesting() { videoSize = VideoSize(width: 640, height: 1280) }
 
             var transportsReleasedForTesting: Bool { peer == nil && signalling == nil }
 

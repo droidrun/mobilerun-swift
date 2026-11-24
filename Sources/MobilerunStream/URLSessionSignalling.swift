@@ -60,13 +60,18 @@
             guard let url = components.url else { throw SignallingError.invalidEndpoint }
             return url
         }
-        @discardableResult func send(_ text: String) -> Bool {
+        @discardableResult func send(_ text: String) -> Bool { enqueue(text, onFailure: nil) }
+        @discardableResult func sendPublish(_ text: String, onFailure: @escaping @MainActor () -> Void) -> Bool {
+            enqueue(text, onFailure: onFailure)
+        }
+        private func enqueue(_ text: String, onFailure: (@MainActor () -> Void)?) -> Bool {
             guard let socket, !failed else { return false }
             let previous = sender
             sender = Task { [weak self] in
                 await previous?.value
                 guard !Task.isCancelled, let self, self.socket === socket, !self.failed else { return }
-                do { try await socket.send(.string(text)) } catch { self.reportFailure(socket) }
+                do { try await socket.send(.string(text)) }
+                catch { onFailure?(); self.reportFailure(socket) }
             }
             return true
         }

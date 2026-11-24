@@ -79,7 +79,7 @@ import MobilerunStreamCore
             .overlay(alignment: .bottom) {
                 let publish = PublishPresentation(capabilities: session.publishCapabilities,
                     cameraSupported: session.supportsPublishCamera, shown: showsPublishControls,
-                    phase: session.publishState.phase)
+                    phase: session.publishState.phase, reason: session.publishState.reason)
                 if publish.visible {
                     StreamPublishPill(session: session, presentation: publish).padding(16)
                 }
@@ -94,7 +94,7 @@ import MobilerunStreamCore
         .onChange(of: ObjectIdentifier(session)) { _ in lifecycle.rebind(session: session) }
         .onDisappear {
             lifecycle.stop()
-            Task { await session.stopPublish() }
+            session.disconnectPublishForView()
         }
     }
 }

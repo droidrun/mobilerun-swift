@@ -76,6 +76,27 @@ import UIKit
         captureSurface(after, name: "publish-after-1280", width: 1280)
         after.terminate()
     }
+    func testPublishPillBackgroundPassesThroughAndStatusDoesNotBlockVideo() {
+        let app = launch("publish-interaction")
+        let mic = app.buttons["stream-publish-microphone"]
+        let camera = app.buttons["stream-publish-camera"]
+        XCTAssertTrue(mic.waitForExistence(timeout: 10))
+        XCTAssertTrue(camera.exists)
+        XCTAssertTrue(app.staticTexts["Stream taps: 0"].waitForExistence(timeout: 10))
+        // The gap is capsule background, outside both 44-point button hit areas.
+        let gap = CGPoint(x: (mic.frame.maxX + camera.frame.minX) / 2, y: mic.frame.midY)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: gap.x, dy: gap.y)).tap()
+        XCTAssertTrue(app.staticTexts["Stream taps: 1"].waitForExistence(timeout: 5))
+        mic.tap()
+        XCTAssertTrue(app.staticTexts["Could not publish inputs"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Stream taps: 1"].exists)
+        let status = app.staticTexts["stream-publish-message"]
+        XCTAssertLessThan(status.frame.maxY, mic.frame.minY)
+        status.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.staticTexts["Stream taps: 2"].waitForExistence(timeout: 5))
+        capture("publish-hit-areas-status-above")
+        app.terminate()
+    }
     func testPublishPillVisibilityAndClickThrough() {
         let absent = launch("connecting")
         XCTAssertTrue(absent.otherElements["device-stream-surface"].waitForExistence(timeout: 10))
@@ -92,9 +113,9 @@ import UIKit
         capture("publish-after")
         app.buttons["stream-publish-microphone"].tap()
         // Offline demo has no connected transport: readiness fails before any protected capture API.
-        XCTAssertTrue(app.staticTexts["Media publication could not start."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Could not publish inputs"].waitForExistence(timeout: 5))
         app.buttons["stream-publish-camera"].tap()
-        XCTAssertTrue(app.staticTexts["Media publication could not start."].exists)
+        XCTAssertTrue(app.staticTexts["Could not publish inputs"].exists)
         app.terminate()
     }
     func testPublishPillStartingAndFailureLabels() {
@@ -104,11 +125,11 @@ import UIKit
         XCTAssertFalse(starting.buttons["stream-publish-camera"].isEnabled)
         starting.terminate()
         let permission = launch("publish-permission")
-        XCTAssertTrue(permission.staticTexts["Allow microphone and camera access in Settings."].waitForExistence(timeout: 10))
+        XCTAssertTrue(permission.staticTexts["Microphone or camera permission denied"].waitForExistence(timeout: 10))
         capture("publish-permission")
         permission.terminate()
         let forbidden = launch("publish-forbidden")
-        XCTAssertTrue(forbidden.staticTexts["Media publication is not allowed."].waitForExistence(timeout: 10))
+        XCTAssertTrue(forbidden.staticTexts["Publishing is not allowed"].waitForExistence(timeout: 10))
         capture("publish-forbidden")
         forbidden.terminate()
         let active = launch("publish-active")

@@ -3,6 +3,14 @@
 
 /// Shared MIME/name normalization for preference ordering and decoder fallback.
 package enum CodecPreferences {
+    private static let publishH264Profiles: Set<String> = ["42e0", "42c0", "4d00", "640c"]
+    package static func supportsPublishH264Profile(_ value: String?) -> Bool {
+        guard let profile = value?.lowercased(), profile.count == 6,
+              publishH264Profiles.contains(String(profile.prefix(4))),
+              let maximumLevel = Int(profile.suffix(2), radix: 16) else { return false }
+        return maximumLevel >= 0x1f
+    }
+
     package static func family(_ name: String) -> String {
         let subtype = name.split(separator: "/").last.map(String.init)?.lowercased() ?? ""
         switch subtype {

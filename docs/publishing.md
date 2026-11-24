@@ -25,7 +25,7 @@ DeviceStream(session: session) // Floating microphone/camera pill, bottom centre
 
 The embedding application's Info.plist must contain nonempty `NSMicrophoneUsageDescription` and,
 for video, `NSCameraUsageDescription` strings explaining why access is needed. The SDK checks all
-required metadata before protected APIs, then checks/requests access only on an explicit start. Audio-only
+required metadata before protected APIs, then checks/requests access only after the device accepts an explicit start. Audio-only
 never requests camera permission. Connect and wait for `session.status == .connected` first.
 
 ```swift
@@ -45,11 +45,12 @@ do {
 await session.stopPublish() // Idempotent; stops local capture without closing the viewer.
 ```
 
-Observe `session.$publishState`: `idle → capturing → starting → accepted → active`, followed by
+Observe `session.$publishState`: `idle → starting → accepted → capturing → active`, followed by
 `stopped` or `error`. State is separate from viewer status. `startPublish` throws `PublishFailure`;
 `onError` additionally reports `operation == "publish"`, the current viewer attempt, `final == true`,
 and optional `mediaSessionId`, `detail` and `serverReason`. Explicit stop cancels a pending start with
 `publish_cancelled`, leaves state `stopped` / `stopped_by_client`, and emits no error callback.
+If the stop write itself fails, the result is `disconnected` instead.
 
 Only audio and audio+video are supported. `audio: false` fails locally with `publish_failed` /
 `invalid_options`. Camera requires device support and a compatible local H.264 encoder; it never
@@ -57,20 +58,22 @@ silently falls back to audio. One pending or active publication is allowed. To c
 stop, then explicitly start again. The pill performs this stop/start when toggling camera; stopping
 microphone stops both inputs. Active controls use the theme's destructive/red color.
 
-The first viewer offer reserves separate trackless upstream sections without prompting. Capture
-stays detached until the server accepts. Missing or unusable reservations fail `publish_unsupported`.
+The first viewer offer reserves separate trackless upstream sections without prompting. The SDK sends `publishStart` before requesting permissions or capture. Capture starts only after
+acceptance, then attaches to the reserved senders. Missing or unusable reservations fail `publish_unsupported`.
 The SDK never adds media sections dynamically or rewrites SDP to manufacture SSRCs.
 
 `forbidden` maps to `publish_not_allowed`; `busy` to `publish_busy`. No acceptance in 5 seconds means
 `publish_unsupported` / `response_timeout`, never an inferred authorization denial. Acceptance without
-active in 15 seconds means `publish_timeout` / `active_timeout`. Permission prompts have no SDK timeout;
-stop can cancel them and late permission/capture results cannot restart publication.
+capture and active completion within 30 seconds of acceptance means `publish_timeout` / `active_timeout`.
+That window includes OS permission prompts. Stop can cancel a pending request; late permission/capture
+results cannot restart publication. Refusal or silence never prompts or captures.
 
 Stop, close, renderer unmount, capture loss and socket/peer replacement release SDK-owned media.
-The default lifecycle adapter also stops publication on backgrounding. No automatic retry or reconnect
+Renderer replacement/remount emits a terminal `disconnected` publish state and error once.
+The session stops publication when the app backgrounds, including headless use without a lifecycle adapter. No automatic retry or reconnect
 resume occurs; explicitly start again after reconnect. A same-peer ICE credential refresh preserves the
-current publication. Applications using custom lifecycle handling should stop publication themselves
-when leaving the foreground; background capture is not guaranteed.
+current publication. Background capture is not supported. A throwing signaling send reports
+`disconnected` and releases capture, including a failed stop write.
 
 Customize `StreamLabels` fields `microphone`, `camera`, `stopMicrophone`, `stopCamera`, `publishStarting`,
 `publishPermissionDenied`, `publishNotAllowed` and `publishFailed` through `.streamLabels(...)`.
@@ -92,3 +95,7 @@ pressing them demonstrates readiness failure without prompting or sending media.
 are `publish-hidden`, `publish-active`, `publish-starting`, `publish-permission` and `publish-forbidden`.
 The `publish-narrow-before` / `publish-narrow-after` and `publish-wide-before` / `publish-wide-after`
 modes provide the fixed-size layout captures. Wide UI tests require an iPad simulator.
+
+The pill fades to 50% opacity after three seconds without interaction. A nearby touch or pointer
+restores full opacity. Only its buttons receive hits; capsule padding, gaps and the separate status
+text above it pass input through to the device stream.
