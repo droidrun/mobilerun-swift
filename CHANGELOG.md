@@ -2,6 +2,8 @@
 
 ## [0.1.0] — Unreleased
 
+- Microphone and camera publish: `startPublish` / `stopPublish` with publish state and reasons, and a built-in control over the stream when the device supports it.
+- Agent skill `skills/mobilerun-device-stream` for integrating the SDK.
 - Connection errors: `DeviceStreamSession.onError` / `lastError` with reasons `credentials_unavailable`, `connection_refused`, `token_rejected` (upgrade 401), `disconnected`, `device_unavailable` and `unknown`, and a `final` flag.
 - `StreamCredentials.tokenProvider` is recommended: a fresh key before every connect attempt. The static token is legacy and deprecated (reconnects reuse it; one log warning per session).
 - `StreamLabels.disconnected` for reconnecting after a dropped session.
